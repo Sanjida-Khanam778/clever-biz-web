@@ -1,0 +1,146 @@
+import { Checkbox, Field, Label } from "@headlessui/react";
+import { Controller, SubmitHandler, useForm } from "react-hook-form";
+import { HiLockClosed } from "react-icons/hi";
+import { MdEmail } from "react-icons/md";
+import { Link, useNavigate } from "react-router";
+import { LabelInput } from "../../components/input";
+import axiosInstance from "@/lib/axios";
+import toast from "react-hot-toast";
+
+const ScreenLogin = () => {
+  type Inputs = {
+    email: string;
+    password: string;
+    remember: boolean;
+  };
+  const navigate = useNavigate();
+  const { register, handleSubmit, control } = useForm<Inputs>();
+
+  const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    try {
+      const response = await axiosInstance.post("/login/", {
+        email: data.email,
+        password: data.password,
+      });
+
+      const { access, refresh, user } = response.data;
+
+      // Store tokens if needed
+      localStorage.setItem("accessToken", access);
+      localStorage.setItem("refreshToken", refresh);
+      localStorage.setItem("userInfo", JSON.stringify(user));
+
+      // Redirect based on role
+      switch (user.role) {
+        case "chef":
+          navigate("/chef");
+          break;
+        case "staff":
+          navigate("/staff");
+          break;
+        case "restaurant":
+          navigate("/restaurant");
+          break;
+        case "admin":
+          navigate("/admin");
+          break;
+        default:
+          navigate("/");
+          break;
+      }
+    } catch (error) {
+      console.error("Login failed:", error);
+      toast.error("Invalid login credentials");
+    }
+  };
+
+  // const onSubmit: SubmitHandler<Inputs> = (data) => {
+  //   if (data.email == "chef@gmail.com") {
+  //     navigate("/chef");
+  //   } else if (data.email == "staff@gmail.com") {
+  //     navigate("/staff");
+  //   } else if (data.email == "restaurant@gmail.com") {
+  //     navigate("/restaurant");
+  //   } else if (data.email == "admin@gmail.com") {
+  //     navigate("/admin");
+  //   }
+  // };
+
+  return (
+    <div className="bg-primary text-black p-8 rounded-xl shadow-lg w-full max-w-lg">
+      <h2 className="text-3xl mb-6 text-center text-primary-text">Welcome</h2>
+      <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+        <LabelInput
+          label="Email"
+          inputProps={{
+            id: "email",
+            ...register("email"),
+          }}
+          icon={<MdEmail />}
+        />
+        <LabelInput
+          label="Password"
+          inputProps={{
+            id: "password",
+            ...register("password"),
+          }}
+          icon={<HiLockClosed className="h-4 w-4" />}
+          inputType="password"
+        />
+        <div className="flex justify-between items-center">
+          <Controller
+            control={control}
+            name="remember"
+            render={({ field }) => (
+              <Field className="flex items-center gap-2">
+                <Checkbox
+                  checked={field.value}
+                  onChange={field.onChange}
+                  className="group block size-4 rounded border bg-white data-[checked]:bg-blue-500"
+                >
+                  <svg
+                    className="stroke-white opacity-0 group-data-[checked]:opacity-100"
+                    viewBox="0 0 14 14"
+                    fill="none"
+                  >
+                    <path
+                      d="M3 8L6 11L11 3.5"
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </Checkbox>
+                <Label className="text-sm text-primary-text">Remember Me</Label>
+              </Field>
+            )}
+          />
+
+          <Link
+            className="text-sm text-primary-text border border-primary-text/20 rounded-md p-1"
+            to="/verify-email"
+          >
+            Forgot Password
+          </Link>
+        </div>
+        <div className="text-center mt-8 mb-14">
+          <button type="submit" className="button-primary px-14">
+            Login
+          </button>
+        </div>
+        <div className="text-center flex justify-center items-center">
+          <p className="text-sm text-primary-text/40">Dont have account?</p>
+          <div className="w-2"></div>
+          <Link
+            className="text-sm text-primary-text border border-primary-text/20 rounded-md p-1"
+            to="/register"
+          >
+            Register
+          </Link>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default ScreenLogin;
