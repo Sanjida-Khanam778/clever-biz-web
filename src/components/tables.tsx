@@ -8,6 +8,7 @@ import { IconCheckmark, IconClose, IconHold } from "./icons";
 import { ButtonStatus, StatusSpan } from "./input";
 import { TooltipTop } from "./utilities";
 import { BiCopy, BiMailSend } from "react-icons/bi";
+import { useState } from "react";
 
 /* Reservation Table Data ===========================================================>>>>> */
 
@@ -83,8 +84,60 @@ export const TableReservationList: React.FC<TableReservationListProps> = ({
 /* <<<<<<<<===================================================== Reservation Table Data */
 
 /* Team management table ===========================================================>>>>> */
+type ButtonStatusProps = {
+  status: string;
+  availableStatuses: string[];
+  properties: {
+    [key: string]: {
+      bg: string;
+      text: string;
+    };
+  };
+  onChange?: (newStatus: string) => void; // <-- add this
+};
+
+export const ButtonStatus: React.FC<ButtonStatusProps> = ({
+  status,
+  availableStatuses,
+  properties,
+  onChange,
+}) => {
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState(status);
+
+  const handleSelect = (newStatus: string) => {
+    setSelected(newStatus);
+    setOpen(false);
+    onChange?.(newStatus); // call parent function
+  };
+
+  return (
+    <div className="relative">
+      <button
+        className={`px-3 py-1 text-sm rounded ${properties[selected].bg} ${properties[selected].text}`}
+        onClick={() => setOpen(!open)}
+      >
+        {selected}
+      </button>
+      {open && (
+        <div className="absolute top-full left-0 bg-sidebar text-white mt-1 rounded shadow-lg z-10">
+          {availableStatuses.map((s) => (
+            <div
+              key={s}
+              className={`px-4 py-2 cursor-pointer hover:bg-gray-700 ${properties[s].text}`}
+              onClick={() => handleSelect(s)}
+            >
+              {s}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 interface TableTeamManagementProps {
-  data: StaffItem[];
+  data: Member[];
 }
 export const TableTeamManagement: React.FC<TableTeamManagementProps> = ({
   data,
@@ -103,8 +156,8 @@ export const TableTeamManagement: React.FC<TableTeamManagementProps> = ({
       <tbody className="bg-sidebar text-sm">
         {data.map((item, index) => (
           <tr key={index} className="border-b border-[#1C1E3C]">
-            <td className="p-4 text-primary-text">{item.staffId}</td>
-            <td className="p-4 text-primary-text">{item.name}</td>
+            <td className="p-4 text-primary-text">{item.id}</td>
+            <td className="p-4 text-primary-text">{item.username}</td>
             <td className="p-4 text-primary-text">{item.role}</td>
             <td className="p-4 text-primary-text/60 flex items-center gap-x-1">
               {item.email}
@@ -119,20 +172,7 @@ export const TableTeamManagement: React.FC<TableTeamManagementProps> = ({
               )}
             </td>
             <td className="p-4 text-primary-text">
-              {!item.email ? (
-                <StatusSpan
-                  status="Generate Access"
-                  properties={{
-                    "Generate Access": {
-                      bg: "bg-gray-800",
-                      text: "text-gray-300",
-                    },
-                  }}
-                  onClick={() => {
-                    console.log("Generate access token");
-                  }}
-                />
-              ) : (
+              {
                 <ButtonStatus
                   status="Active"
                   availableStatuses={["Active", "Hold"]}
@@ -147,7 +187,7 @@ export const TableTeamManagement: React.FC<TableTeamManagementProps> = ({
                     },
                   }}
                 />
-              )}
+                }
             </td>
           </tr>
         ))}

@@ -35,16 +35,9 @@ import axiosInstance from "@/lib/axios";
 type ModalProps = {
   isOpen: boolean;
   close: () => void;
-  file: File | null;
-  setFile: (file: File) => void;
 };
 
-export const EditFoodItemModal: React.FC<ModalProps> = ({
-  isOpen,
-  close,
-  file,
-  setFile,
-}) => {
+export const EditFoodItemModal: React.FC<ModalProps> = ({ isOpen, close }) => {
   type Inputs = {
     price: string;
     name: string;

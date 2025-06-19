@@ -24,6 +24,19 @@ type StaffItem = {
   action: "Active" | "Hold";
 };
 
+type Member = {
+  id: number;
+  email: string;
+  username: string;
+  role: string;
+  action: string;
+  generate: string;
+  created_at: string;
+  updated_time: string;
+  restaurant: string;
+  image: string | null;
+};
+
 type DeviceItem = {
   userName: string;
   tableNo: string;

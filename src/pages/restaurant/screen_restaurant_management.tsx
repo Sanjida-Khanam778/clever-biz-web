@@ -1,10 +1,27 @@
 import { EditStaffModal } from "@/components/modals";
 import { TableTeamManagement } from "@/components/tables";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ButtonAdd, TextSearchBox } from "../../components/input";
 import { Pagination } from "../../components/utilities";
+import axiosInstance from "@/lib/axios";
+import toast from "react-hot-toast";
+type Member = {
+  id: number;
+  email: string;
+  username: string;
+  role: string;
+  action: string;
+  generate: string;
+  created_at: string;
+  updated_time: string;
+  restaurant: string;
+  image: string | null;
+};
 
 export const ScreenRestaurantManagement = () => {
+  const [member, setMember] = useState<Member[]>([]);
+
+  const [staffModal, setShowStaffModal] = useState(false);
   const staffData: StaffItem[] = [
     {
       staffId: 1,
@@ -31,7 +48,22 @@ export const ScreenRestaurantManagement = () => {
       action: "Hold",
     },
   ];
-  const [staffModal, setShowStaffModal] = useState(false);
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axiosInstance.get(
+          "http://192.168.10.150:8000/owners/chef-staff/"
+        );
+        setMember(response.data.results);
+        console.log("------------------", response.data.results);
+      } catch (error) {
+        console.error("Failed to load all members", error);
+        toast.error("Failed to load all members.");
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const showModal = () => {
     setShowStaffModal(true);
@@ -53,7 +85,7 @@ export const ScreenRestaurantManagement = () => {
         </div>
         {/* List of content */}
         <div className="bg-sidebar p-4 rounded-lg overflow-x-auto">
-          <TableTeamManagement data={staffData} />
+          <TableTeamManagement data={member} />
           <div className="mt-4 flex justify-center">
             <Pagination page={1} />
           </div>
