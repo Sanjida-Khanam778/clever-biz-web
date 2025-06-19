@@ -3,12 +3,15 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { OtpTimer } from "../../components/utilities";
 import { useNavigate } from "react-router";
 import axiosInstance from "@/lib/axios";
+import toast from "react-hot-toast";
+import { ImSpinner6 } from "react-icons/im";
 
 const ScreenOtpVerification = () => {
   type Inputs = {
     otp: string;
   };
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const { register, handleSubmit, setValue } = useForm<Inputs>();
   const [digits, setDigits] = useState<string[]>(new Array(4).fill(""));
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -16,6 +19,7 @@ const ScreenOtpVerification = () => {
   // Handle OTP submit
 
   const onSubmit: SubmitHandler<Inputs> = async () => {
+    setLoading(true);
     const otp = digits.join("");
     setValue("otp", otp); // Sync with react-hook-form
 
@@ -32,7 +36,8 @@ const ScreenOtpVerification = () => {
         otp: parseInt(otp),
       });
 
-      console.log("OTP verified successfully:", response.data);
+      toast.success("OTP verified successfully");
+      setLoading(false);
 
       // Proceed to create-password page
       navigate("/create-password");
@@ -71,8 +76,20 @@ const ScreenOtpVerification = () => {
     }
   };
 
-  const resentOTP = () => {
-    // todo: resent otp
+  const resentOTP = async () => {
+    const email = localStorage.getItem("verifyEmail");
+    if (!email) {
+      alert("Email not found.");
+      return;
+    }
+
+    try {
+      await axiosInstance.post("/send-otp/", { email });
+      alert("OTP resent successfully!");
+    } catch (error) {
+      console.error("Resend OTP failed:", error);
+      alert("Failed to resend OTP.");
+    }
   };
 
   // Optional: Sync digits to `otp` on every change
@@ -116,7 +133,13 @@ const ScreenOtpVerification = () => {
         <div className="h-4" />
         <div className="text-center mb-4">
           <button type="submit" className="button-primary w-2/3">
-            Continue
+            {loading ? (
+              <span className="flex gap-3 items-center justify-center">
+                <ImSpinner6 className="animate-spin" /> Loading...
+              </span>
+            ) : (
+              "Continue"
+            )}
           </button>
         </div>
       </form>

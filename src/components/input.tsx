@@ -107,13 +107,14 @@ export const DateInput: React.FC<LabelInputProps> = ({
   labelProps = {},
   containerProps = {},
   icon,
-  inputType = "text", // 👈 default type
+  inputType = "text",
 }: LabelInputProps) => {
   const id = inputProps.id;
 
   const { className: labelClassName, ...remainLabel } = labelProps;
   const { className, ...remain } = inputProps;
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  // const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   return (
     <div>
@@ -381,11 +382,15 @@ export const DashboardDropDown: React.FC<DashboardDropDownProps> = ({
 
 /* <<<<<<<<===================================================== Input Drop Down */
 /* Upload pickable item ===========================================================>>>>> */
+// InputImageUploadBox.tsx
+type Props = {
+  file: File | null;
+  setFile: (file: File | null) => void;
+};
 
-export const InputImageUploadBox = () => {
+export const InputImageUploadBox: React.FC<Props> = ({ file, setFile }) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [dragActive, setDragActive] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const handleClick = () => inputRef.current?.click();
@@ -394,44 +399,34 @@ export const InputImageUploadBox = () => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-
-    const file = e.dataTransfer.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-    }
+    const droppedFile = e.dataTransfer.files?.[0];
+    if (droppedFile) setFile(droppedFile);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-    }
+    const selected = e.target.files?.[0];
+    if (selected) setFile(selected);
   };
 
   const handleRemoveImage = () => {
-    setSelectedFile(null);
+    setFile(null);
     setPreviewUrl(null);
-    if (inputRef.current) {
-      inputRef.current.value = "";
-    }
+    if (inputRef.current) inputRef.current.value = "";
   };
 
   useEffect(() => {
-    if (!selectedFile) return;
-
-    const objectUrl = URL.createObjectURL(selectedFile);
+    if (!file) return;
+    const objectUrl = URL.createObjectURL(file);
     setPreviewUrl(objectUrl);
-
     return () => URL.revokeObjectURL(objectUrl);
-  }, [selectedFile]);
+  }, [file]);
 
   return (
     <div className="space-y-4">
       <label className="block text-primary-text text-sm font-medium">
         Upload image
       </label>
-
-      {previewUrl && (
+      {previewUrl ? (
         <div className="relative mt-4 inline-block">
           <img
             src={previewUrl}
@@ -440,14 +435,12 @@ export const InputImageUploadBox = () => {
           />
           <button
             onClick={handleRemoveImage}
-            className="absolute top-1 right-1 p-1 bg-black bg-opacity-60 text-white rounded-full hover:bg-opacity-80 transition"
-            aria-label="Remove image"
+            className="absolute top-1 right-1 p-1 bg-black bg-opacity-60 text-white rounded-full"
           >
             <FiX className="w-4 h-4" />
           </button>
         </div>
-      )}
-      {!previewUrl && (
+      ) : (
         <div
           onClick={handleClick}
           onDragOver={(e) => {
@@ -458,7 +451,7 @@ export const InputImageUploadBox = () => {
           onDrop={handleDrop}
           className={`w-full cursor-pointer rounded-lg border-2 border-dashed ${
             dragActive ? "border-accent" : "border-transparent"
-          } bg-[#201C3F] p-8 text-center transition duration-200`}
+          } bg-[#201C3F] p-8 text-center`}
         >
           <input
             type="file"
@@ -467,8 +460,8 @@ export const InputImageUploadBox = () => {
             onChange={handleFileChange}
             className="hidden"
           />
-          <div className="flex flex-col justify-center items-center text-primary-text">
-            <FiUpload className="text-primary-text text-2xl mb-2" />
+          <div className="text-primary-text">
+            <FiUpload className="text-2xl mb-2" />
             <p className="font-semibold">Upload a File</p>
             <p className="text-sm text-primary-text/40">
               Drag and drop files here or{" "}
@@ -480,52 +473,56 @@ export const InputImageUploadBox = () => {
     </div>
   );
 };
+
 /* <<<<<<<<===================================================== Upload pickable item */
 /* Pick Video ===========================================================>>>>> */
-export const InputVideoUploadBox = () => {
+type InputVideoUploadBoxProps = {
+  file: File | null;
+  setFile: (file: File) => void;
+};
+
+export const InputVideoUploadBox: React.FC<InputVideoUploadBoxProps> = ({
+  file,
+  setFile,
+}) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [dragActive, setDragActive] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
 
   const handleClick = () => inputRef.current?.click();
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    e.stopPropagation();
     setDragActive(false);
     const file = e.dataTransfer.files?.[0];
     if (file) {
-      setSelectedFile(file);
+      setFile(file);
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setSelectedFile(file);
+      setFile(file);
     }
   };
 
   const handleRemoveVideo = () => {
-    setSelectedFile(null);
+    setFile(null);
     setThumbnailUrl(null);
-    if (inputRef.current) {
-      inputRef.current.value = "";
-    }
+    if (inputRef.current) inputRef.current.value = "";
   };
 
-  // Create a thumbnail from video
   useEffect(() => {
-    if (!selectedFile) return;
+    if (!file) return;
 
     const video = document.createElement("video");
-    const fileURL = URL.createObjectURL(selectedFile);
+    const fileURL = URL.createObjectURL(file);
     video.src = fileURL;
-    video.preload = "metadata"; // Hint to browser to preload metadata
+    video.preload = "metadata";
 
     const handleLoadedMetadata = () => {
-      const middleFrame = Math.max(video.duration / 2, 0.1); // avoid 0
+      const middleFrame = Math.max(video.duration / 2, 0.1);
       video.currentTime = middleFrame;
     };
 
@@ -553,9 +550,9 @@ export const InputVideoUploadBox = () => {
     return () => {
       video.removeEventListener("loadedmetadata", handleLoadedMetadata);
       video.removeEventListener("seeked", handleSeeked);
-      video.removeEventListener("error", () => {});
     };
-  }, [selectedFile]);
+  }, [file]);
+
   return (
     <div className="space-y-4">
       <label className="block text-primary-text text-sm font-medium">
@@ -578,6 +575,7 @@ export const InputVideoUploadBox = () => {
           </button>
         </div>
       )}
+
       {!thumbnailUrl && (
         <div
           onClick={handleClick}

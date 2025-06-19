@@ -4,8 +4,12 @@ import { LabelInput } from "../../components/input";
 import { useNavigate } from "react-router";
 import axiosInstance from "@/lib/axios";
 import toast from "react-hot-toast";
+import { useState } from "react";
+import { ImSpinner6 } from "react-icons/im";
 
 const ScreenEmailVerification = () => {
+  const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
   type Inputs = {
     email: string;
@@ -17,6 +21,7 @@ const ScreenEmailVerification = () => {
   } = useForm<Inputs>();
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    setLoading(true);
     try {
       const response = await axiosInstance.post("/send-otp/", {
         email: data.email,
@@ -24,6 +29,7 @@ const ScreenEmailVerification = () => {
 
       // localStorage.setItem("verifyEmail", data.email);
       console.log("OTP sent successfully:", response.data);
+      setLoading(false);
       toast.success(
         "OTP sent successfully to your email. Please check your inbox."
       );
@@ -56,7 +62,13 @@ const ScreenEmailVerification = () => {
         </p>
         <div className="text-center mt-12 mb-4">
           <button type="submit" className="button-primary w-2/3">
-            Continue
+            {loading ? (
+              <span className="flex gap-3 items-center justify-center">
+                <ImSpinner6 className="animate-spin" /> Loading...
+              </span>
+            ) : (
+              "Continue"
+            )}
           </button>
         </div>
       </form>

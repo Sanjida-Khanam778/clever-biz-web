@@ -26,88 +26,159 @@ import {
   BtnUndo,
   BtnRedo,
 } from "react-simple-wysiwyg";
-import { useState } from "react";
-import { SubmitHandler, useForm } from "react-hook-form";
+import { useEffect, useState } from "react";
+import { set, SubmitHandler, useForm } from "react-hook-form";
+import toast from "react-hot-toast";
+import axiosInstance from "@/lib/axios";
 
 /* Edit food item dialog ===========================================================>>>>> */
 type ModalProps = {
   isOpen: boolean;
   close: () => void;
+  file: File | null;
+  setFile: (file: File) => void;
 };
 
-export const EditFoodItemModal: React.FC<ModalProps> = ({ isOpen, close }) => {
+export const EditFoodItemModal: React.FC<ModalProps> = ({
+  isOpen,
+  close,
+  file,
+  setFile,
+}) => {
+  type Inputs = {
+    price: string;
+    name: string;
+    category: string;
+    description: string;
+  };
+
+  const { register, handleSubmit, reset } = useForm<Inputs>();
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+
+  const [categories, setCategories] = useState<
+    { id: number; Category_name: string }[]
+  >([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axiosInstance.get(
+          "http://192.168.10.150:8000/owners/categories/"
+        );
+        setCategories(response.data.results);
+        console.log("------------------", response.data);
+      } catch (error) {
+        console.error("Failed to load categories", error);
+        toast.error("Failed to load categories.");
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    console.log("Submitted data:", data);
+    if (!imageFile) return toast.error("Please upload an image.");
+    if (!videoFile) return toast.error("Please upload a video.");
+
+    const formData = new FormData();
+    formData.append("item_name", data.name);
+    formData.append("price", data.price.toString());
+    formData.append("category", data.category);
+    formData.append("description", data.description);
+    formData.append("image1", imageFile);
+    formData.append("video", videoFile);
+
+    try {
+      const response = await axiosInstance.post(
+        "http://192.168.10.150:8000/owners/items/",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      console.log("Food item created:", response.data);
+      toast.success("Food item created successfully!");
+      reset();
+      setImageFile(null);
+      setVideoFile(null);
+      close();
+    } catch (error) {
+      console.error("Error creating food item:", error);
+      toast.error("Failed to create food item.");
+    }
+  };
+
   return (
-    <Dialog
-      open={isOpen}
-      as="div"
-      className="relative z-10 focus:outline-none"
-      onClose={close}
-    >
+    <Dialog open={isOpen} as="div" className="relative z-10" onClose={close}>
       <DialogBackdrop className="fixed inset-0 bg-black/30" />
       <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
         <div className="flex min-h-full items-center justify-center p-4">
-          <DialogPanel
-            transition
-            className="w-full max-w-xl rounded-xl bg-sidebar/80 p-6 backdrop-blur-xl duration-300 ease-out data-[closed]:transform-[scale(95%)] data-[closed]:opacity-0"
-          >
-            <DialogTitle
-              as="h3"
-              className="text-base/7 font-medium text-white mb-8"
-            >
+          <DialogPanel className="w-full max-w-xl rounded-xl bg-sidebar/80 p-6 backdrop-blur-xl">
+            <DialogTitle className="text-base font-medium text-white mb-8">
               Edit Food Item
             </DialogTitle>
-            <div className="flex flex-col gap-y-4">
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="flex flex-col gap-y-4"
+            >
               <LabelInput
-                label="Input here"
-                labelProps={{
-                  className: "text-sm",
-                }}
+                label="Item Name"
+                labelProps={{ className: "text-sm" }}
                 inputProps={{
                   className: "bg-[#201C3F] shadow-md text-sm",
+                  ...register("name", { required: true }),
                 }}
               />
               <div className="flex gap-x-4">
                 <div className="basis-[30%]">
                   <LabelInput
                     label="Price"
-                    labelProps={{
-                      className: "text-sm",
-                    }}
+                    labelProps={{ className: "text-sm" }}
                     inputProps={{
                       className: "bg-[#201C3F] shadow-md text-sm",
+                      type: "number",
+                      ...register("price", { required: true }),
                     }}
                   />
                 </div>
                 <div className="basis-[70%]">
-                  <LabelInput
-                    label="Food category"
-                    labelProps={{
-                      className: "text-sm",
-                    }}
-                    inputProps={{
-                      className: "bg-[#201C3F] shadow-md text-sm",
-                    }}
-                  />
+                  <label className="block text-sm text-white mb-1">
+                    Food Category
+                  </label>
+                  <select
+                    {...register("category", { required: true })}
+                    className="bg-[#201C3F] shadow-md text-sm w-full px-3 py-2 rounded-md text-white"
+                  >
+                    <option value="">Select category</option>
+                    {categories?.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.Category_name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <LabelTextarea
                 label="Description"
-                labelProps={{
-                  className: "text-sm",
-                }}
+                labelProps={{ className: "text-sm" }}
                 textareaProps={{
                   placeholder: "Enter here...",
-                  id: "description",
                   rows: 6,
                   className: "bg-[#201C3F] shadow-md text-sm",
+                  ...register("description", { required: true }),
                 }}
               />
-              <InputImageUploadBox />
-              <InputVideoUploadBox />
-              <button className="button-primary" onClick={close}>
+              <InputImageUploadBox file={imageFile} setFile={setImageFile} />
+              <InputVideoUploadBox file={videoFile} setFile={setVideoFile} />
+
+              <button className="button-primary" type="submit">
                 Submit
               </button>
-            </div>
+            </form>
           </DialogPanel>
         </div>
       </div>
@@ -526,6 +597,33 @@ export const ModalAddSubscriber: React.FC<ModalProps> = ({ isOpen, close }) => {
 
 /* Category Add/Edit Modal ===========================================================>>>>> */
 export const EditCategoryModal: React.FC<ModalProps> = ({ isOpen, close }) => {
+  const { handleSubmit, register, reset } = useForm<Inputs>();
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    try {
+      const formData = new FormData();
+      formData.append("Category_name", data.name);
+      if (imageFile) formData.append("image", imageFile);
+
+      const response = await axiosInstance.post(
+        "/owners/categories/",
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+
+      console.log(response.data);
+      toast.success("Category Created successfully");
+      reset();
+      setImageFile(null);
+      close();
+    } catch (error) {
+      console.error("Failed:", error);
+      toast.error("An error occurred");
+    }
+    0;
+  };
   return (
     <Dialog
       open={isOpen}
@@ -544,9 +642,12 @@ export const EditCategoryModal: React.FC<ModalProps> = ({ isOpen, close }) => {
               as="h3"
               className="text-base/7 font-medium text-white mb-8"
             >
-              Edit Category
+              Add Category
             </DialogTitle>
-            <div className="flex flex-col gap-y-4">
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="flex flex-col gap-y-4"
+            >
               <LabelInput
                 label="Category Name"
                 labelProps={{
@@ -554,13 +655,14 @@ export const EditCategoryModal: React.FC<ModalProps> = ({ isOpen, close }) => {
                 }}
                 inputProps={{
                   className: "bg-[#201C3F] shadow-md text-sm",
+                  ...register("name"),
                 }}
               />
-              <InputImageUploadBox />
+              <InputImageUploadBox file={imageFile} setFile={setImageFile} />
               <button className="button-primary" onClick={close}>
                 Submit
               </button>
-            </div>
+            </form>
           </DialogPanel>
         </div>
       </div>
@@ -626,6 +728,40 @@ export const EditDeviceModal: React.FC<ModalProps> = ({ isOpen, close }) => {
 
 /* Edit staff ===========================================================>>>>> */
 export const EditStaffModal: React.FC<ModalProps> = ({ isOpen, close }) => {
+  type Inputs = {
+    email: string;
+    name: string;
+    role: string;
+  };
+  const { register, handleSubmit, control } = useForm<Inputs>();
+  const [imageFile, setImageFile] = useState<File | null>(null);
+
+  const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    try {
+      const formData = new FormData();
+      formData.append("email", data.email);
+      formData.append("username", data.name);
+      formData.append("role", data.role);
+      if (imageFile) formData.append("image", imageFile);
+
+      const response = await axiosInstance.post(
+        "/owners/chef-staff/",
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+
+      console.log(response.data);
+      toast.success(`${response.data?.role} Created successfully`);
+      close();
+    } catch (error) {
+      console.error("Failed:", error);
+      toast.error(error.response?.data?.email || "An error occurred");
+    }
+    0;
+  };
+
   return (
     <Dialog
       open={isOpen}
@@ -644,41 +780,42 @@ export const EditStaffModal: React.FC<ModalProps> = ({ isOpen, close }) => {
               as="h3"
               className="text-base/7 font-medium text-white mb-8"
             >
-              Edit Member
+              Create Member
             </DialogTitle>
-            <div className="flex flex-col gap-y-4">
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="flex flex-col gap-y-4"
+            >
               <LabelInput
                 label="Name"
-                labelProps={{
-                  className: "text-sm",
-                }}
+                labelProps={{ className: "text-sm" }}
                 inputProps={{
                   className: "bg-[#201C3F] shadow-md text-sm",
+                  ...register("name"),
                 }}
               />
               <LabelInput
                 label="Email"
-                labelProps={{
-                  className: "text-sm",
-                }}
+                labelProps={{ className: "text-sm" }}
                 inputProps={{
                   className: "bg-[#201C3F] shadow-md text-sm",
+                  ...register("email"),
                 }}
               />
               <LabelInput
                 label="Role"
-                labelProps={{
-                  className: "text-sm",
-                }}
+                labelProps={{ className: "text-sm" }}
                 inputProps={{
                   className: "bg-[#201C3F] shadow-md text-sm",
+                  ...register("role"),
                 }}
               />
-              <InputImageUploadBox />
-              <button className="button-primary" onClick={close}>
+              <InputImageUploadBox file={imageFile} setFile={setImageFile} />
+
+              <button type="submit" className="button-primary">
                 Submit
               </button>
-            </div>
+            </form>
           </DialogPanel>
         </div>
       </div>

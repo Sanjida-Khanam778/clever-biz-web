@@ -1,5 +1,5 @@
 import { SubmitHandler, useForm } from "react-hook-form";
-import { DateInput, LabelInput, PickCompanyLogo } from "../../components/input";
+import { LabelInput, PickCompanyLogo } from "../../components/input";
 import { useNavigate } from "react-router";
 import axiosInstance from "@/lib/axios";
 import toast from "react-hot-toast";
@@ -8,14 +8,11 @@ import { ImSpinner6 } from "react-icons/im";
 
 const ScreenRegister = () => {
   const [loading, setLoading] = useState(false);
-
   type Inputs = {
     customer_name: string;
     restaurant_name: string;
     location: string;
-    starting_date: string;
     phone_number: string;
-    package: string;
     company_logo: FileList | undefined;
     email: string;
     password: string;
@@ -24,23 +21,73 @@ const ScreenRegister = () => {
   const { register, handleSubmit, watch, setValue } = useForm<Inputs>();
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     setLoading(true);
+    console.log("Data sent :", data);
+
     try {
-      const payload = {
+      const formData = new FormData();
+      formData.append("email", data.email);
+      formData.append("password", data.password);
+      formData.append("username", data.customer_name);
+      formData.append("resturent_name", data.restaurant_name);
+      formData.append("location", data.location);
+      formData.append("phone_number", data.phone_number);
+
+      // Add image file if exists
+      if (data.company_logo && data.company_logo[0]) {
+        formData.append("image", data.company_logo[0]);
+      }
+
+      const res = await axiosInstance.post("/owners/register/", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      console.log(res.data);
+
+      const response = await axiosInstance.post("/login/", {
         email: data.email,
         password: data.password,
-      };
-      console.log(payload);
-      const res = await axiosInstance.post("/register/", payload);
+      });
+
+      const { access, refresh, user } = response.data;
+
+      // Store tokens if needed
+      localStorage.setItem("accessToken", access);
+      localStorage.setItem("refreshToken", refresh);
+      localStorage.setItem("userInfo", JSON.stringify(user));
+
+      // Redirect based on role
+      switch (user.role) {
+        case "chef":
+          navigate("/chef");
+          break;
+        case "staff":
+          navigate("/staff");
+          break;
+        case "owner":
+          navigate("/restaurant");
+          break;
+        case "admin":
+          navigate("/admin");
+          break;
+        default:
+          navigate("/");
+          break;
+      }
       setLoading(false);
-      console.log(res.data);
       toast.success("Registration successful!");
-      navigate("/login");
     } catch (error) {
       console.error("Registration failed:", error);
-      toast.error("Registration failed. Please try again.");
-      // Optional: toast or error message
+      toast.error(
+        error.response.data.phone_number[0] ||
+          error.response.data.email[0] ||
+          "Registration failed. Please try again."
+      );
+      setLoading(false);
     }
   };
+
   const logoFile: File | undefined = watch("company_logo")?.[0];
   return (
     <div className="bg-primary text-black p-8 rounded-xl shadow-lg w-full max-w-xl">
@@ -70,13 +117,7 @@ const ScreenRegister = () => {
             ...register("location"),
           }}
         />
-        <DateInput
-          label="Starting Date"
-          inputProps={{
-            id: "starting_date",
-            ...register("starting_date"),
-          }}
-        />
+
         <LabelInput
           label="Phone Number"
           inputProps={{
@@ -84,13 +125,13 @@ const ScreenRegister = () => {
             ...register("phone_number"),
           }}
         />
-        <LabelInput
+        {/* <LabelInput
           label="Package"
           inputProps={{
             id: "package",
             ...register("package"),
           }}
-        />
+        /> */}
         <PickCompanyLogo
           file={logoFile}
           label="Company Logo"

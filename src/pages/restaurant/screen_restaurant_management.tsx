@@ -30,22 +30,6 @@ export const ScreenRestaurantManagement = () => {
       password: null,
       action: "Hold",
     },
-    {
-      staffId: 4,
-      name: "Ruman uduk",
-      role: "Stuff",
-      email: null,
-      password: null,
-      action: "Hold",
-    },
-    {
-      staffId: 5,
-      name: "Ruman uduk",
-      role: "Stuff",
-      email: null,
-      password: null,
-      action: "Hold",
-    },
   ];
   const [staffModal, setShowStaffModal] = useState(false);
 

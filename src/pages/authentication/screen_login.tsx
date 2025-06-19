@@ -6,6 +6,8 @@ import { Link, useNavigate } from "react-router";
 import { LabelInput } from "../../components/input";
 import axiosInstance from "@/lib/axios";
 import toast from "react-hot-toast";
+import { useState } from "react";
+import { ImSpinner6 } from "react-icons/im";
 
 const ScreenLogin = () => {
   type Inputs = {
@@ -14,16 +16,22 @@ const ScreenLogin = () => {
     remember: boolean;
   };
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
   const { register, handleSubmit, control } = useForm<Inputs>();
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    setLoading(true);
     try {
       const response = await axiosInstance.post("/login/", {
         email: data.email,
         password: data.password,
       });
 
+      console.log(response.data);
+
       const { access, refresh, user } = response.data;
+      setLoading(false);
 
       // Store tokens if needed
       localStorage.setItem("accessToken", access);
@@ -38,7 +46,7 @@ const ScreenLogin = () => {
         case "staff":
           navigate("/staff");
           break;
-        case "restaurant":
+        case "owner":
           navigate("/restaurant");
           break;
         case "admin":
@@ -125,7 +133,13 @@ const ScreenLogin = () => {
         </div>
         <div className="text-center mt-8 mb-14">
           <button type="submit" className="button-primary px-14">
-            Login
+            {loading ? (
+              <span className="flex gap-3 items-center justify-center">
+                <ImSpinner6 className="animate-spin" /> Loading...
+              </span>
+            ) : (
+              "Login"
+            )}
           </button>
         </div>
         <div className="text-center flex justify-center items-center">
