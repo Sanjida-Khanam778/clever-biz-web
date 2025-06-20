@@ -22,38 +22,11 @@ export const ScreenRestaurantManagement = () => {
   const [member, setMember] = useState<Member[]>([]);
 
   const [staffModal, setShowStaffModal] = useState(false);
-  const staffData: StaffItem[] = [
-    {
-      staffId: 1,
-      name: "Nasi uduk",
-      role: "Chef",
-      email: "namehere@cleverbiz.com",
-      password: "aldsf;ljajdlfj",
-      action: "Active",
-    },
-    {
-      staffId: 2,
-      name: "Ruman uduk",
-      role: "Stuff",
-      email: null,
-      password: null,
-      action: "Hold",
-    },
-    {
-      staffId: 3,
-      name: "Ruman uduk",
-      role: "Stuff",
-      email: null,
-      password: null,
-      action: "Hold",
-    },
-  ];
+
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axiosInstance.get(
-          "http://192.168.10.150:8000/owners/chef-staff/"
-        );
+        const response = await axiosInstance.get("/owners/chef-staff/");
         setMember(response.data.results);
         console.log("------------------", response.data.results);
       } catch (error) {

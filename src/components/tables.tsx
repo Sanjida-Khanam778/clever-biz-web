@@ -187,7 +187,7 @@ export const TableTeamManagement: React.FC<TableTeamManagementProps> = ({
                     },
                   }}
                 />
-                }
+              }
             </td>
           </tr>
         ))}

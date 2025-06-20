@@ -667,6 +667,28 @@ export const EditCategoryModal: React.FC<ModalProps> = ({ isOpen, close }) => {
 
 /* Device Add/Edit Modal ===========================================================>>>>> */
 export const EditDeviceModal: React.FC<ModalProps> = ({ isOpen, close }) => {
+  const [loading, setLoading] = useState(false);
+
+  const [tableName, setTableName] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const response = await axiosInstance.post("/owners/devices/", {
+        table_name: tableName,
+      });
+
+      console.log("Response:", response.data);
+      close();
+    } catch (error) {
+      console.error("Error adding device:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Dialog
       open={isOpen}
@@ -685,31 +707,30 @@ export const EditDeviceModal: React.FC<ModalProps> = ({ isOpen, close }) => {
               as="h3"
               className="text-base/7 font-medium text-white mb-8"
             >
-              Edit Device
+              Add Device
             </DialogTitle>
-            <div className="flex flex-col gap-y-4">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-y-4">
               <LabelInput
                 label="Name"
                 labelProps={{
                   className: "text-sm",
                 }}
                 inputProps={{
-                  className: "bg-[#201C3F] shadow-md text-sm",
+                  className: "bg-[#201C3F] shadow-md text-sm text-white",
+                  value: tableName,
+                  onChange: (e) => setTableName(e.target.value),
+                  required: true,
                 }}
               />
-              <LabelInput
-                label="Table Number"
-                labelProps={{
-                  className: "text-sm",
-                }}
-                inputProps={{
-                  className: "bg-[#201C3F] shadow-md text-sm",
-                }}
-              />
-              <button className="button-primary" onClick={close}>
-                Submit
+
+              <button
+                type="submit"
+                className="button-primary"
+                disabled={loading}
+              >
+                {loading ? "Submitting..." : "Submit"}
               </button>
-            </div>
+            </form>
           </DialogPanel>
         </div>
       </div>
