@@ -19,9 +19,11 @@ const ScreenRestaurantReviews = () => {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const response = await axiosInstance.get(`/owners/reviews/?page=${page}`);
+        const response = await axiosInstance.get(
+          `/owners/reviews/?page=${page}`
+        );
         const { results, count, status } = response.data;
-console.log(response.data);
+        console.log(response.data);
         setReviews(results || []);
         setCount(count || 0);
         setStats({
@@ -67,7 +69,9 @@ console.log(response.data);
 
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-y-2 md:gap-y-0 my-4">
-        <h2 className="flex-1 text-2xl text-primary-text">Registered Device List</h2>
+        <h2 className="flex-1 text-2xl text-primary-text">
+          Registered Device List
+        </h2>
         <div className="flex-1 flex gap-x-4 justify-end">
           <DateSearchBox />
           <TextSearchBox placeholder="Search" />

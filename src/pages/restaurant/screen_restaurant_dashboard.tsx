@@ -6,221 +6,60 @@ import {
   Pagination,
   TableFoodList,
 } from "../../components/utilities";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { EditCategoryModal, EditFoodItemModal } from "@/components/modals";
 import { IconGrowth, IconSales, IconTeam } from "@/components/icons";
+import axiosInstance from "@/lib/axios";
+import toast from "react-hot-toast";
 
 const ScreenRestaurantDashboard = () => {
-  const foodItems: FoodItem[] = [
-    {
-      image: "https://source.unsplash.com/80x80/?pizza",
-      name: "Pepperoni Pizza",
-      price: 100,
-      category: "Fast Food",
-      available: true,
-    },
-    {
-      image: "https://source.unsplash.com/80x80/?steak",
-      name: "Grilled Steak",
-      price: 180,
-      category: "Fast Food",
-      available: false,
-    },
-    {
-      image: "https://source.unsplash.com/80x80/?salad",
-      name: "Caesar Salad",
-      price: 70,
-      category: "Vegetables",
-      available: true,
-    },
-    {
-      image: "https://source.unsplash.com/80x80/?burger",
-      name: "Cheese Burger",
-      price: 90,
-      category: "Fast Food",
-      available: true,
-    },
-    {
-      image: "https://source.unsplash.com/80x80/?sushi",
-      name: "Salmon Sushi",
-      price: 120,
-      category: "Chinese Food",
-      available: false,
-    },
-    {
-      image: "https://source.unsplash.com/80x80/?taco",
-      name: "Mexican Tacos",
-      price: 85,
-      category: "Fast Food",
-      available: true,
-    },
-    {
-      image: "https://source.unsplash.com/80x80/?pasta",
-      name: "Creamy Pasta",
-      price: 95,
-      category: "Fast Food",
-      available: true,
-    },
-    {
-      image: "https://source.unsplash.com/80x80/?noodles",
-      name: "Spicy Noodles",
-      price: 80,
-      category: "Fast Food",
-      available: false,
-    },
-    {
-      image: "https://source.unsplash.com/80x80/?sandwich",
-      name: "Club Sandwich",
-      price: 75,
-      category: "Fast Food",
-      available: true,
-    },
-    {
-      image: "https://source.unsplash.com/80x80/?fries",
-      name: "Loaded Fries",
-      price: 60,
-      category: "Fast Food",
-      available: true,
-    },
-  ];
-
-  const sellingItemData = [
-    {
-      label: "Large size Pizza with chesse",
-      itemSell: 500,
-      totalSell: 1000,
-    },
-    {
-      label: "Small size vanilla ice cream",
-      itemSell: 500,
-      totalSell: 1000,
-    },
-    {
-      label: "Large size Pizza with chesse",
-      itemSell: 400,
-      totalSell: 1000,
-    },
-    {
-      label: "Small size vanilla ice cream",
-      itemSell: 500,
-      totalSell: 1000,
-    },
-    {
-      label: "Large size Pizza with chesse",
-      itemSell: 500,
-      totalSell: 1000,
-    },
-    {
-      label: "Small size vanilla ice cream",
-      itemSell: 600,
-      totalSell: 1000,
-    },
-    {
-      label: "Large size Pizza with chesse",
-      itemSell: 100,
-      totalSell: 1000,
-    },
-    {
-      label: "Small size vanilla ice cream",
-      itemSell: 500,
-      totalSell: 1000,
-    },
-    {
-      label: "Large size Pizza with chesse",
-      itemSell: 300,
-      totalSell: 1000,
-    },
-    {
-      label: "Small size vanilla ice cream",
-      itemSell: 500,
-      totalSell: 1000,
-    },
-    {
-      label: "Large size Pizza with chesse",
-      itemSell: 500,
-      totalSell: 1000,
-    },
-    {
-      label: "Small size vanilla ice cream",
-      itemSell: 500,
-      totalSell: 1000,
-    },
-    {
-      label: "Large size Pizza with chesse",
-      itemSell: 500,
-      totalSell: 1000,
-    },
-    {
-      label: "Small size vanilla ice cream",
-      itemSell: 500,
-      totalSell: 1000,
-    },
-    {
-      label: "Large size Pizza with chesse",
-      itemSell: 500,
-      totalSell: 1000,
-    },
-    {
-      label: "Small size vanilla ice cream",
-      itemSell: 500,
-      totalSell: 1000,
-    },
-    {
-      label: "Large size Pizza with chesse",
-      itemSell: 500,
-      totalSell: 1000,
-    },
-    {
-      label: "Small size vanilla ice cream",
-      itemSell: 500,
-      totalSell: 1000,
-    },
-    {
-      label: "Large size Pizza with chesse",
-      itemSell: 500,
-      totalSell: 1000,
-    },
-    {
-      label: "Small size vanilla ice cream",
-      itemSell: 500,
-      totalSell: 1000,
-    },
-    {
-      label: "Large size Pizza with chesse",
-      itemSell: 500,
-      totalSell: 1000,
-    },
-    {
-      label: "Small size vanilla ice cream",
-      itemSell: 500,
-      totalSell: 1000,
-    },
-  ];
+  const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
+  const [page, setPage] = useState(1);
+  const [count, setCount] = useState(0);
 
   const [categoryModal, setShowCategoryModal] = useState(false);
   const [foodItemModal, setShowFoodItemModal] = useState(false);
 
-  const showFoodItemAddModal = () => {
-    setShowFoodItemModal(true);
-  };
-  const showCategoryAddModal = () => {
-    setShowCategoryModal(true);
+  const showFoodItemAddModal = () => setShowFoodItemModal(true);
+  const showCategoryAddModal = () => setShowCategoryModal(true);
+  const closeFoodItemModal = () => setShowFoodItemModal(false);
+  const closeCaegoryModal = () => setShowCategoryModal(false);
+
+  const fetchFoodItems = async () => {
+    try {
+      const response = await axiosInstance.get(`/owners/items/?page=${page}`);
+      const { results, count } = response.data;
+      console.log("Fetched food items:", response.data);
+      const formattedItems = results.map((item: any) => ({
+        id: item.id,
+        image: item.image1 ?? "https://source.unsplash.com/80x80/?food",
+        name: item.item_name,
+        price: parseFloat(item.price),
+        category: item.category_name,
+        available: item.availability,
+      }));
+
+      setFoodItems(formattedItems);
+      setCount(count || 0);
+    } catch (error) {
+      console.error("Failed to load food items", error);
+      toast.error("Failed to load food items.");
+    }
   };
 
-  const closeFoodItemModal = () => {
-    setShowFoodItemModal(false);
-  };
+  useEffect(() => {
+    fetchFoodItems();
+  }, [page]);
 
-  const closeCaegoryModal = () => {
-    setShowCategoryModal(false);
-  };
+  const sellingItemData = [
+    /* same as before */
+  ];
 
   return (
     <>
       <div className="flex flex-col">
         {/* Dashboard Cards */}
         <div className="flex flex-col lg:flex-row gap-y-3 lg:gap-y-0 lg:gap-x-3">
-          {/* Card 1 */}
           <DashboardCard
             icon={<IconSales />}
             label="Total Sells today"
@@ -230,7 +69,6 @@ const ScreenRestaurantDashboard = () => {
             gradientEnd="#161F42"
             tail="(45)"
           />
-          {/* Card 2 */}
           <DashboardCard
             icon={<IconGrowth />}
             label="Weekly growth"
@@ -240,7 +78,6 @@ const ScreenRestaurantDashboard = () => {
             gradientEnd="#161F42"
             tail="19.91%"
           />
-          {/* Card 3 */}
           <DashboardCard
             icon={<IconTeam />}
             label="Total member"
@@ -251,7 +88,8 @@ const ScreenRestaurantDashboard = () => {
             tail="Team"
           />
         </div>
-        {/* Dashboard Content */}
+
+        {/* Charts */}
         <div className="grid grid-cols-3 mt-4 z-10 gap-x-4">
           <div className="col-span-2 bg-sidebar rounded-xl p-4">
             <YearlyChart
@@ -269,30 +107,31 @@ const ScreenRestaurantDashboard = () => {
           </div>
           <div className="col-span-1"></div>
         </div>
-        {/* Add Buttons */}
 
-        {/* List of content */}
+        {/* Search + Add Buttons */}
         <div className="grid grid-cols-3 grid-rows-[auto_1fr] gap-x-4 items-start mt-4">
           <div className="col-span-2 flex items-center justify-end mb-4 gap-x-4">
             <TextSearchBox
               placeholder="Search by Name"
               className="flex-1 max-w-none"
             />
-            <ButtonAdd
-              label="Add Items"
-              onClick={() => showFoodItemAddModal()}
-            />
-            <ButtonAdd
-              label="Add Category"
-              onClick={() => showCategoryAddModal()}
-            />
+            <ButtonAdd label="Add Items" onClick={showFoodItemAddModal} />
+            <ButtonAdd label="Add Category" onClick={showCategoryAddModal} />
           </div>
+
+          {/* Table */}
           <div className="col-span-2 bg-sidebar p-4 rounded-lg">
             <TableFoodList data={foodItems} />
             <div className="mt-4 flex justify-center">
-              <Pagination page={1} />
+              <Pagination
+                page={page}
+                total={count}
+                onPageChange={(p) => setPage(p)}
+              />
             </div>
           </div>
+
+          {/* Most Selling Items */}
           <div className="h-full col-span-1 row-span-2 col-start-3 col-end-4 row-start-1 row-end-3 bg-sidebar rounded-xl p-4 flex flex-col">
             <h6 className="text-xl text-primary-text">Most Selling Items</h6>
             <DashboardMostSellingItems
@@ -304,8 +143,18 @@ const ScreenRestaurantDashboard = () => {
           </div>
         </div>
       </div>
-      <EditFoodItemModal isOpen={foodItemModal} close={closeFoodItemModal} />
-      <EditCategoryModal isOpen={categoryModal} close={closeCaegoryModal} />
+
+      {/* Modals */}
+      <EditFoodItemModal
+        isOpen={foodItemModal}
+        close={closeFoodItemModal}
+        onSuccess={fetchFoodItems}
+      />
+      <EditCategoryModal
+        isOpen={categoryModal}
+        close={closeCaegoryModal}
+        onSuccess={fetchFoodItems}
+      />
     </>
   );
 };

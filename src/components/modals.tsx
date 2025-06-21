@@ -30,78 +30,138 @@ import { useEffect, useState } from "react";
 import { set, SubmitHandler, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import axiosInstance from "@/lib/axios";
+import { ImSpinner6 } from "react-icons/im";
+import { useOwner } from "@/context/ownerContext";
+import { FiX } from "react-icons/fi";
 
 /* Edit food item dialog ===========================================================>>>>> */
 type ModalProps = {
   isOpen: boolean;
   close: () => void;
+  id?: number | null;
+  onSuccess: () => void;
 };
 
-export const EditFoodItemModal: React.FC<ModalProps> = ({ isOpen, close }) => {
+export const EditFoodItemModal: React.FC<ModalProps> = ({
+  isOpen,
+  close,
+  id,
+  onSuccess,
+}) => {
   type Inputs = {
     price: string;
     name: string;
     category: string;
     description: string;
   };
-
-  const { register, handleSubmit, reset } = useForm<Inputs>();
+  const { categories, fetchCategories } = useOwner();
+  const { register, handleSubmit, reset, setValue } = useForm<Inputs>();
+  const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [existingImage, setExistingImage] = useState<string | null>(null);
+  const [existingVideo, setExistingVideo] = useState<string | null>(null);
 
-  const [categories, setCategories] = useState<
-    { id: number; Category_name: string }[]
-  >([]);
-
+  // Load categories
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await axiosInstance.get(
-          "http://192.168.10.150:8000/owners/categories/"
-        );
-        setCategories(response.data.results);
-        console.log("------------------", response.data);
-      } catch (error) {
-        console.error("Failed to load categories", error);
-        toast.error("Failed to load categories.");
-      }
-    };
-
     fetchCategories();
   }, []);
 
-  const onSubmit: SubmitHandler<Inputs> = async (data) => {
-    console.log("Submitted data:", data);
-    if (!imageFile) return toast.error("Please upload an image.");
-    if (!videoFile) return toast.error("Please upload a video.");
+  // Load single food item data if in edit mode
+  useEffect(() => {
+    if (id) {
+      const fetchItem = async () => {
+        try {
+          const res = await axiosInstance.get(
+            `http://192.168.10.150:8000/owners/items/${id}/`
+          );
+          const item = res.data;
+          console.log(item);
+          reset({
+            name: item.item_name,
+            price: item.price,
+            category: item.category.toString(),
+            description: item.description,
+          });
+          // Set existing media files
+          if (item.image1) {
+            setExistingImage(item.image1);
+          }
+          if (item.video) {
+            setExistingVideo(item.video);
+          }
+        } catch (err) {
+          console.error("Failed to load item for edit", err);
+          toast.error("Failed to load item.");
+        }
+      };
+      fetchItem();
+    } else {
+      reset(); // clear form for create mode
+      setImageFile(null);
+      setVideoFile(null);
+      setExistingImage(null);
+      setExistingVideo(null);
+    }
+  }, [id, reset]);
 
+  const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    setLoading(true);
     const formData = new FormData();
     formData.append("item_name", data.name);
     formData.append("price", data.price.toString());
     formData.append("category", data.category);
     formData.append("description", data.description);
-    formData.append("image1", imageFile);
-    formData.append("video", videoFile);
+
+    if (imageFile) formData.append("image1", imageFile);
+    if (videoFile) formData.append("video", videoFile);
 
     try {
-      const response = await axiosInstance.post(
-        "http://192.168.10.150:8000/owners/items/",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
+      if (id) {
+        // For edit mode, check if we have any media (new or existing)
+        if (!imageFile && !existingImage) {
+          setLoading(false);
+          return toast.error(
+            "Please upload an image or keep the existing one."
+          );
         }
-      );
-      console.log("Food item created:", response.data);
-      toast.success("Food item created successfully!");
+        if (!videoFile && !existingVideo) {
+          setLoading(false);
+          return toast.error("Please upload a video or keep the existing one.");
+        }
+
+        const res = await axiosInstance.patch(
+          `http://192.168.10.150:8000/owners/items/${id}/`,
+          formData,
+          { headers: { "Content-Type": "multipart/form-data" } }
+        );
+        setLoading(false);
+        toast.success("Food item updated successfully!");
+      } else {
+        // For create mode, require both image and video
+        if (!imageFile) return toast.error("Please upload an image.");
+        if (!videoFile) return toast.error("Please upload a video.");
+
+        const res = await axiosInstance.post(
+          "http://192.168.10.150:8000/owners/items/",
+          formData,
+          { headers: { "Content-Type": "multipart/form-data" } }
+        );
+        setLoading(false);
+        toast.success("Food item created successfully!");
+      }
+      setLoading(false);
       reset();
       setImageFile(null);
       setVideoFile(null);
-      close();
-    } catch (error) {
-      console.error("Error creating food item:", error);
-      toast.error("Failed to create food item.");
+      setExistingImage(null);
+      setExistingVideo(null);
+      onSuccess(); // table refresh
+      close(); // modal close
+    } catch (err) {
+      setLoading(false);
+      console.error("Failed to submit item", err);
+      toast.error("Failed to submit item.");
     }
   };
 
@@ -112,7 +172,7 @@ export const EditFoodItemModal: React.FC<ModalProps> = ({ isOpen, close }) => {
         <div className="flex min-h-full items-center justify-center p-4">
           <DialogPanel className="w-full max-w-xl rounded-xl bg-sidebar/80 p-6 backdrop-blur-xl">
             <DialogTitle className="text-base font-medium text-white mb-8">
-              Edit Food Item
+              {id ? "Edit Food Item" : "Add New Food Item"}
             </DialogTitle>
             <form
               onSubmit={handleSubmit(onSubmit)}
@@ -165,11 +225,64 @@ export const EditFoodItemModal: React.FC<ModalProps> = ({ isOpen, close }) => {
                   ...register("description", { required: true }),
                 }}
               />
-              <InputImageUploadBox file={imageFile} setFile={setImageFile} />
-              <InputVideoUploadBox file={videoFile} setFile={setVideoFile} />
 
+              {/* Show existing image if editing */}
+              {existingImage && !imageFile && (
+                <div className="space-y-4">
+                  <label className="block text-primary-text text-sm font-medium">
+                    Current Image
+                  </label>
+                  <div className="relative mt-4 inline-block">
+                    <img
+                      src={existingImage}
+                      alt="Current image"
+                      className="rounded-md max-h-60 object-contain border border-gray-600"
+                    />
+                    <button
+                      onClick={() => setExistingImage(null)}
+                      className="absolute top-1 right-1 p-1 bg-black bg-opacity-60 text-white rounded-full"
+                    >
+                      <FiX className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <InputImageUploadBox file={imageFile} setFile={setImageFile} />
+
+              {/* Show existing video if editing */}
+              {existingVideo && !videoFile && (
+                <div className="space-y-4">
+                  <label className="block text-primary-text text-sm font-medium">
+                    Current Video
+                  </label>
+                  <div className="relative mt-4 inline-block">
+                    <video
+                      src={existingVideo}
+                      controls
+                      className="rounded-md max-h-60 object-contain border border-gray-600"
+                    />
+                    <button
+                      onClick={() => setExistingVideo(null)}
+                      className="absolute top-1 right-1 p-1 bg-black bg-opacity-60 text-white rounded-full"
+                    >
+                      <FiX className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <InputVideoUploadBox file={videoFile} setFile={setVideoFile} />
               <button className="button-primary" type="submit">
-                Submit
+                {loading ? (
+                  <span className="flex gap-3 items-center justify-center">
+                    <ImSpinner6 className="animate-spin" /> Loading...
+                  </span>
+                ) : id ? (
+                  "Update"
+                ) : (
+                  "Submit"
+                )}
               </button>
             </form>
           </DialogPanel>
@@ -589,10 +702,19 @@ export const ModalAddSubscriber: React.FC<ModalProps> = ({ isOpen, close }) => {
 /* <<<<<<<<===================================================== Add Subscriber Modal */
 
 /* Category Add/Edit Modal ===========================================================>>>>> */
-export const EditCategoryModal: React.FC<ModalProps> = ({ isOpen, close }) => {
-  const { handleSubmit, register, reset } = useForm<Inputs>();
+type CategoryInputs = {
+  name: string;
+};
+
+export const EditCategoryModal: React.FC<ModalProps> = ({
+  isOpen,
+  close,
+  onSuccess,
+}) => {
+  const { fetchCategories } = useOwner();
+  const { handleSubmit, register, reset } = useForm<CategoryInputs>();
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const onSubmit: SubmitHandler<Inputs> = async (data) => {
+  const onSubmit: SubmitHandler<CategoryInputs> = async (data) => {
     try {
       const formData = new FormData();
       formData.append("Category_name", data.name);
@@ -605,17 +727,17 @@ export const EditCategoryModal: React.FC<ModalProps> = ({ isOpen, close }) => {
           headers: { "Content-Type": "multipart/form-data" },
         }
       );
-
+      fetchCategories();
       console.log(response.data);
       toast.success("Category Created successfully");
       reset();
       setImageFile(null);
+      onSuccess();
       close();
     } catch (error) {
       console.error("Failed:", error);
       toast.error("An error occurred");
     }
-    0;
   };
   return (
     <Dialog

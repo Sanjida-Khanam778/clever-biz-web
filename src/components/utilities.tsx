@@ -24,6 +24,8 @@ import food from "../assets/food.webp";
 import { Progress } from "./ui/progress";
 import profile from "../assets/trailing-icon.png";
 import { Link } from "react-router";
+import toast from "react-hot-toast";
+import axiosInstance from "@/lib/axios";
 
 /* Logo Component */
 type LogoProps = {
@@ -656,6 +658,21 @@ interface TableFoodListProps {
 export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
   const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
+  const [id, setId] = useState(null);
+  const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
+
+  const fetchFoodItems = async () => {
+    try {
+      const res = await axiosInstance.get("/owners/items/");
+      setFoodItems(res.data.results);
+    } catch (error) {
+      toast.error("Failed to fetch food items.");
+    }
+  };
+
+  useEffect(() => {
+    fetchFoodItems();
+  }, []);
 
   function openDelete() {
     setDeleteDialogOpen(true);
@@ -664,7 +681,9 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
   function closeDelete() {
     setDeleteDialogOpen(false);
   }
-  function openEdit() {
+  function openEdit(id: number) {
+    console.log(id, "iddd");
+    setId(id);
     setEditDialogOpen(true);
   }
 
@@ -696,11 +715,11 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
           </tr>
         </thead>
         <tbody className="bg-sidebar text-sm">
-          {data.map((item, index) => (
+          {data?.map((item, index) => (
             <tr key={index} className="border-b border-[#1C1E3C]">
               <td className="p-4">
                 <img
-                  src={food}
+                  src={item.image}
                   alt="Food Item"
                   className="bg-dashboard/50 w-12 h-12 rounded-md"
                 />
@@ -710,7 +729,7 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
               <td className="p-4 text-primary-text">{item.price}</td>
               <td className="h-20 p-4 flex gap-x-4 items-center">
                 <button
-                  onClick={openEdit}
+                  onClick={() => openEdit(item?.id)}
                   className="text-blue-100 hover:text-blue-600"
                 >
                   <IconEdit className="h-6 w-6" />
@@ -741,7 +760,12 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
           ))}
         </tbody>
       </table>
-      <EditFoodItemModal isOpen={isEditDialogOpen} close={closeEdit} />
+      <EditFoodItemModal
+        isOpen={isEditDialogOpen}
+        close={closeEdit}
+        id={id}
+        onSuccess={fetchFoodItems}
+      />
       <DeleteFoodItemModal isOpen={isDeleteDialogOpen} close={closeDelete} />
     </>
   );
