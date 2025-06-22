@@ -24,6 +24,24 @@ interface FoodItem {
   available: boolean;
 }
 
+// Define order item type
+interface OrderItem {
+  id: number;
+  userName: string;
+  guestNo: number;
+  tableNo: string;
+  orderedItems: number;
+  timeOfOrder: string;
+  orderId: string;
+  status:
+    | "Pending"
+    | "Completed"
+    | "Delivered"
+    | "Cancelled"
+    | "In Progress"
+    | "Processing";
+}
+
 // Define the context type
 interface OwnerContextType {
   categories: Category[];
@@ -31,13 +49,22 @@ interface OwnerContextType {
   foodItemsCount: number;
   currentPage: number;
   searchQuery: string;
+  orders: OrderItem[];
+  ordersCount: number;
+  ordersCurrentPage: number;
+  ordersSearchQuery: string;
   fetchCategories: () => Promise<void>;
   fetchFoodItems: (page?: number, search?: string) => Promise<void>;
+  fetchOrders: (page?: number, search?: string) => Promise<void>;
   updateFoodItem: (id: number, formData: FormData) => Promise<void>;
   createFoodItem: (formData: FormData) => Promise<void>;
   deleteFoodItem: (id: number) => Promise<void>;
+  updateAvailability: (id: number, available: boolean) => Promise<void>;
+  updateOrderStatus: (id: number, status: string) => Promise<void>;
   setCurrentPage: (page: number) => void;
   setSearchQuery: (query: string) => void;
+  setOrdersCurrentPage: (page: number) => void;
+  setOrdersSearchQuery: (query: string) => void;
 }
 
 // Create the context
@@ -54,6 +81,10 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
   const [foodItemsCount, setFoodItemsCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
+  const [orders, setOrders] = useState<OrderItem[]>([]);
+  const [ordersCount, setOrdersCount] = useState(0);
+  const [ordersCurrentPage, setOrdersCurrentPage] = useState(1);
+  const [ordersSearchQuery, setOrdersSearchQuery] = useState("");
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -90,6 +121,36 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
       } catch (error) {
         console.error("Failed to load food items", error);
         toast.error("Failed to load food items.");
+      }
+    },
+    []
+  );
+
+  const fetchOrders = useCallback(
+    async (page: number = ordersCurrentPage, search?: string) => {
+      try {
+        const response = await axiosInstance.get(
+          `/owners/orders/?page=${page}&search=${search || ""}`
+        );
+        const { results, count } = response.data;
+        console.log("Fetched orders:", response.data);
+        const formattedOrders = results.orders?.map((item: any) => ({
+          id: item.id,
+          userName: item.userName,
+          guestNo: item.guestNo,
+          tableNo: item.tableNo,
+          orderedItems: item.orderedItems,
+          timeOfOrder: item.timeOfOrder,
+          orderId: item.orderId,
+          status: item.status,
+        }));
+
+        setOrders(formattedOrders);
+        setOrdersCount(count || 0);
+        setOrdersCurrentPage(page);
+      } catch (error) {
+        console.error("Failed to load orders", error);
+        toast.error("Failed to load orders.");
       }
     },
     []
@@ -147,19 +208,64 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
     [fetchFoodItems, currentPage, searchQuery]
   );
 
+  const updateAvailability = useCallback(
+    async (id: number, available: boolean) => {
+      try {
+        await axiosInstance.patch(`/owners/items/${id}/`, {
+          availability: available.toString(),
+        });
+        toast.success("Food item availability updated successfully!");
+        // Refresh the current page to show updated data
+        await fetchFoodItems(currentPage, searchQuery);
+      } catch (err) {
+        console.error("Failed to update food item availability", err);
+        toast.error("Failed to update food item availability.");
+        throw err;
+      }
+    },
+    [fetchFoodItems, currentPage, searchQuery]
+  );
+
+  const updateOrderStatus = useCallback(
+    async (id: number, status: string) => {
+      try {
+        await axiosInstance.patch(`/owners/orders/${id}/`, {
+          status: status,
+        });
+        toast.success("Order status updated successfully!");
+        // Refresh the current page to show updated data
+        await fetchOrders(ordersCurrentPage, ordersSearchQuery);
+      } catch (err) {
+        console.error("Failed to update order status", err);
+        toast.error("Failed to update order status.");
+        throw err;
+      }
+    },
+    [fetchOrders, ordersCurrentPage, ordersSearchQuery]
+  );
+
   const value: OwnerContextType = {
     categories,
     foodItems,
     foodItemsCount,
     currentPage,
     searchQuery,
+    orders,
+    ordersCount,
+    ordersCurrentPage,
+    ordersSearchQuery,
     fetchCategories,
     fetchFoodItems,
+    fetchOrders,
     updateFoodItem,
     createFoodItem,
     deleteFoodItem,
+    updateAvailability,
+    updateOrderStatus,
     setCurrentPage,
     setSearchQuery,
+    setOrdersCurrentPage,
+    setOrdersSearchQuery,
   };
 
   return (

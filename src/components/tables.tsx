@@ -5,10 +5,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { IconCheckmark, IconClose, IconHold } from "./icons";
-import { ButtonStatus, StatusSpan } from "./input";
+import { ButtonStatus as InputButtonStatus, StatusSpan } from "./input";
 import { TooltipTop } from "./utilities";
 import { BiCopy, BiMailSend } from "react-icons/bi";
 import { useState } from "react";
+import { useOwner } from "@/context/ownerContext";
 
 /* Reservation Table Data ===========================================================>>>>> */
 
@@ -311,7 +312,16 @@ interface TableFoodOrderListProps {
 export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
   data,
 }) => {
-  const statuses = ["Processing", "Delivered", "Canceled", "Pending"];
+  const statuses = ["Processing", "Delivered", "Cancelled", "Pending"];
+  const { updateOrderStatus } = useOwner();
+
+  const handleStatusChange = async (orderId: number, newStatus: string) => {
+    try {
+      await updateOrderStatus(orderId, newStatus);
+    } catch (error) {
+      console.error("Failed to update order status:", error);
+    }
+  };
 
   return (
     <table className="w-full table-auto text-left clever-table">
@@ -336,51 +346,37 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
             <td className="p-4 text-primary-text">{item.timeOfOrder}</td>
             <td className="p-4 text-primary-text">{item.orderId}</td>
             <td className="p-4 text-primary-text">
-              {item.status.toLocaleLowerCase() === "processing" ? (
-                <ButtonStatus
-                  status="Processing"
-                  properties={{
-                    Processing: {
-                      bg: "bg-blue-800",
-                      text: "text-blue-300",
-                    },
-                  }}
-                  availableStatuses={statuses}
-                />
-              ) : item.status.toLocaleLowerCase() === "delivered" ? (
-                <ButtonStatus
-                  status="Delivered"
-                  properties={{
-                    Delivered: {
-                      bg: "bg-green-800",
-                      text: "text-green-300",
-                    },
-                  }}
-                  availableStatuses={statuses}
-                />
-              ) : item.status.toLocaleLowerCase() === "canceled" ? (
-                <ButtonStatus
-                  status="Canceled"
-                  properties={{
-                    Canceled: {
-                      bg: "bg-red-800",
-                      text: "text-red-300",
-                    },
-                  }}
-                  availableStatuses={statuses}
-                />
-              ) : (
-                <ButtonStatus
-                  status="Pending"
-                  properties={{
-                    Pending: {
-                      bg: "bg-yellow-800",
-                      text: "text-yellow-300",
-                    },
-                  }}
-                  availableStatuses={statuses}
-                />
-              )}
+              <ButtonStatus
+                status={item.status}
+                properties={{
+                  Processing: {
+                    bg: "bg-blue-800",
+                    text: "text-blue-300",
+                  },
+                  Delivered: {
+                    bg: "bg-green-800",
+                    text: "text-green-300",
+                  },
+                  Cancelled: {
+                    bg: "bg-red-800",
+                    text: "text-red-300",
+                  },
+                  Pending: {
+                    bg: "bg-yellow-800",
+                    text: "text-yellow-300",
+                  },
+                  "In Progress": {
+                    bg: "bg-blue-800",
+                    text: "text-blue-300",
+                  },
+                  Completed: {
+                    bg: "bg-green-800",
+                    text: "text-green-300",
+                  },
+                }}
+                availableStatuses={statuses}
+                onChange={(newStatus) => handleStatusChange(item.id, newStatus)}
+              />
             </td>
           </tr>
         ))}

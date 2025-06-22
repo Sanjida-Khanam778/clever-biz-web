@@ -26,6 +26,7 @@ import profile from "../assets/trailing-icon.png";
 import { Link } from "react-router";
 import toast from "react-hot-toast";
 import axiosInstance from "@/lib/axios";
+import { useOwner } from "@/context/ownerContext";
 
 /* Logo Component */
 type LogoProps = {
@@ -706,6 +707,7 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
   const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
+  const { updateAvailability } = useOwner();
 
   function openDelete(id: number) {
     setSelectedItemId(id);
@@ -727,6 +729,18 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
     setEditDialogOpen(false);
     setSelectedItemId(null);
   }
+
+  const handleAvailabilityChange = async (
+    itemId: number,
+    newStatus: string
+  ) => {
+    const available = newStatus === "Available";
+    try {
+      await updateAvailability(itemId, available);
+    } catch (error) {
+      console.error("Failed to update availability:", error);
+    }
+  };
 
   const contextStatuses = ["Available", "Unavailable"];
   const contextProperties = {
@@ -781,19 +795,14 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
                 </button>
               </td>
               <td className="p-4">
-                {item.available ? (
-                  <ButtonStatus
-                    status="Available"
-                    properties={contextProperties}
-                    availableStatuses={contextStatuses}
-                  />
-                ) : (
-                  <ButtonStatus
-                    status="Unavailable"
-                    properties={contextProperties}
-                    availableStatuses={contextStatuses}
-                  />
-                )}
+                <ButtonStatus
+                  status={item.available ? "Available" : "Unavailable"}
+                  properties={contextProperties}
+                  availableStatuses={contextStatuses}
+                  onChange={(newStatus) =>
+                    handleAvailabilityChange(item.id, newStatus)
+                  }
+                />
               </td>
             </tr>
           ))}
