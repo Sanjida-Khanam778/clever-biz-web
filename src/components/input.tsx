@@ -786,22 +786,38 @@ export const DateSearchBox = () => {
 /* <<<<<<<<===================================================== Date picker input */
 
 /* Text Search Box ===========================================================>>>>> */
-interface TextSearchBoxProps extends React.HTMLAttributes<HTMLDivElement> {
+interface TextSearchBoxProps
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange"> {
   placeholder?: string;
+  value?: string;
+  onChange?: (value: string) => void;
 }
 export const TextSearchBox = ({
   placeholder = "Search...",
   className,
+  value = "",
+  onChange,
 }: TextSearchBoxProps) => {
-  const [value, setValue] = useState("");
+  const [internalValue, setInternalValue] = useState(value);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setInternalValue(newValue);
+    onChange?.(newValue);
+  };
+
+  // Update internal value when prop changes
+  useEffect(() => {
+    setInternalValue(value);
+  }, [value]);
 
   return (
     <div className={cn("w-full max-w-sm h-14", className)}>
       <div className="h-14 flex items-center bg-sidebar text-primary-text rounded-lg overflow-hidden shadow-md">
         <input
           type="text"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
+          value={internalValue}
+          onChange={handleChange}
           placeholder={placeholder}
           className="w-full h-full px-4 text-sm bg-transparent text-primary-text placeholder:text-primary-text/70 focus:outline-none"
         />

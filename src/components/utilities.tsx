@@ -705,24 +705,27 @@ interface TableFoodListProps {
 export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
   const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
-  const [id, setId] = useState(null);
+  const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
 
-  function openDelete() {
+  function openDelete(id: number) {
+    setSelectedItemId(id);
     setDeleteDialogOpen(true);
   }
 
   function closeDelete() {
     setDeleteDialogOpen(false);
+    setSelectedItemId(null);
   }
 
   function openEdit(id: number) {
     console.log(id, "iddd");
-    setId(id);
+    setSelectedItemId(id);
     setEditDialogOpen(true);
   }
 
   function closeEdit() {
     setEditDialogOpen(false);
+    setSelectedItemId(null);
   }
 
   const contextStatuses = ["Available", "Unavailable"];
@@ -771,7 +774,7 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
                   <IconEdit className="h-6 w-6" />
                 </button>
                 <button
-                  onClick={openDelete}
+                  onClick={() => openDelete(item?.id)}
                   className="text-red-400 hover:text-red-600"
                 >
                   <IconDelete className="h-6 w-6" />
@@ -796,8 +799,16 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
           ))}
         </tbody>
       </table>
-      <EditFoodItemModal isOpen={isEditDialogOpen} close={closeEdit} id={id} />
-      <DeleteFoodItemModal isOpen={isDeleteDialogOpen} close={closeDelete} />
+      <EditFoodItemModal
+        isOpen={isEditDialogOpen}
+        close={closeEdit}
+        id={selectedItemId}
+      />
+      <DeleteFoodItemModal
+        isOpen={isDeleteDialogOpen}
+        close={closeDelete}
+        id={selectedItemId}
+      />
     </>
   );
 };

@@ -6,7 +6,7 @@ import {
   Pagination,
   TableFoodList,
 } from "../../components/utilities";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { EditCategoryModal, EditFoodItemModal } from "@/components/modals";
 import { IconGrowth, IconSales, IconTeam } from "@/components/icons";
 import { useOwner } from "@/context/ownerContext";
@@ -16,25 +16,42 @@ const ScreenRestaurantDashboard = () => {
     foodItems,
     foodItemsCount,
     currentPage,
+    searchQuery,
     fetchFoodItems,
     setCurrentPage,
+    setSearchQuery,
   } = useOwner();
 
   const [categoryModal, setShowCategoryModal] = useState(false);
   const [foodItemModal, setShowFoodItemModal] = useState(false);
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
 
   const showFoodItemAddModal = () => setShowFoodItemModal(true);
   const showCategoryAddModal = () => setShowCategoryModal(true);
   const closeFoodItemModal = () => setShowFoodItemModal(false);
   const closeCaegoryModal = () => setShowCategoryModal(false);
 
-  // Load food items on component mount and when page changes
+  // Debounced search effect
   useEffect(() => {
-    fetchFoodItems(currentPage);
-  }, [currentPage, fetchFoodItems]);
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Load food items on component mount and when page or debounced search changes
+  useEffect(() => {
+    fetchFoodItems(currentPage, debouncedSearchQuery);
+  }, [currentPage, debouncedSearchQuery, fetchFoodItems]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1); // Reset to first page when searching
   };
 
   const sellingItemData = [
@@ -100,6 +117,8 @@ const ScreenRestaurantDashboard = () => {
             <TextSearchBox
               placeholder="Search by Name"
               className="flex-1 max-w-none"
+              value={searchQuery}
+              onChange={handleSearch}
             />
             <ButtonAdd label="Add Items" onClick={showFoodItemAddModal} />
             <ButtonAdd label="Add Category" onClick={showCategoryAddModal} />

@@ -285,12 +285,38 @@ export const EditFoodItemModal: React.FC<ModalProps> = ({
 };
 
 /* <<<<<<<<===================================================== Edit food item dialog */
-type DeleteFoodItemModalProps = ModalProps & {};
+
+/* Delete food item dialog ===========================================================>>>>> */
+type DeleteFoodItemModalProps = ModalProps & {
+  id?: number | null;
+};
 
 export const DeleteFoodItemModal: React.FC<DeleteFoodItemModalProps> = ({
   isOpen,
   close,
+  id,
 }) => {
+  const { deleteFoodItem } = useOwner();
+  const [loading, setLoading] = useState(false);
+
+  const handleDelete = async () => {
+    if (!id) {
+      toast.error("No item selected for deletion.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await deleteFoodItem(id);
+      close();
+    } catch (err) {
+      console.error("Failed to delete item", err);
+      // Error handling is done in the context function
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Dialog
       open={isOpen}
@@ -306,17 +332,33 @@ export const DeleteFoodItemModal: React.FC<DeleteFoodItemModalProps> = ({
             className="w-full max-w-md rounded-xl bg-sidebar/80 p-6 backdrop-blur-2xl duration-300 ease-out data-[closed]:transform-[scale(95%)] data-[closed]:opacity-0"
           >
             <DialogTitle as="h3" className="text-base/7 font-medium text-white">
-              Warning
+              Delete Food Item
             </DialogTitle>
             <p className="mt-2 text-sm/6 text-white/50">
-              Do you want to Delete item?
+              Are you sure you want to delete this food item? This action cannot
+              be undone.
             </p>
-            <div className="mt-4 flex justify-end">
+            <div className="mt-6 flex justify-end gap-3">
               <button
-                className="button-primary inline-flex items-center gap-2 rounded-md py-1.5 px-3 text-sm/6 font-semibold text-white shadow-inner shadow-white/5 focus:outline-none data-[hover]:bg-gray-600 data-[focus]:outline-1 data-[focus]:outline-white data-[open]:bg-gray-700"
+                className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
                 onClick={close}
+                disabled={loading}
               >
-                Confirm
+                Cancel
+              </button>
+              <button
+                className="button-primary inline-flex items-center gap-2 rounded-md py-2 px-4 text-sm/6 font-semibold text-white shadow-inner shadow-white/5 focus:outline-none data-[hover]:bg-red-600 data-[focus]:outline-1 data-[focus]:outline-white data-[open]:bg-red-700 bg-red-500 hover:bg-red-600"
+                onClick={handleDelete}
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <ImSpinner6 className="animate-spin w-4 h-4" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete"
+                )}
               </button>
             </div>
           </DialogPanel>

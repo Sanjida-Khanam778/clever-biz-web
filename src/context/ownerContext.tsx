@@ -1,5 +1,11 @@
 import axiosInstance from "@/lib/axios";
-import { createContext, useContext, useState, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useCallback,
+} from "react";
 import toast from "react-hot-toast";
 
 // Define the type of each category (adjust fields based on actual API)
@@ -24,12 +30,14 @@ interface OwnerContextType {
   foodItems: FoodItem[];
   foodItemsCount: number;
   currentPage: number;
+  searchQuery: string;
   fetchCategories: () => Promise<void>;
-  fetchFoodItems: (page?: number) => Promise<void>;
+  fetchFoodItems: (page?: number, search?: string) => Promise<void>;
   updateFoodItem: (id: number, formData: FormData) => Promise<void>;
   createFoodItem: (formData: FormData) => Promise<void>;
   deleteFoodItem: (id: number) => Promise<void>;
   setCurrentPage: (page: number) => void;
+  setSearchQuery: (query: string) => void;
 }
 
 // Create the context
@@ -45,8 +53,9 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
   const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
   const [foodItemsCount, setFoodItemsCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       const res = await axiosInstance.get(
         "http://192.168.10.150:8000/owners/categories/"
@@ -56,85 +65,101 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
       console.error("Failed to load categories", err);
       toast.error("Failed to load categories.");
     }
-  };
+  }, []);
 
-  const fetchFoodItems = async (page: number = currentPage) => {
-    try {
-      const response = await axiosInstance.get(`/owners/items/?page=${page}`);
-      const { results, count } = response.data;
-      console.log("Fetched food items:", response.data);
-      const formattedItems = results.map((item: any) => ({
-        id: item.id,
-        image: item.image1 ?? "https://source.unsplash.com/80x80/?food",
-        name: item.item_name,
-        price: parseFloat(item.price),
-        category: item.category_name,
-        available: item.availability,
-      }));
+  const fetchFoodItems = useCallback(
+    async (page: number = currentPage, search?: string) => {
+      try {
+        const response = await axiosInstance.get(
+          `/owners/items/?page=${page}&search=${search || ""}`
+        );
+        const { results, count } = response.data;
+        console.log("Fetched food items:", response.data);
+        const formattedItems = results.map((item: any) => ({
+          id: item.id,
+          image: item.image1 ?? "https://source.unsplash.com/80x80/?food",
+          name: item.item_name,
+          price: parseFloat(item.price),
+          category: item.category_name,
+          available: item.availability,
+        }));
 
-      setFoodItems(formattedItems);
-      setFoodItemsCount(count || 0);
-      setCurrentPage(page);
-    } catch (error) {
-      console.error("Failed to load food items", error);
-      toast.error("Failed to load food items.");
-    }
-  };
+        setFoodItems(formattedItems);
+        setFoodItemsCount(count || 0);
+        setCurrentPage(page);
+      } catch (error) {
+        console.error("Failed to load food items", error);
+        toast.error("Failed to load food items.");
+      }
+    },
+    []
+  );
 
-  const updateFoodItem = async (id: number, formData: FormData) => {
-    try {
-      await axiosInstance.patch(`/owners/items/${id}/`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      toast.success("Food item updated successfully!");
-      // Refresh the current page to show updated data
-      await fetchFoodItems(currentPage);
-    } catch (err) {
-      console.error("Failed to update food item", err);
-      toast.error("Failed to update food item.");
-      throw err;
-    }
-  };
+  const updateFoodItem = useCallback(
+    async (id: number, formData: FormData) => {
+      try {
+        await axiosInstance.patch(`/owners/items/${id}/`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        toast.success("Food item updated successfully!");
+        // Refresh the current page to show updated data
+        await fetchFoodItems(currentPage, searchQuery);
+      } catch (err) {
+        console.error("Failed to update food item", err);
+        toast.error("Failed to update food item.");
+        throw err;
+      }
+    },
+    [fetchFoodItems, currentPage, searchQuery]
+  );
 
-  const createFoodItem = async (formData: FormData) => {
-    try {
-      await axiosInstance.post("/owners/items/", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      toast.success("Food item created successfully!");
-      // Refresh the current page to show new data
-      await fetchFoodItems(currentPage);
-    } catch (err) {
-      console.error("Failed to create food item", err);
-      toast.error("Failed to create food item.");
-      throw err;
-    }
-  };
+  const createFoodItem = useCallback(
+    async (formData: FormData) => {
+      try {
+        await axiosInstance.post("/owners/items/", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        toast.success("Food item created successfully!");
+        // Refresh the current page to show new data
+        await fetchFoodItems(currentPage, searchQuery);
+      } catch (err) {
+        console.error("Failed to create food item", err);
+        toast.error("Failed to create food item.");
+        throw err;
+      }
+    },
+    [fetchFoodItems, currentPage, searchQuery]
+  );
 
-  const deleteFoodItem = async (id: number) => {
-    try {
-      await axiosInstance.delete(`/owners/items/${id}/`);
-      toast.success("Food item deleted successfully!");
-      // Refresh the current page to show updated data
-      await fetchFoodItems(currentPage);
-    } catch (err) {
-      console.error("Failed to delete food item", err);
-      toast.error("Failed to delete food item.");
-      throw err;
-    }
-  };
+  const deleteFoodItem = useCallback(
+    async (id: number) => {
+      try {
+        await axiosInstance.delete(`/owners/items/${id}/`);
+        toast.success("Food item deleted successfully!");
+        // Refresh the current page to show updated data
+        await fetchFoodItems(currentPage, searchQuery);
+      } catch (err) {
+        console.error("Failed to delete food item", err);
+        toast.error("Failed to delete food item.");
+        throw err;
+      }
+    },
+    [fetchFoodItems, currentPage, searchQuery]
+  );
 
   const value: OwnerContextType = {
     categories,
     foodItems,
     foodItemsCount,
     currentPage,
+    searchQuery,
     fetchCategories,
     fetchFoodItems,
     updateFoodItem,
     createFoodItem,
     deleteFoodItem,
     setCurrentPage,
+    setSearchQuery,
   };
 
   return (
