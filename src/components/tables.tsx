@@ -34,7 +34,7 @@ export const TableReservationList: React.FC<TableReservationListProps> = ({
         </tr>
       </thead>
       <tbody className="bg-sidebar text-sm">
-        {data.map((item, index) => (
+        {data?.map((item, index) => (
           <tr key={index} className="border-b border-[#1C1E3C]">
             <td className="p-4 text-primary-text">{item.reservationId}</td>
             <td className="p-4 text-primary-text">{item.customerName}</td>

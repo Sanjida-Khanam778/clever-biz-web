@@ -7,6 +7,7 @@ type FoodItem = {
   available: boolean;
 };
 type ReservationItem = {
+  id: number;
   reservationId: string;
   customerName: string;
   tableNo: string;

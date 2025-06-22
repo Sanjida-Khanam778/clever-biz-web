@@ -42,6 +42,26 @@ interface OrderItem {
     | "Processing";
 }
 
+// Define reservation item type
+interface ReservationItem {
+  id: number;
+  reservationId: string;
+  customerName: string;
+  tableNo: string;
+  guestNo: number;
+  cellNumber: string;
+  email: string;
+  reservationTime: string;
+  customRequest: string;
+}
+
+// Define reservation status report type
+interface ReservationStatusReport {
+  total_active_accepted_reservations: number;
+  last_month_reservations: number;
+  running_month_reservations: number;
+}
+
 // Define the context type
 interface OwnerContextType {
   categories: Category[];
@@ -53,9 +73,16 @@ interface OwnerContextType {
   ordersCount: number;
   ordersCurrentPage: number;
   ordersSearchQuery: string;
+  reservations: ReservationItem[];
+  reservationsCount: number;
+  reservationsCurrentPage: number;
+  reservationsSearchQuery: string;
+  reservationStatusReport: ReservationStatusReport | null;
   fetchCategories: () => Promise<void>;
   fetchFoodItems: (page?: number, search?: string) => Promise<void>;
   fetchOrders: (page?: number, search?: string) => Promise<void>;
+  fetchReservations: (page?: number, search?: string) => Promise<void>;
+  fetchReservationStatusReport: () => Promise<void>;
   updateFoodItem: (id: number, formData: FormData) => Promise<void>;
   createFoodItem: (formData: FormData) => Promise<void>;
   deleteFoodItem: (id: number) => Promise<void>;
@@ -65,6 +92,8 @@ interface OwnerContextType {
   setSearchQuery: (query: string) => void;
   setOrdersCurrentPage: (page: number) => void;
   setOrdersSearchQuery: (query: string) => void;
+  setReservationsCurrentPage: (page: number) => void;
+  setReservationsSearchQuery: (query: string) => void;
 }
 
 // Create the context
@@ -85,6 +114,12 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
   const [ordersCount, setOrdersCount] = useState(0);
   const [ordersCurrentPage, setOrdersCurrentPage] = useState(1);
   const [ordersSearchQuery, setOrdersSearchQuery] = useState("");
+  const [reservations, setReservations] = useState<ReservationItem[]>([]);
+  const [reservationsCount, setReservationsCount] = useState(0);
+  const [reservationsCurrentPage, setReservationsCurrentPage] = useState(1);
+  const [reservationsSearchQuery, setReservationsSearchQuery] = useState("");
+  const [reservationStatusReport, setReservationStatusReport] =
+    useState<ReservationStatusReport | null>(null);
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -155,6 +190,51 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
     },
     []
   );
+
+  const fetchReservations = useCallback(
+    async (page: number = reservationsCurrentPage, search?: string) => {
+      try {
+        const response = await axiosInstance.get(
+          `/owners/reservations/?page=${page}&search=${search || ""}`
+        );
+        const { results, count } = response.data;
+        console.log("Fetched reservations:", response.data);
+        const formattedReservations = results.reservations?.map(
+          (item: any) => ({
+            id: item.id,
+            reservationId: item.reservationId,
+            customerName: item.customerName,
+            tableNo: item.tableNo,
+            guestNo: item.guestNo,
+            cellNumber: item.cellNumber,
+            email: item.email,
+            reservationTime: item.reservationTime,
+            customRequest: item.customRequest,
+          })
+        );
+
+        setReservations(formattedReservations);
+        setReservationsCount(count || 0);
+        setReservationsCurrentPage(page);
+      } catch (error) {
+        console.error("Failed to load reservations", error);
+        toast.error("Failed to load reservations.");
+      }
+    },
+    []
+  );
+
+  const fetchReservationStatusReport = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get(
+        "/owners/reservations/report-reservation-status/"
+      );
+      setReservationStatusReport(response.data);
+    } catch (error) {
+      console.error("Failed to load reservation status report", error);
+      toast.error("Failed to load reservation status report.");
+    }
+  }, []);
 
   const updateFoodItem = useCallback(
     async (id: number, formData: FormData) => {
@@ -254,9 +334,16 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
     ordersCount,
     ordersCurrentPage,
     ordersSearchQuery,
+    reservations,
+    reservationsCount,
+    reservationsCurrentPage,
+    reservationsSearchQuery,
+    reservationStatusReport,
     fetchCategories,
     fetchFoodItems,
     fetchOrders,
+    fetchReservations,
+    fetchReservationStatusReport,
     updateFoodItem,
     createFoodItem,
     deleteFoodItem,
@@ -266,6 +353,8 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
     setSearchQuery,
     setOrdersCurrentPage,
     setOrdersSearchQuery,
+    setReservationsCurrentPage,
+    setReservationsSearchQuery,
   };
 
   return (

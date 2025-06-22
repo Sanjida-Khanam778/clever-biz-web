@@ -1,100 +1,75 @@
 import { TableReservationList } from "@/components/tables";
 import { DateSearchBox, TextSearchBox } from "../../components/input";
 import { Pagination, StatCard } from "../../components/utilities";
+import { useEffect, useState } from "react";
+import { useOwner } from "@/context/ownerContext";
 
 /* Screen to list of reservations on staff end */
 const ScreenRestaurantReservations = () => {
-  const reservationData: ReservationItem[] = [
-    {
-      reservationId: "1122",
-      customerName: "Nasi uduk",
-      tableNo: "2B",
-      guestNo: 4,
-      cellNumber: "(205) 555-0100",
-      email: "namehere@cleverbiz.com",
-      reservationTime: "9.30AM",
-      customRequest: "N/A",
-    },
-    {
-      reservationId: "1122",
-      customerName: "Bakso",
-      tableNo: "3C",
-      guestNo: 5,
-      cellNumber: "(405) 555-0128",
-      email: "namehere@cleverbiz.com",
-      reservationTime: "9.30AM",
-      customRequest: "N/A",
-    },
-    {
-      reservationId: "1122",
-      customerName: "Satay",
-      tableNo: "5B",
-      guestNo: 3,
-      cellNumber: "(239) 555-0108",
-      email: "namehere@cleverbiz.com",
-      reservationTime: "9.30PM",
-      customRequest: "accepted",
-    },
-    {
-      reservationId: "1122",
-      customerName: "Pepes",
-      tableNo: "4A",
-      guestNo: 4,
-      cellNumber: "(308) 555-0121",
-      email: "namehere@cleverbiz.com",
-      reservationTime: "9.30AM",
-      customRequest: "accepted",
-    },
-    {
-      reservationId: "1122",
-      customerName: "Sate Padang",
-      tableNo: "2A",
-      guestNo: 4,
-      cellNumber: "(307) 555-0133",
-      email: "namehere@cleverbiz.com",
-      reservationTime: "9.30AM",
-      customRequest: "accepted",
-    },
-    {
-      reservationId: "1122",
-      customerName: "Babi Pangang",
-      tableNo: "3B",
-      guestNo: 2,
-      cellNumber: "(229) 555-0109",
-      email: "namehere@cleverbiz.com",
-      reservationTime: "12.30AM",
-      customRequest: "hold",
-    },
-    {
-      reservationId: "1122",
-      customerName: "Soto",
-      tableNo: "2A",
-      guestNo: 1,
-      cellNumber: "(316) 555-0116",
-      email: "namehere@cleverbiz.com",
-      reservationTime: "9.30AM",
-      customRequest: "accepted",
-    },
-  ];
+  const {
+    reservations,
+    reservationsCount,
+    reservationsCurrentPage,
+    reservationsSearchQuery,
+    reservationStatusReport,
+    fetchReservations,
+    fetchReservationStatusReport,
+    setReservationsCurrentPage,
+    setReservationsSearchQuery,
+  } = useOwner();
+
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+
+  // Debounced search effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(reservationsSearchQuery);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [reservationsSearchQuery]);
+
+  // Load reservations and status report on component mount
+  useEffect(() => {
+    fetchReservations(reservationsCurrentPage, debouncedSearchQuery);
+    fetchReservationStatusReport();
+  }, [
+    reservationsCurrentPage,
+    debouncedSearchQuery,
+    fetchReservations,
+    fetchReservationStatusReport,
+  ]);
+
+  const handlePageChange = (page: number) => {
+    setReservationsCurrentPage(page);
+  };
+
+  const handleSearch = (query: string) => {
+    setReservationsSearchQuery(query);
+    setReservationsCurrentPage(1); // Reset to first page when searching
+  };
+
   return (
     <>
       <div className="flex flex-col">
         {/* Stats Cards */}
         <div className="flex flex-col md:flex-row gap-6">
           <StatCard
-            count={20}
+            count={
+              reservationStatusReport?.total_active_accepted_reservations || 0
+            }
             label="Active booking"
             barColor="#4F46E5" // indigo
             accentColor="#4F46E5"
           />
           <StatCard
-            count={500}
+            count={reservationStatusReport?.last_month_reservations || 0}
             label="Booking last month"
             barColor="#8B5CF6" // violet
             accentColor="#8B5CF6"
           />
           <StatCard
-            count={300}
+            count={reservationStatusReport?.running_month_reservations || 0}
             label="Total booking (Jun)"
             barColor="#0EA5E9" // sky blue
             accentColor="#0EA5E9"
@@ -107,14 +82,22 @@ const ScreenRestaurantReservations = () => {
             {/* Date filter */}
             <DateSearchBox />
             {/* Search box by id */}
-            <TextSearchBox placeholder="Search by Reservation ID" />
+            <TextSearchBox
+              placeholder="Search by Reservation ID"
+              value={reservationsSearchQuery}
+              onChange={handleSearch}
+            />
           </div>
         </div>
         {/* List of content */}
         <div className="bg-sidebar p-4 rounded-lg overflow-x-auto ">
-          <TableReservationList data={reservationData} />
+          <TableReservationList data={reservations} />
           <div className="mt-4 flex justify-center">
-            <Pagination page={1} />
+            <Pagination
+              page={reservationsCurrentPage}
+              total={reservationsCount}
+              onPageChange={handlePageChange}
+            />
           </div>
         </div>
       </div>
