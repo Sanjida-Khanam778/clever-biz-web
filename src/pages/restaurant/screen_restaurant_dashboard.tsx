@@ -9,13 +9,16 @@ import {
 import { useEffect, useState } from "react";
 import { EditCategoryModal, EditFoodItemModal } from "@/components/modals";
 import { IconGrowth, IconSales, IconTeam } from "@/components/icons";
-import axiosInstance from "@/lib/axios";
-import toast from "react-hot-toast";
+import { useOwner } from "@/context/ownerContext";
 
 const ScreenRestaurantDashboard = () => {
-  const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
-  const [page, setPage] = useState(1);
-  const [count, setCount] = useState(0);
+  const {
+    foodItems,
+    foodItemsCount,
+    currentPage,
+    fetchFoodItems,
+    setCurrentPage,
+  } = useOwner();
 
   const [categoryModal, setShowCategoryModal] = useState(false);
   const [foodItemModal, setShowFoodItemModal] = useState(false);
@@ -25,31 +28,14 @@ const ScreenRestaurantDashboard = () => {
   const closeFoodItemModal = () => setShowFoodItemModal(false);
   const closeCaegoryModal = () => setShowCategoryModal(false);
 
-  const fetchFoodItems = async () => {
-    try {
-      const response = await axiosInstance.get(`/owners/items/?page=${page}`);
-      const { results, count } = response.data;
-      console.log("Fetched food items:", response.data);
-      const formattedItems = results.map((item: any) => ({
-        id: item.id,
-        image: item.image1 ?? "https://source.unsplash.com/80x80/?food",
-        name: item.item_name,
-        price: parseFloat(item.price),
-        category: item.category_name,
-        available: item.availability,
-      }));
-
-      setFoodItems(formattedItems);
-      setCount(count || 0);
-    } catch (error) {
-      console.error("Failed to load food items", error);
-      toast.error("Failed to load food items.");
-    }
-  };
-
+  // Load food items on component mount and when page changes
   useEffect(() => {
-    fetchFoodItems();
-  }, [page]);
+    fetchFoodItems(currentPage);
+  }, [currentPage, fetchFoodItems]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
   const sellingItemData = [
     /* same as before */
@@ -124,9 +110,9 @@ const ScreenRestaurantDashboard = () => {
             <TableFoodList data={foodItems} />
             <div className="mt-4 flex justify-center">
               <Pagination
-                page={page}
-                total={count}
-                onPageChange={(p) => setPage(p)}
+                page={currentPage}
+                total={foodItemsCount}
+                onPageChange={handlePageChange}
               />
             </div>
           </div>
@@ -145,11 +131,7 @@ const ScreenRestaurantDashboard = () => {
       </div>
 
       {/* Modals */}
-      <EditFoodItemModal
-        isOpen={foodItemModal}
-        close={closeFoodItemModal}
-        onSuccess={fetchFoodItems}
-      />
+      <EditFoodItemModal isOpen={foodItemModal} close={closeFoodItemModal} />
       <EditCategoryModal
         isOpen={categoryModal}
         close={closeCaegoryModal}

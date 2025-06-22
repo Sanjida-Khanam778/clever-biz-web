@@ -20,7 +20,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { AiFillCaretDown, AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import { BiTrash } from "react-icons/bi";
 import { FaCalendarDays, FaMagnifyingGlass } from "react-icons/fa6";
-import { FiFilter, FiUpload, FiX } from "react-icons/fi";
+import { FiFilter, FiUpload, FiX, FiVideo } from "react-icons/fi";
 import { IoMdAdd } from "react-icons/io";
 import { IoAdd, IoChevronDown } from "react-icons/io5";
 
@@ -496,14 +496,74 @@ export const InputVideoUploadBox: React.FC<InputVideoUploadBoxProps> = ({
     setDragActive(false);
     const file = e.dataTransfer.files?.[0];
     if (file) {
-      setFile(file);
+      // Validate file type
+      const validVideoTypes = [
+        "video/mp4",
+        "video/mov",
+        "video/avi",
+        "video/wmv",
+        "video/flv",
+        "video/webm",
+        "video/mkv",
+        "video/m4v",
+        "video/3gp",
+        "video/ogv",
+        "video/ts",
+        "video/mts",
+        "video/m2ts",
+      ];
+
+      const isValidVideo =
+        validVideoTypes.includes(file.type) ||
+        file.name
+          .toLowerCase()
+          .match(/\.(mp4|mov|avi|wmv|flv|webm|mkv|m4v|3gp|ogv|ts|mts|m2ts)$/);
+
+      if (isValidVideo) {
+        setFile(file);
+      } else {
+        alert(
+          "Please select a valid video file (MP4, MOV, AVI, WMV, FLV, WebM, MKV, M4V, 3GP, OGV, TS, MTS, M2TS)"
+        );
+        if (inputRef.current) inputRef.current.value = "";
+      }
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setFile(file);
+      // Validate file type
+      const validVideoTypes = [
+        "video/mp4",
+        "video/mov",
+        "video/avi",
+        "video/wmv",
+        "video/flv",
+        "video/webm",
+        "video/mkv",
+        "video/m4v",
+        "video/3gp",
+        "video/ogv",
+        "video/ts",
+        "video/mts",
+        "video/m2ts",
+      ];
+
+      const isValidVideo =
+        validVideoTypes.includes(file.type) ||
+        file.name
+          .toLowerCase()
+          .match(/\.(mp4|mov|avi|wmv|flv|webm|mkv|m4v|3gp|ogv|ts|mts|m2ts)$/);
+
+      if (isValidVideo) {
+        setFile(file);
+      } else {
+        alert(
+          "Please select a valid video file (MP4, MOV, AVI, WMV, FLV, WebM, MKV, M4V, 3GP, OGV, TS, MTS, M2TS)"
+        );
+        if (inputRef.current) inputRef.current.value = "";
+      }
     }
   };
 
@@ -520,36 +580,77 @@ export const InputVideoUploadBox: React.FC<InputVideoUploadBoxProps> = ({
     const fileURL = URL.createObjectURL(file);
     video.src = fileURL;
     video.preload = "metadata";
+    video.crossOrigin = "anonymous";
 
     const handleLoadedMetadata = () => {
-      const middleFrame = Math.max(video.duration / 2, 0.1);
-      video.currentTime = middleFrame;
+      try {
+        const middleFrame = Math.max(video.duration / 2, 0.1);
+        video.currentTime = middleFrame;
+      } catch (error) {
+        console.error("Error setting video time:", error);
+        // Fallback: try to get thumbnail from first frame
+        video.currentTime = 0;
+      }
     };
 
     const handleSeeked = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const thumbnail = canvas.toDataURL("image/png");
-        setThumbnailUrl(thumbnail);
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth || 320;
+        canvas.height = video.videoHeight || 240;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const thumbnail = canvas.toDataURL("image/png");
+          setThumbnailUrl(thumbnail);
+        }
+      } catch (error) {
+        console.error("Error generating thumbnail:", error);
+        // Fallback: create a placeholder thumbnail
+        setThumbnailUrl(null);
+      } finally {
+        URL.revokeObjectURL(fileURL);
       }
+    };
+
+    const handleError = (err: Event) => {
+      console.error("Video load error:", err);
+      console.log("File type:", file.type);
+      console.log("File name:", file.name);
       URL.revokeObjectURL(fileURL);
+      // Even if thumbnail generation fails, still allow the file to be uploaded
+      setThumbnailUrl(null);
+    };
+
+    const handleCanPlay = () => {
+      // Video can play, try to generate thumbnail
+      if (video.readyState >= 2) {
+        handleSeeked();
+      }
     };
 
     video.addEventListener("loadedmetadata", handleLoadedMetadata);
     video.addEventListener("seeked", handleSeeked);
+    video.addEventListener("error", handleError);
+    video.addEventListener("canplay", handleCanPlay);
 
-    video.addEventListener("error", (err) => {
-      console.error("Video load error:", err);
-      URL.revokeObjectURL(fileURL);
-    });
+    // Timeout fallback in case video doesn't load properly
+    const timeout = setTimeout(() => {
+      if (!thumbnailUrl) {
+        console.log(
+          "Video processing timeout, allowing upload without thumbnail"
+        );
+        URL.revokeObjectURL(fileURL);
+        setThumbnailUrl(null);
+      }
+    }, 5000);
 
     return () => {
+      clearTimeout(timeout);
       video.removeEventListener("loadedmetadata", handleLoadedMetadata);
       video.removeEventListener("seeked", handleSeeked);
+      video.removeEventListener("error", handleError);
+      video.removeEventListener("canplay", handleCanPlay);
     };
   }, [file]);
 
@@ -576,7 +677,28 @@ export const InputVideoUploadBox: React.FC<InputVideoUploadBoxProps> = ({
         </div>
       )}
 
-      {!thumbnailUrl && (
+      {file && !thumbnailUrl && (
+        <div className="relative mt-4 inline-block">
+          <div className="rounded-md max-h-60 w-80 h-40 bg-gray-800 border border-gray-600 flex items-center justify-center">
+            <div className="text-center">
+              <FiVideo className="text-4xl text-gray-400 mb-2" />
+              <p className="text-sm text-gray-300">{file.name}</p>
+              <p className="text-xs text-gray-500">
+                Video uploaded successfully
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleRemoveVideo}
+            className="absolute top-1 right-1 p-1 bg-black bg-opacity-60 text-white rounded-full hover:bg-opacity-80 transition"
+            aria-label="Remove video"
+          >
+            <FiX className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {!file && (
         <div
           onClick={handleClick}
           onDragOver={(e) => {
@@ -591,7 +713,7 @@ export const InputVideoUploadBox: React.FC<InputVideoUploadBoxProps> = ({
         >
           <input
             type="file"
-            accept="video/*"
+            accept="video/*,.mov,.avi,.wmv,.flv,.webm,.mkv,.m4v,.3gp,.ogv,.ts,.mts,.m2ts"
             ref={inputRef}
             onChange={handleFileChange}
             className="hidden"

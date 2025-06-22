@@ -39,7 +39,7 @@ type ModalProps = {
   isOpen: boolean;
   close: () => void;
   id?: number | null;
-  onSuccess: () => void;
+  onSuccess?: () => void;
 };
 
 export const EditFoodItemModal: React.FC<ModalProps> = ({
@@ -54,7 +54,8 @@ export const EditFoodItemModal: React.FC<ModalProps> = ({
     category: string;
     description: string;
   };
-  const { categories, fetchCategories } = useOwner();
+  const { categories, fetchCategories, updateFoodItem, createFoodItem } =
+    useOwner();
   const { register, handleSubmit, reset, setValue } = useForm<Inputs>();
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -130,38 +131,29 @@ export const EditFoodItemModal: React.FC<ModalProps> = ({
           return toast.error("Please upload a video or keep the existing one.");
         }
 
-        const res = await axiosInstance.patch(
-          `http://192.168.10.150:8000/owners/items/${id}/`,
-          formData,
-          { headers: { "Content-Type": "multipart/form-data" } }
-        );
-        setLoading(false);
-        toast.success("Food item updated successfully!");
+        await updateFoodItem(id, formData);
       } else {
         // For create mode, require both image and video
         if (!imageFile) return toast.error("Please upload an image.");
         if (!videoFile) return toast.error("Please upload a video.");
 
-        const res = await axiosInstance.post(
-          "http://192.168.10.150:8000/owners/items/",
-          formData,
-          { headers: { "Content-Type": "multipart/form-data" } }
-        );
-        setLoading(false);
-        toast.success("Food item created successfully!");
+        await createFoodItem(formData);
       }
-      setLoading(false);
+
+      // Reset form and state
       reset();
       setImageFile(null);
       setVideoFile(null);
       setExistingImage(null);
       setExistingVideo(null);
-      onSuccess(); // table refresh
-      close(); // modal close
+
+      // Close modal
+      close();
     } catch (err) {
-      setLoading(false);
       console.error("Failed to submit item", err);
-      toast.error("Failed to submit item.");
+      // Error handling is done in the context functions
+    } finally {
+      setLoading(false);
     }
   };
 

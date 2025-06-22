@@ -163,6 +163,7 @@ export const LogoDashboard: React.FC<LogoProps> = ({ className }) => (
     />
   </svg>
 );
+
 /* OtpTimer ===========================================================>>>>> */
 type OtpTimerProps = {
   initialSeconds?: number;
@@ -453,10 +454,20 @@ export const OrderlistCard: React.FC<OrderlistCardProps> = ({
 /* Pagination ===========================================================>>>>> */
 type PaginationProps = {
   page: number;
+  total: number;
+  onPageChange: (page: number) => void;
 };
-export const Pagination: React.FC<PaginationProps> = ({ page = 1 }) => {
+export const Pagination: React.FC<PaginationProps> = ({
+  page = 1,
+  total = 0,
+  onPageChange,
+}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState(page.toString());
+
+  const totalPages = Math.ceil(total / 10); // Assuming 10 items per page
+  const canGoPrev = page > 1;
+  const canGoNext = page < totalPages;
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
@@ -465,15 +476,42 @@ export const Pagination: React.FC<PaginationProps> = ({ page = 1 }) => {
         setValue(page.toString());
         return;
       }
-      //todo: have to do it
-      console.log("Navigating to:", value);
+      const newPage = parseInt(value);
+      if (!isNaN(newPage) && newPage >= 1 && newPage <= totalPages) {
+        onPageChange(newPage);
+      } else {
+        setValue(page.toString());
+      }
     }
   };
+
+  const handlePrev = () => {
+    if (canGoPrev) {
+      onPageChange(page - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (canGoNext) {
+      onPageChange(page + 1);
+    }
+  };
+
+  // Update value when page changes
+  useEffect(() => {
+    setValue(page.toString());
+  }, [page]);
 
   return (
     <div className="inline-flex gap-x-2 mt-2 xs:mt-0">
       {/* Prev button */}
-      <button className="flex items-center justify-center px-4 h-12 text-base font-medium text-primary-text bg-table-header rounded-md hover:bg-dashboard">
+      <button
+        className={`flex items-center justify-center px-4 h-12 text-base font-medium text-primary-text bg-table-header rounded-md hover:bg-dashboard ${
+          !canGoPrev ? "opacity-50 cursor-not-allowed" : ""
+        }`}
+        onClick={handlePrev}
+        disabled={!canGoPrev}
+      >
         <GrFormPrevious className="fill-primary-text me-4" /> Prev
       </button>
 
@@ -498,7 +536,10 @@ export const Pagination: React.FC<PaginationProps> = ({ page = 1 }) => {
               }
             }}
             onKeyDown={handleKeyDown}
-            onBlur={() => setIsEditing(false)}
+            onBlur={() => {
+              setIsEditing(false);
+              setValue(page.toString());
+            }}
             className="bg-transparent w-full outline-none text-primary-text text-center"
           />
         ) : (
@@ -507,7 +548,13 @@ export const Pagination: React.FC<PaginationProps> = ({ page = 1 }) => {
       </div>
 
       {/* Next button */}
-      <button className="flex items-center justify-center px-4 h-12 text-base font-medium text-primary-text bg-table-header rounded-md hover:bg-dashboard">
+      <button
+        className={`flex items-center justify-center px-4 h-12 text-base font-medium text-primary-text bg-table-header rounded-md hover:bg-dashboard ${
+          !canGoNext ? "opacity-50 cursor-not-allowed" : ""
+        }`}
+        onClick={handleNext}
+        disabled={!canGoNext}
+      >
         Next <GrFormNext className="fill-primary-text ms-4" />
       </button>
     </div>
@@ -659,20 +706,6 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
   const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const [id, setId] = useState(null);
-  const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
-
-  const fetchFoodItems = async () => {
-    try {
-      const res = await axiosInstance.get("/owners/items/");
-      setFoodItems(res.data.results);
-    } catch (error) {
-      toast.error("Failed to fetch food items.");
-    }
-  };
-
-  useEffect(() => {
-    fetchFoodItems();
-  }, []);
 
   function openDelete() {
     setDeleteDialogOpen(true);
@@ -681,6 +714,7 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
   function closeDelete() {
     setDeleteDialogOpen(false);
   }
+
   function openEdit(id: number) {
     console.log(id, "iddd");
     setId(id);
@@ -690,6 +724,7 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
   function closeEdit() {
     setEditDialogOpen(false);
   }
+
   const contextStatuses = ["Available", "Unavailable"];
   const contextProperties = {
     Available: {
@@ -701,6 +736,7 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
       text: "text-red-300",
     },
   };
+
   return (
     <>
       <table className="w-full table-auto text-left clever-table">
@@ -760,12 +796,7 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
           ))}
         </tbody>
       </table>
-      <EditFoodItemModal
-        isOpen={isEditDialogOpen}
-        close={closeEdit}
-        id={id}
-        onSuccess={fetchFoodItems}
-      />
+      <EditFoodItemModal isOpen={isEditDialogOpen} close={closeEdit} id={id} />
       <DeleteFoodItemModal isOpen={isDeleteDialogOpen} close={closeDelete} />
     </>
   );
@@ -857,7 +888,7 @@ export const ChatSection = () => {
       id: "12",
       chatId: "2A",
       sender: "user",
-      message: "Hi again, I’d like to make another order.",
+      message: "Hi again, I'd like to make another order.",
       time: "10:30 AM",
     },
     {
@@ -878,7 +909,7 @@ export const ChatSection = () => {
       id: "45",
       chatId: "2A",
       sender: "user",
-      message: "I’ll take a BBQ Chicken Pizza and an iced coffee.",
+      message: "I'll take a BBQ Chicken Pizza and an iced coffee.",
       time: "10:33 AM",
     },
     {
@@ -896,7 +927,7 @@ export const ChatSection = () => {
     {
       id: "78",
       sender: "user",
-      message: "And that’s all for now. Thank you!",
+      message: "And that's all for now. Thank you!",
       time: "10:36 AM",
     },
   ];
