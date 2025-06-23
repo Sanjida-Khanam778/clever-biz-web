@@ -40,10 +40,12 @@ type Member = {
 };
 
 type DeviceItem = {
-  userName: string;
-  tableNo: string;
-  password: string | null;
-  status: "Active" | "Hold";
+  id: number;
+  table_name: string;
+  restaurant: number;
+  action: string;
+  restaurant_name: string;
+  username: string;
 };
 
 type ReviewItem = {

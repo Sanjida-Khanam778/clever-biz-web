@@ -824,8 +824,9 @@ export const EditCategoryModal: React.FC<ModalProps> = ({
 /* Device Add/Edit Modal ===========================================================>>>>> */
 export const EditDeviceModal: React.FC<ModalProps> = ({ isOpen, close }) => {
   const [loading, setLoading] = useState(false);
-
   const [tableName, setTableName] = useState("");
+  const { fetchAllDevices, devicesSearchQuery, devicesCurrentPage } =
+    useOwner();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -837,9 +838,17 @@ export const EditDeviceModal: React.FC<ModalProps> = ({ isOpen, close }) => {
       });
 
       console.log("Response:", response.data);
+      toast.success("Device added successfully!");
+
+      // Refresh the devices list with current page and search query
+      await fetchAllDevices(devicesCurrentPage, devicesSearchQuery);
+
+      // Reset form and close modal
+      setTableName("");
       close();
     } catch (error) {
       console.error("Error adding device:", error);
+      toast.error("Failed to add device.");
     } finally {
       setLoading(false);
     }

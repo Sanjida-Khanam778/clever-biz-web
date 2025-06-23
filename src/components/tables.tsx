@@ -207,59 +207,33 @@ export const TableDeviceList: React.FC<TableDeviceListProps> = ({ data }) => {
     <table className="w-full table-auto text-left clever-table">
       <thead className="table-header">
         <tr>
+          <th>ID</th>
           <th>Username</th>
           <th>Table No.</th>
-          <th>Password</th>
           <th>Action</th>
         </tr>
       </thead>
       <tbody className="bg-sidebar text-sm">
         {data.map((item, index) => (
           <tr key={index} className="border-b border-[#1C1E3C]">
-            <td className="p-4 text-primary-text">{item.userName}</td>
-            <td className="p-4 text-primary-text">{item.tableNo}</td>
-            <td className="p-4 text-primary-text/60 flex items-center gap-x-1">
-              {item.password}
-              {item.password ? (
-                <TooltipTop tip="Copy Password">
-                  <button className="bg-transparent">
-                    <BiCopy className="w-4 h-4" />
-                  </button>
-                </TooltipTop>
-              ) : (
-                "N/A"
-              )}
-            </td>
+            <td className="p-4 text-primary-text">{item.id}</td>
+            <td className="p-4 text-primary-text">{item.username}</td>
+            <td className="p-4 text-primary-text">{item.table_name}</td>
             <td className="p-4 text-primary-text">
-              {!item.password ? (
-                <StatusSpan
-                  status="Generate Access"
-                  properties={{
-                    "Generate Access": {
-                      bg: "bg-gray-800",
-                      text: "text-gray-300",
-                    },
-                  }}
-                  onClick={() => {
-                    console.log("Generate access token");
-                  }}
-                />
-              ) : (
-                <ButtonStatus
-                  status={item.status}
-                  availableStatuses={["Active", "Hold"]}
-                  properties={{
-                    Active: {
-                      bg: "bg-green-800",
-                      text: "text-green-300",
-                    },
-                    Hold: {
-                      bg: "bg-yellow-800",
-                      text: "text-yellow-300",
-                    },
-                  }}
-                />
-              )}
+              <ButtonStatus
+                status={item.action === "active" ? "Active" : "Hold"}
+                availableStatuses={["Active", "Hold"]}
+                properties={{
+                  Active: {
+                    bg: "bg-green-800",
+                    text: "text-green-300",
+                  },
+                  Hold: {
+                    bg: "bg-yellow-800",
+                    text: "text-yellow-300",
+                  },
+                }}
+              />
             </td>
           </tr>
         ))}

@@ -3,60 +3,51 @@ import { DeviceDashboardCard, Pagination } from "../../components/utilities";
 import { TableDeviceList } from "@/components/tables";
 import { IconDeviceActive, IconDeviceHold } from "@/components/icons";
 import { EditDeviceModal } from "@/components/modals";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useOwner } from "@/context/ownerContext";
 
 export const ScreenRestaurantDevices = () => {
-  const data: DeviceItem[] = [
-    {
-      userName: "ISSUE-1290",
-      tableNo: "2B",
-      password: "lkasdlfkjadsad",
-      status: "Active",
-    },
-    {
-      userName: "ISSUE-23",
-      tableNo: "3C",
-      password: "lvNtA6FHI",
-      status: "Active",
-    },
-    {
-      userName: "UBER-344",
-      tableNo: "5B",
-      password: "TCiAfwi87I",
-      status: "Hold",
-    },
-    {
-      userName: "APP-012",
-      tableNo: "4A",
-      password: null,
-      status: "Active",
-    },
-    {
-      userName: "APP-12",
-      tableNo: "2A",
-      password: "yRzjajHTjXiE4",
-      status: "Active",
-    },
-    {
-      userName: "ISSUE-879",
-      tableNo: "3B",
-      password: "3TKyV4cE",
-      status: "Active",
-    },
-    {
-      userName: "ISSUE-488",
-      tableNo: "2A",
-      password: "u18dhS",
-      status: "Hold",
-    },
-    {
-      userName: "APP-1",
-      tableNo: "1B",
-      password: "yc91tIpF",
-      status: "Active",
-    },
-  ];
+  const {
+    fetchAllDevices,
+    allDevices,
+    setAllDevices,
+    devicesSearchQuery,
+    setDevicesSearchQuery,
+    devicesCurrentPage,
+    devicesCount,
+    setDevicesCurrentPage,
+  } = useOwner();
+
   const [deviceModal, setShowAddModall] = useState(false);
+
+  useEffect(() => {
+    fetchAllDevices();
+  }, [fetchAllDevices]);
+
+  // Debounced search function
+  const debouncedSearch = useCallback(
+    (() => {
+      let timeoutId: NodeJS.Timeout;
+      return (searchTerm: string) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          setDevicesSearchQuery(searchTerm);
+          setDevicesCurrentPage(1); // Reset to first page when searching
+          fetchAllDevices(1, searchTerm);
+        }, 500);
+      };
+    })(),
+    [fetchAllDevices, setDevicesSearchQuery, setDevicesCurrentPage]
+  );
+
+  // Handle page change
+  const handlePageChange = useCallback(
+    (page: number) => {
+      setDevicesCurrentPage(page);
+      fetchAllDevices(page, devicesSearchQuery);
+    },
+    [fetchAllDevices, devicesSearchQuery, setDevicesCurrentPage]
+  );
 
   const showDeviceModal = () => {
     setShowAddModall(true);
@@ -66,27 +57,36 @@ export const ScreenRestaurantDevices = () => {
     setShowAddModall(false);
   };
 
+  // Calculate stats from actual data
+  const activeDevices = allDevices.filter(
+    (device) => device.action === "active"
+  ).length;
+  const holdDevices = allDevices.filter(
+    (device) => device.action === "hold"
+  ).length;
+  const totalDevices = allDevices.length;
+
   return (
     <>
       <div className="flex flex-col">
         {/* Stats Cards */}
         <div className="flex flex-col md:flex-row gap-6">
           <DeviceDashboardCard
-            count={300}
+            count={activeDevices}
             label="Active Devices"
             barColor="#0EA5E9"
             accentColor="#0EA5E9"
             icon={<IconDeviceActive />}
           />
           <DeviceDashboardCard
-            count={20}
+            count={holdDevices}
             label="Hold Device"
             barColor="#D8954A"
             accentColor="#D8954A"
             icon={<IconDeviceHold />}
           />
           <DeviceDashboardCard
-            count={320}
+            count={totalDevices}
             label="Total Devices"
             barColor="#8B5CF6"
             accentColor="#8B5CF6"
@@ -99,14 +99,22 @@ export const ScreenRestaurantDevices = () => {
           </h2>
           <div className="flex-1 flex gap-x-4 justify-end">
             <ButtonAdd label="Add Device" onClick={() => showDeviceModal()} />
-            <TextSearchBox placeholder="Search" />
+            <TextSearchBox
+              placeholder="Search"
+              value={devicesSearchQuery}
+              onChange={(value) => debouncedSearch(value)}
+            />
           </div>
         </div>
         {/* List of content */}
         <div className="bg-sidebar p-4 rounded-lg overflow-x-auto">
-          <TableDeviceList data={data} />
+          <TableDeviceList data={allDevices} />
           <div className="mt-4 flex justify-center">
-            <Pagination page={1} />
+            <Pagination
+              page={devicesCurrentPage}
+              total={devicesCount}
+              onPageChange={handlePageChange}
+            />
           </div>
         </div>
       </div>

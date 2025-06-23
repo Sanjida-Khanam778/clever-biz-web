@@ -14,6 +14,16 @@ interface Category {
   Category_name: string;
 }
 
+// Define device item type
+interface DeviceItem {
+  id: number;
+  table_name: string;
+  restaurant: number;
+  action: string;
+  restaurant_name: string;
+  username: string;
+}
+
 // Define food item type
 interface FoodItem {
   id: number;
@@ -78,11 +88,16 @@ interface OwnerContextType {
   reservationsCurrentPage: number;
   reservationsSearchQuery: string;
   reservationStatusReport: ReservationStatusReport | null;
+  allDevices: DeviceItem[];
+  devicesSearchQuery: string;
+  devicesCurrentPage: number;
+  devicesCount: number;
   fetchCategories: () => Promise<void>;
   fetchFoodItems: (page?: number, search?: string) => Promise<void>;
   fetchOrders: (page?: number, search?: string) => Promise<void>;
   fetchReservations: (page?: number, search?: string) => Promise<void>;
   fetchReservationStatusReport: () => Promise<void>;
+  fetchAllDevices: (page?: number, search?: string) => Promise<void>;
   updateFoodItem: (id: number, formData: FormData) => Promise<void>;
   createFoodItem: (formData: FormData) => Promise<void>;
   deleteFoodItem: (id: number) => Promise<void>;
@@ -94,6 +109,9 @@ interface OwnerContextType {
   setOrdersSearchQuery: (query: string) => void;
   setReservationsCurrentPage: (page: number) => void;
   setReservationsSearchQuery: (query: string) => void;
+  setAllDevices: (devices: DeviceItem[]) => void;
+  setDevicesSearchQuery: (query: string) => void;
+  setDevicesCurrentPage: (page: number) => void;
 }
 
 // Create the context
@@ -120,6 +138,10 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
   const [reservationsSearchQuery, setReservationsSearchQuery] = useState("");
   const [reservationStatusReport, setReservationStatusReport] =
     useState<ReservationStatusReport | null>(null);
+  const [allDevices, setAllDevices] = useState<DeviceItem[]>([]);
+  const [devicesSearchQuery, setDevicesSearchQuery] = useState("");
+  const [devicesCurrentPage, setDevicesCurrentPage] = useState(1);
+  const [devicesCount, setDevicesCount] = useState(0);
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -236,6 +258,24 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, []);
 
+  const fetchAllDevices = useCallback(
+    async (page: number = devicesCurrentPage, search?: string) => {
+      try {
+        const searchParam = search || devicesSearchQuery;
+        const response = await axiosInstance.get(
+          `/owners/devices/?page=${page}&search=${searchParam}`
+        );
+        setAllDevices(response.data.results);
+        setDevicesCount(response.data.count || 0);
+        setDevicesCurrentPage(page);
+      } catch (error) {
+        console.error("Failed to load devices", error);
+        toast.error("Failed to load devices.");
+      }
+    },
+    [devicesCurrentPage, devicesSearchQuery]
+  );
+
   const updateFoodItem = useCallback(
     async (id: number, formData: FormData) => {
       try {
@@ -339,11 +379,16 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
     reservationsCurrentPage,
     reservationsSearchQuery,
     reservationStatusReport,
+    allDevices,
+    devicesSearchQuery,
+    devicesCurrentPage,
+    devicesCount,
     fetchCategories,
     fetchFoodItems,
     fetchOrders,
     fetchReservations,
     fetchReservationStatusReport,
+    fetchAllDevices,
     updateFoodItem,
     createFoodItem,
     deleteFoodItem,
@@ -355,6 +400,9 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
     setOrdersSearchQuery,
     setReservationsCurrentPage,
     setReservationsSearchQuery,
+    setAllDevices,
+    setDevicesSearchQuery,
+    setDevicesCurrentPage,
   };
 
   return (
