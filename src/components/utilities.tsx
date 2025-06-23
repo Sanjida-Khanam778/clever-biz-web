@@ -827,33 +827,49 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
 /* Chat Page Section ===========================================================>>>>> */
 
 export const ChatSection = () => {
-  const [selectedChat, setSelectedChat] = useState<ChatRoomItem>({
-    id: "2A",
-    name: "APP-1",
-    time: "09:36 PM",
-  });
+  const [selectedChat, setSelectedChat] = useState<ChatRoomItem | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isCallOpen, setIsCallOpen] = useState(false);
+  const [chatData, setChatData] = useState<ChatRoomItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch devices for chat list
+  useEffect(() => {
+    const fetchDevices = async () => {
+      try {
+        setLoading(true);
+        const response = await axiosInstance.get("/owners/devices/");
+        const devices = response.data.results;
+
+        // Convert device data to chat list format
+        const chatList = devices.map((device: any) => ({
+          id: device.table_name,
+          name: device.username,
+          time: "09:36 PM", // You can update this with actual time if available
+        }));
+
+        setChatData(chatList);
+        console.log(chatData)
+
+        // Set first device as selected by default
+        if (chatList.length > 0 && !selectedChat) {
+          setSelectedChat(chatList[0]);
+        }
+      } catch (error) {
+        console.error("Failed to load devices for chat:", error);
+        toast.error("Failed to load devices.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDevices();
+  }, []);
 
   const confirmToCall = () => {
     setIsConfirmOpen(true);
   };
-  const chatData: ChatRoomItem[] = [
-    { id: "2A", name: "APP-1", time: "09:36 PM" },
-    { id: "2B", name: "ISSUE-488", time: "09:36 PM" },
-    { id: "2C", name: "ISSUE-870", time: "09:36 PM" },
-    { id: "2D", name: "APP-2", time: "09:36 PM" },
-    { id: "5A", name: "ISSUE-1200", time: "09:36 PM" },
-    { id: "6A", name: "ISSUE-1200", time: "09:36 PM" },
-    { id: "7A", name: "ISSUE-1200", time: "09:36 PM" },
-    { id: "8A", name: "ISSUE-1200", time: "09:36 PM" },
-    { id: "9A", name: "ISSUE-1200", time: "09:36 PM" },
-    { id: "10A", name: "ISSUE-1200", time: "09:36 PM" },
-    { id: "11A", name: "ISSUE-1200", time: "09:36 PM" },
-    { id: "12A", name: "ISSUE-1200", time: "09:36 PM" },
-    { id: "13A", name: "ISSUE-1200", time: "09:36 PM" },
-    { id: "14A", name: "ISSUE-1200", time: "09:36 PM" },
-  ];
+
   const messages = [
     {
       id: "1",
@@ -952,6 +968,14 @@ export const ChatSection = () => {
     },
   ];
 
+  if (loading) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-white">Loading devices...</div>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="h-full flex flex-col border-2 border-sidebar rounded-xl">
@@ -966,13 +990,16 @@ export const ChatSection = () => {
           <div className="flex-1 flex items-center justify-between p-4 border-[#2B2A40] text-primary-text">
             <div className="flex items-center space-x-4">
               <div className="w-10 h-10 rounded-full bg-[#292758] flex items-center justify-center">
-                <span>{selectedChat.id}</span>
+                <span>{selectedChat?.id || "N/A"}</span>
               </div>
-              <span className="font-medium">{selectedChat.name}</span>
+              <span className="font-medium">
+                {selectedChat?.name || "Select a table"}
+              </span>
             </div>
             <button
               onClick={() => confirmToCall()}
               className="button-primary bg-sidebar rounded-lg text-base flex items-center space-x-2"
+              disabled={!selectedChat}
             >
               <IoCall className="w-4 h-4" />
               <span>Call to customer</span>
@@ -981,13 +1008,13 @@ export const ChatSection = () => {
         </div>
         <div className="flex-1 flex h-full text-white border-t-2 border-chat-sender/20 overflow-hidden">
           {/* Left Chat List */}
-          <div className="w-92 bg-sidebar p-2 overflow-y-auto scrollbar-hide">
+          <div className="w-92 bg-sidebar p-2 overflow-y-auto scrollbar-hide flex-shrink-0">
             <div className="divide-y divide-chat-sender/10">
               {chatData.map((chat) => (
                 <ChatListItem
                   key={chat.id}
                   data={chat}
-                  isSelected={selectedChat.id === chat.id}
+                  isSelected={selectedChat?.id === chat.id}
                   onClick={() => setSelectedChat(chat)}
                 />
               ))}
@@ -998,55 +1025,62 @@ export const ChatSection = () => {
           <div className="flex-1 flex flex-col bg-chat-container/60 border-l-2 border-blue-900/10">
             {/* Chat Body - Scrollable */}
             <div className="flex-1 px-6 py-4 space-y-2 overflow-y-auto scrollbar-hide">
-              {messages.map((msg, index) => {
-                const isSameSenderAsPrev =
-                  index > 0 && messages[index - 1].sender === msg.sender;
-                const isSameSenderAsNext =
-                  index < messages.length - 1 &&
-                  messages[index + 1].sender === msg.sender;
+              {selectedChat ? (
+                messages.map((msg, index) => {
+                  const isSameSenderAsPrev =
+                    index > 0 && messages[index - 1].sender === msg.sender;
+                  const isSameSenderAsNext =
+                    index < messages.length - 1 &&
+                    messages[index + 1].sender === msg.sender;
 
-                const isSingleMessage =
-                  !isSameSenderAsPrev && !isSameSenderAsNext;
-                const isMiddleMessage =
-                  isSameSenderAsPrev && isSameSenderAsNext;
-                const isFirstInGroup =
-                  !isSameSenderAsPrev && isSameSenderAsNext;
-                const isLastInGroup = isSameSenderAsPrev && !isSameSenderAsNext;
+                  const isSingleMessage =
+                    !isSameSenderAsPrev && !isSameSenderAsNext;
+                  const isMiddleMessage =
+                    isSameSenderAsPrev && isSameSenderAsNext;
+                  const isFirstInGroup =
+                    !isSameSenderAsPrev && isSameSenderAsNext;
+                  const isLastInGroup =
+                    isSameSenderAsPrev && !isSameSenderAsNext;
 
-                const isUser = msg.sender === "admin"; //todo: reverse in production
+                  const isUser = msg.sender === "admin"; //todo: reverse in production
 
-                return (
-                  <div
-                    key={msg.id}
-                    className={cn("flex", {
-                      "justify-end": isUser,
-                      "justify-start": msg.sender === "user", //todo: reverse in production
-                    })}
-                  >
+                  return (
                     <div
-                      className={cn(
-                        "max-w-xs py-2 px-3 text-primary-text flex flex-col",
-                        isUser ? "bg-chat-sender" : "bg-chat-receiver/40",
-                        {
-                          "rounded-xl": isSingleMessage,
-                          "rounded-l-xl": isMiddleMessage,
-                          [isUser
-                            ? "rounded-t-xl rounded-l-xl"
-                            : "rounded-t-xl rounded-r-xl"]: isFirstInGroup,
-                          [isUser
-                            ? "rounded-b-xl rounded-l-xl"
-                            : "rounded-b-xl rounded-r-xl"]: isLastInGroup,
-                        }
-                      )}
+                      key={msg.id}
+                      className={cn("flex", {
+                        "justify-end": isUser,
+                        "justify-start": msg.sender === "user", //todo: reverse in production
+                      })}
                     >
-                      <span>{msg.message}</span>
-                      <span className="text-[10px] text-primary-text/40 self-end mt-1">
-                        {msg.time}
-                      </span>
+                      <div
+                        className={cn(
+                          "max-w-xs py-2 px-3 text-primary-text flex flex-col",
+                          isUser ? "bg-chat-sender" : "bg-chat-receiver/40",
+                          {
+                            "rounded-xl": isSingleMessage,
+                            "rounded-l-xl": isMiddleMessage,
+                            [isUser
+                              ? "rounded-t-xl rounded-l-xl"
+                              : "rounded-t-xl rounded-r-xl"]: isFirstInGroup,
+                            [isUser
+                              ? "rounded-b-xl rounded-l-xl"
+                              : "rounded-b-xl rounded-r-xl"]: isLastInGroup,
+                          }
+                        )}
+                      >
+                        <span>{msg.message}</span>
+                        <span className="text-[10px] text-primary-text/40 self-end mt-1">
+                          {msg.time}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              ) : (
+                <div className="flex items-center justify-center h-full text-white/60">
+                  Select a table to view messages
+                </div>
+              )}
             </div>
 
             {/* Footer Input */}
@@ -1056,8 +1090,12 @@ export const ChatSection = () => {
                   placeholder="Type a message"
                   className="flex-1 h-full min-h-16 bg-dashboard px-4 py-2 rounded text-sm placeholder:text-white/40 outline-none resize-none me-14"
                   rows={2}
+                  disabled={!selectedChat}
                 />
-                <button className="absolute right-2 bg-sidebar p-2 rounded">
+                <button
+                  className="absolute right-2 bg-sidebar p-2 rounded"
+                  disabled={!selectedChat}
+                >
                   <IconSend className="text-white w-6 h-6" />
                 </button>
               </div>
