@@ -5,6 +5,7 @@ import { IconDeviceActive, IconDeviceHold } from "@/components/icons";
 import { EditDeviceModal } from "@/components/modals";
 import { useState, useEffect, useCallback } from "react";
 import { useOwner } from "@/context/ownerContext";
+import axiosInstance from "@/lib/axios";
 
 export const ScreenRestaurantDevices = () => {
   const {
@@ -19,10 +20,34 @@ export const ScreenRestaurantDevices = () => {
   } = useOwner();
 
   const [deviceModal, setShowAddModall] = useState(false);
+  const [deviceStats, setDeviceStats] = useState({
+    total_devices: 0,
+    active_devices: 0,
+    hold_devices: 0,
+    restaurant: "",
+  });
 
   useEffect(() => {
     fetchAllDevices();
   }, [fetchAllDevices]);
+
+  useEffect(() => {
+    // Fetch device stats from API
+    const fetchStats = async () => {
+      try {
+        const res = await axiosInstance.get("/owners/devices/stats/");
+        setDeviceStats(res.data);
+      } catch (err) {
+        setDeviceStats({
+          total_devices: 0,
+          active_devices: 0,
+          hold_devices: 0,
+          restaurant: "",
+        });
+      }
+    };
+    fetchStats();
+  }, []);
 
   // Debounced search function
   const debouncedSearch = useCallback(
@@ -57,36 +82,27 @@ export const ScreenRestaurantDevices = () => {
     setShowAddModall(false);
   };
 
-  // Calculate stats from actual data
-  const activeDevices = allDevices.filter(
-    (device) => device.action === "active"
-  ).length;
-  const holdDevices = allDevices.filter(
-    (device) => device.action === "hold"
-  ).length;
-  const totalDevices = allDevices.length;
-
   return (
     <>
       <div className="flex flex-col">
         {/* Stats Cards */}
         <div className="flex flex-col md:flex-row gap-6">
           <DeviceDashboardCard
-            count={activeDevices}
+            count={deviceStats.active_devices}
             label="Active Devices"
             barColor="#0EA5E9"
             accentColor="#0EA5E9"
             icon={<IconDeviceActive />}
           />
           <DeviceDashboardCard
-            count={holdDevices}
+            count={deviceStats.hold_devices}
             label="Hold Device"
             barColor="#D8954A"
             accentColor="#D8954A"
             icon={<IconDeviceHold />}
           />
           <DeviceDashboardCard
-            count={totalDevices}
+            count={deviceStats.total_devices}
             label="Total Devices"
             barColor="#8B5CF6"
             accentColor="#8B5CF6"

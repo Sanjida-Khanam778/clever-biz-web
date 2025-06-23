@@ -265,8 +265,12 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
         const response = await axiosInstance.get(
           `/owners/devices/?page=${page}&search=${searchParam}`
         );
-        setAllDevices(response.data.results);
-        setDevicesCount(response.data.count || 0);
+        console.log(response, "response");
+        const devices = Array.isArray(response.data?.results)
+          ? response.data?.results
+          : [];
+        setAllDevices(devices);
+        setDevicesCount(response.data?.count || 0);
         setDevicesCurrentPage(page);
       } catch (error) {
         console.error("Failed to load devices", error);
