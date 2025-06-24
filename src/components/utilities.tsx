@@ -768,14 +768,7 @@ export const ChatSection = () => {
   const [isConnected, setIsConnected] = useState(false);
   const socket = useRef<WebSocket | null>(null);
   const [inputMessage, setInputMessage] = useState(""); // For textarea input
-  const [messages, setMessages] = useState<
-    {
-      sender: string;
-      message: string;
-      is_from_device: boolean;
-      timestamp: string;
-    }[]
-  >([]);
+  const [messages, setMessages] = useState<any[]>([]); // Accepts API and WS messages
 
   // Fetch devices and set initial chat
   useEffect(() => {
@@ -798,10 +791,28 @@ export const ChatSection = () => {
     fetchDevices();
   }, []);
 
+  // Fetch previous messages when selectedChat changes
+  useEffect(() => {
+    if (!selectedChat) return;
+    const device_id = selectedChat.id;
+    const restaurant_id = 24; // static for now
+    const fetchMessages = async () => {
+      try {
+        const response = await axiosInstance.get(
+          `/message/chat/?device_id=${device_id}&restaurant_id=${restaurant_id}`
+        );
+        setMessages(response.data || []);
+      } catch (error) {
+        toast.error("Failed to load previous messages.");
+        setMessages([]);
+      }
+    };
+    fetchMessages();
+  }, [selectedChat]);
+
   // Handle WebSocket connection and messages when selectedChat changes
   useEffect(() => {
     if (!selectedChat) return;
-    setMessages([]); // Reset messages when chat changes
     const accessToken = localStorage.getItem("accessToken");
     if (!accessToken) {
       console.error("No access token found");
@@ -819,14 +830,7 @@ export const ChatSection = () => {
     };
     socket.current.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      console.log("data from WebSocket:", data);
-      const formattedMessage = {
-        sender: data.sender,
-        message: data.message.trim(),
-        is_from_device: data.is_from_device,
-        timestamp: data.timestamp,
-      };
-      setMessages((prevMessages) => [...prevMessages, formattedMessage]);
+      setMessages((prevMessages) => [...prevMessages, data]);
     };
     socket.current.onclose = () => {
       console.log("WebSocket disconnected");
