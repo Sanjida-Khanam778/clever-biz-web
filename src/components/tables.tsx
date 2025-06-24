@@ -203,6 +203,16 @@ interface TableDeviceListProps {
   data: DeviceItem[];
 }
 export const TableDeviceList: React.FC<TableDeviceListProps> = ({ data }) => {
+  const { updateDeviceStatus } = useOwner();
+
+  const handleStatusChange = async (deviceId: number, newStatus: string) => {
+    try {
+      await updateDeviceStatus(deviceId, newStatus.toLowerCase());
+    } catch (error) {
+      // Optionally handle error
+    }
+  };
+
   return (
     <table className="w-full table-auto text-left clever-table">
       <thead className="table-header">
@@ -233,6 +243,7 @@ export const TableDeviceList: React.FC<TableDeviceListProps> = ({ data }) => {
                     text: "text-yellow-300",
                   },
                 }}
+                onChange={(newStatus) => handleStatusChange(item.id, newStatus)}
               />
             </td>
           </tr>

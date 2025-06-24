@@ -770,6 +770,9 @@ export const ChatSection = () => {
   const [inputMessage, setInputMessage] = useState(""); // For textarea input
   const [messages, setMessages] = useState<any[]>([]); // Accepts API and WS messages
 
+  // Add a ref for the chat body
+  const chatBodyRef = useRef<HTMLDivElement | null>(null);
+
   // Fetch devices and set initial chat
   useEffect(() => {
     const fetchDevices = async () => {
@@ -846,6 +849,13 @@ export const ChatSection = () => {
       }
     };
   }, [selectedChat]);
+
+  // Auto-scroll to bottom when messages or selectedChat changes
+  useEffect(() => {
+    if (chatBodyRef.current) {
+      chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
+    }
+  }, [messages, selectedChat]);
 
   const handleSend = () => {
     if (!inputMessage.trim()) return;
@@ -926,7 +936,10 @@ export const ChatSection = () => {
           {/* Right Chat Window */}
           <div className="flex-1 flex flex-col bg-chat-container/60 border-l-2 border-blue-900/10">
             {/* Chat Body - Scrollable */}
-            <div className="flex-1 px-6 py-4 space-y-2 overflow-y-auto scrollbar-hide">
+            <div
+              className="flex-1 px-6 py-4 space-y-2 overflow-y-auto scrollbar-hide"
+              ref={chatBodyRef}
+            >
               {selectedChat ? (
                 messages?.map((msg, index) => {
                   const isSameSenderAsPrev =
@@ -995,6 +1008,12 @@ export const ChatSection = () => {
                   disabled={!selectedChat}
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSend();
+                    }
+                  }}
                 />
                 <button
                   className="absolute right-2 bg-sidebar p-2 rounded"

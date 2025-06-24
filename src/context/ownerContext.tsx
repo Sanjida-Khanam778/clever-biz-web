@@ -112,6 +112,7 @@ interface OwnerContextType {
   setAllDevices: (devices: DeviceItem[]) => void;
   setDevicesSearchQuery: (query: string) => void;
   setDevicesCurrentPage: (page: number) => void;
+  updateDeviceStatus: (id: number, action: string) => Promise<void>;
 }
 
 // Create the context
@@ -368,6 +369,21 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
     [fetchOrders, ordersCurrentPage, ordersSearchQuery]
   );
 
+  const updateDeviceStatus = useCallback(
+    async (id: number, action: string) => {
+      try {
+        await axiosInstance.patch(`/owners/devices/${id}/`, { action });
+        toast.success("Device status updated successfully!");
+        await fetchAllDevices(devicesCurrentPage, devicesSearchQuery);
+      } catch (err) {
+        console.error("Failed to update device status", err);
+        toast.error("Failed to update device status.");
+        throw err;
+      }
+    },
+    [fetchAllDevices, devicesCurrentPage, devicesSearchQuery]
+  );
+
   const value: OwnerContextType = {
     categories,
     foodItems,
@@ -407,6 +423,7 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
     setAllDevices,
     setDevicesSearchQuery,
     setDevicesCurrentPage,
+    updateDeviceStatus,
   };
 
   return (
