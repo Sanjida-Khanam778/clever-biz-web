@@ -784,7 +784,6 @@ export const ChatSection = () => {
           setSelectedChat(chatList[0]);
         }
       } catch (error) {
-        console.error("Failed to load devices for chat:", error);
         toast.error("Failed to load devices.");
         setChatData([]); // Ensure it's always an array even on error
       } finally {
@@ -818,7 +817,7 @@ export const ChatSection = () => {
     if (!selectedChat) return;
     const accessToken = localStorage.getItem("accessToken");
     if (!accessToken) {
-      console.error("No access token found");
+      toast.error("No access token found");
       return;
     }
     if (socket.current) {
@@ -828,7 +827,6 @@ export const ChatSection = () => {
       `ws://192.168.10.150:8000/ws/chat/${selectedChat.id}/?token=${accessToken}`
     );
     socket.current.onopen = () => {
-      console.log("WebSocket connected");
       setIsConnected(true);
     };
     socket.current.onmessage = (event) => {
