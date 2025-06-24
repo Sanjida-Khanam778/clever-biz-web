@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FaRegCalendarCheck } from "react-icons/fa6";
 import { GrFormNext, GrFormPrevious } from "react-icons/gr";
 import { HiChevronRight } from "react-icons/hi2";
@@ -27,6 +27,7 @@ import { Link } from "react-router";
 import toast from "react-hot-toast";
 import axiosInstance from "@/lib/axios";
 import { useOwner } from "@/context/ownerContext";
+import axios from "axios";
 
 /* Logo Component */
 type LogoProps = {
@@ -759,146 +760,110 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
 /* Chat Page Section ===========================================================>>>>> */
 
 export const ChatSection = () => {
+  const [loading, setLoading] = useState(true);
   const [selectedChat, setSelectedChat] = useState<ChatRoomItem | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isCallOpen, setIsCallOpen] = useState(false);
   const [chatData, setChatData] = useState<ChatRoomItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState("");
-  console.log(message, "message");
-  // Fetch devices for chat list
+  const [isConnected, setIsConnected] = useState(false);
+  const socket = useRef<WebSocket | null>(null);
+  const [inputMessage, setInputMessage] = useState(""); // For textarea input
+  const [messages, setMessages] = useState<
+    {
+      sender: string;
+      message: string;
+      is_from_device: boolean;
+      timestamp: string;
+    }[]
+  >([]);
+
+  // Fetch devices and set initial chat
   useEffect(() => {
     const fetchDevices = async () => {
       try {
-        setLoading(true);
         const response = await axiosInstance.get("/owners/devicesall/");
-        console.log(response, "response");
-        const devices = Array.isArray(response.data) ? response.data : [];
-        // Convert device data to chat list format
-        const chatList = devices.map((device: any) => ({
-          id: device.table_name,
-          name: device.username,
-          time: "", // No time in API, so use empty string or a default value
-        }));
+        const chatList = Array.isArray(response.data) ? response.data : [];
         setChatData(chatList);
-        console.log(chatList, "chatList");
-
-        // Set first device as selected by default
-        if (chatList.length > 0 && !selectedChat) {
+        if (chatList.length > 0) {
           setSelectedChat(chatList[0]);
         }
       } catch (error) {
         console.error("Failed to load devices for chat:", error);
         toast.error("Failed to load devices.");
+        setChatData([]); // Ensure it's always an array even on error
       } finally {
         setLoading(false);
       }
     };
-
     fetchDevices();
   }, []);
+
+  // Handle WebSocket connection and messages when selectedChat changes
+  useEffect(() => {
+    if (!selectedChat) return;
+    setMessages([]); // Reset messages when chat changes
+    const accessToken = localStorage.getItem("accessToken");
+    if (!accessToken) {
+      console.error("No access token found");
+      return;
+    }
+    if (socket.current) {
+      socket.current.close();
+    }
+    socket.current = new WebSocket(
+      `ws://192.168.10.150:8000/ws/chat/${selectedChat.id}/?token=${accessToken}`
+    );
+    socket.current.onopen = () => {
+      console.log("WebSocket connected");
+      setIsConnected(true);
+    };
+    socket.current.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log("data from WebSocket:", data);
+      const formattedMessage = {
+        sender: data.sender,
+        message: data.message.trim(),
+        is_from_device: data.is_from_device,
+        timestamp: data.timestamp,
+      };
+      setMessages((prevMessages) => [...prevMessages, formattedMessage]);
+    };
+    socket.current.onclose = () => {
+      console.log("WebSocket disconnected");
+      setIsConnected(false);
+    };
+    socket.current.onerror = (error) => {
+      console.error("WebSocket error:", error);
+      setIsConnected(false);
+    };
+    return () => {
+      if (socket.current) {
+        socket.current.close();
+      }
+    };
+  }, [selectedChat]);
+
+  const handleSend = () => {
+    if (!inputMessage.trim()) return;
+    if (!socket.current || socket.current.readyState !== WebSocket.OPEN) {
+      console.error("WebSocket is not connected");
+      toast.error("Connection lost. Please refresh the page.");
+      return;
+    }
+    try {
+      socket.current.send(
+        JSON.stringify({ type: "message", message: inputMessage })
+      );
+      setInputMessage(""); // Clear textarea
+    } catch (error) {
+      console.error("Failed to send message:", error);
+      toast.error("Failed to send message");
+    }
+  };
 
   const confirmToCall = () => {
     setIsConfirmOpen(true);
   };
-
-  const messages = [
-    {
-      id: "1",
-      chatId: "2A",
-      sender: "user",
-      message: "Hi, I'd like to place an order.",
-      time: "10:15 AM",
-    },
-    {
-      id: "2",
-      chatId: "2A",
-      sender: "admin",
-      message: "Sure! What would you like to have?",
-      time: "10:16 AM",
-    },
-    {
-      id: "3",
-      chatId: "2A",
-      sender: "admin",
-      message: "We have pizzas, burgers, salads, and drinks.",
-      time: "10:17 AM",
-    },
-    {
-      id: "4",
-      chatId: "2A",
-      sender: "user",
-      message: "I'll have a Margherita Pizza and a lemonade.",
-      time: "10:18 AM",
-    },
-    {
-      id: "5",
-      chatId: "2A",
-      sender: "admin",
-      message: "Great choice! Would you like any sides?",
-      time: "10:19 AM",
-    },
-    {
-      id: "6",
-      chatId: "2A",
-      sender: "user",
-      message: "Yes, please add a side of fries.",
-      time: "10:20 AM",
-    },
-    {
-      id: "7",
-      chatId: "2A",
-      sender: "user",
-      message: "Also, can I get an extra cheese topping on the pizza?",
-      time: "10:21 AM",
-    },
-    {
-      id: "12",
-      chatId: "2A",
-      sender: "user",
-      message: "Hi again, I'd like to make another order.",
-      time: "10:30 AM",
-    },
-    {
-      id: "23",
-      chatId: "2A",
-      sender: "admin",
-      message: "Of course! What would you like this time?",
-      time: "10:31 AM",
-    },
-    {
-      id: "34",
-      chatId: "2A",
-      sender: "admin",
-      message: "We still have all items from the menu available.",
-      time: "10:32 AM",
-    },
-    {
-      id: "45",
-      chatId: "2A",
-      sender: "user",
-      message: "I'll take a BBQ Chicken Pizza and an iced coffee.",
-      time: "10:33 AM",
-    },
-    {
-      id: "56",
-      sender: "admin",
-      message: "Got it! Would you like a dessert to go with that?",
-      time: "10:34 AM",
-    },
-    {
-      id: "67",
-      sender: "user",
-      message: "Yes, add a slice of chocolate cake, please.",
-      time: "10:35 AM",
-    },
-    {
-      id: "78",
-      sender: "user",
-      message: "And that's all for now. Thank you!",
-      time: "10:36 AM",
-    },
-  ];
 
   if (loading) {
     return (
@@ -942,14 +907,15 @@ export const ChatSection = () => {
           {/* Left Chat List */}
           <div className="w-92 bg-sidebar p-2 overflow-y-auto scrollbar-hide flex-shrink-0">
             <div className="divide-y divide-chat-sender/10">
-              {chatData.map((chat) => (
-                <ChatListItem
-                  key={chat.id}
-                  data={chat}
-                  isSelected={selectedChat?.id === chat.id}
-                  onClick={() => setSelectedChat(chat)}
-                />
-              ))}
+              {Array.isArray(chatData) &&
+                chatData.map((chat) => (
+                  <ChatListItem
+                    key={chat.id}
+                    data={chat}
+                    isSelected={selectedChat?.id === chat.id}
+                    onClick={() => setSelectedChat(chat)}
+                  />
+                ))}
             </div>
           </div>
 
@@ -958,7 +924,7 @@ export const ChatSection = () => {
             {/* Chat Body - Scrollable */}
             <div className="flex-1 px-6 py-4 space-y-2 overflow-y-auto scrollbar-hide">
               {selectedChat ? (
-                messages.map((msg, index) => {
+                messages?.map((msg, index) => {
                   const isSameSenderAsPrev =
                     index > 0 && messages[index - 1].sender === msg.sender;
                   const isSameSenderAsNext =
@@ -974,14 +940,14 @@ export const ChatSection = () => {
                   const isLastInGroup =
                     isSameSenderAsPrev && !isSameSenderAsNext;
 
-                  const isUser = msg.sender === "admin"; //todo: reverse in production
+                  const isUser = msg.is_from_device === false; //todo: reverse in production
 
                   return (
                     <div
-                      key={msg.id}
+                      key={index}
                       className={cn("flex", {
                         "justify-end": isUser,
-                        "justify-start": msg.sender === "user", //todo: reverse in production
+                        "justify-start": !isUser,
                       })}
                     >
                       <div
@@ -1002,7 +968,7 @@ export const ChatSection = () => {
                       >
                         <span>{msg.message}</span>
                         <span className="text-[10px] text-primary-text/40 self-end mt-1">
-                          {msg.time}
+                          {msg.timestamp}
                         </span>
                       </div>
                     </div>
@@ -1023,12 +989,13 @@ export const ChatSection = () => {
                   className="flex-1 h-full min-h-16 bg-dashboard px-4 py-2 rounded text-sm placeholder:text-white/40 outline-none resize-none me-14"
                   rows={2}
                   disabled={!selectedChat}
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
                 />
                 <button
                   className="absolute right-2 bg-sidebar p-2 rounded"
                   disabled={!selectedChat}
+                  onClick={handleSend}
                 >
                   <IconSend className="text-white w-6 h-6" />
                 </button>
