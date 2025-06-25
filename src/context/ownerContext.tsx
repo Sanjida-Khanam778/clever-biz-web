@@ -149,24 +149,16 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
 
   // Auto-fetch categories when userRole becomes available
   useEffect(() => {
-    console.log(
-      "useEffect triggered - isLoading:",
-      isLoading,
-      "userRole:",
-      userRole
-    );
     if (!isLoading && userRole) {
-      console.log("Fetching categories for role:", userRole);
       // Fetch categories directly here to avoid dependency issues
       const fetchCategoriesDirectly = async () => {
         try {
           const endpoint =
             userRole === "owner" ? "/owners/categories/" : "/staff/categories/";
-          console.log(userRole, "userRole---------------");
           const res = await axiosInstance.get(endpoint);
           setCategories(res.data);
         } catch (err) {
-          toast.error("Failed to load categories.");
+          console.error("Failed to load categories.");
         }
       };
       fetchCategoriesDirectly();
@@ -182,11 +174,10 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
     try {
       const endpoint =
         userRole === "owner" ? "/owners/categories/" : "/staff/categories/";
-      console.log(userRole, "userRole---------------");
       const res = await axiosInstance.get(endpoint);
       setCategories(res.data);
     } catch (err) {
-      toast.error("Failed to load categories.");
+      console.error("Failed to load categories.");
     }
   }, [userRole, isLoading]);
 
@@ -205,7 +196,6 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
 
         const response = await axiosInstance.get(endpoint);
         const { results, count } = response.data;
-        console.log("Fetched food items:", response.data);
         const formattedItems = results.map((item: any) => ({
           id: item.id,
           image: item.image1 ?? "https://source.unsplash.com/80x80/?food",

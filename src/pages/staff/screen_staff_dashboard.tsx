@@ -6,22 +6,45 @@ import {
   Pagination,
   TableFoodList,
 } from "../../components/utilities";
+import { useOwner } from "@/context/ownerContext";
+import axiosInstance from "@/lib/axios";
+import { TableReservationList } from "../../components/tables";
+
+type ReservationStats = {
+  total_active_accepted_reservations: number;
+  last_month_reservations: number;
+  running_month_reservations: number;
+};
+
+type ReservationItem = {
+  id: number;
+  reservationId: string;
+  customerName: string;
+  tableNo: string;
+  guestNo: number;
+  cellNumber: string;
+  email: string;
+  reservationTime: string;
+  customRequest: string;
+};
 
 const ScreenStaffDashboard = () => {
   const {
-    statusSummary,
     foodItems,
     foodItemsCount,
     currentPage,
     searchQuery,
-    fetchStatusSummary,
     fetchFoodItems,
     setCurrentPage,
     setSearchQuery,
-  } = useStaff();
+  } = useOwner();
+
+  const { statusSummary, fetchStatusSummary } = useStaff();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reservations, setReservations] = useState<ReservationItem[]>([]);
+  const [loadingReservations, setLoadingReservations] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
@@ -33,14 +56,25 @@ const ScreenStaffDashboard = () => {
         const token = localStorage.getItem("accessToken");
         const userInfo = localStorage.getItem("userInfo");
 
-     
-
         if (!token) {
           setError("No authentication token found");
           return;
         }
 
         await Promise.all([fetchStatusSummary(), fetchFoodItems()]);
+
+        const fetchReservations = async () => {
+          try {
+            const res = await axiosInstance.get("/staff/reservations");
+            // If your API returns data in res.data.results
+            setReservations(res.data.results);
+          } catch (err) {
+            // Optionally handle error
+          } finally {
+            setLoadingReservations(false);
+          }
+        };
+        fetchReservations();
       } catch (err) {
         console.error("Dashboard load error:", err);
         setError("Failed to load dashboard data");
@@ -126,6 +160,11 @@ const ScreenStaffDashboard = () => {
               onPageChange={handlePageChange}
             />
           </div>
+          {loadingReservations ? (
+            <div>Loading...</div>
+          ) : (
+            <TableReservationList data={reservations} />
+          )}
         </div>
       </div>
     </>

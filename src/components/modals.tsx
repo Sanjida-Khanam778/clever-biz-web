@@ -72,7 +72,6 @@ export const EditFoodItemModal: React.FC<ModalProps> = ({
     }
   }, [userRole, isLoading, fetchCategories]);
 
-  console.log(categories, "categories---------------");
 
   // Load single food item data if in edit mode
   useEffect(() => {

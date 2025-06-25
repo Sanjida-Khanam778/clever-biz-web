@@ -812,6 +812,7 @@ export const ChatSection = () => {
     const fetchDevices = async () => {
       try {
         const response = await axiosInstance.get("/owners/devicesall/");
+        console.log(response.data, "response data in chat section");
         const chatList = Array.isArray(response.data) ? response.data : [];
         setChatData(chatList);
         if (chatList.length > 0) {
@@ -1105,7 +1106,6 @@ export const ChatListItem: React.FC<ChatListItemProps> = ({
         {/* <p className="text-xs text-white/40 h-4 w-4 bg-chat-sender rounded-full flex justify-center items-center">
           <span>2</span>
         </p> */}
-       
       </div>
     </div>
   );

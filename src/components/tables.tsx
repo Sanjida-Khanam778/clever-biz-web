@@ -19,6 +19,7 @@ interface TableReservationListProps {
 export const TableReservationList: React.FC<TableReservationListProps> = ({
   data,
 }) => {
+  console.log(data, "data");
   return (
     <table className="w-full table-auto text-left clever-table">
       <thead className="table-header">

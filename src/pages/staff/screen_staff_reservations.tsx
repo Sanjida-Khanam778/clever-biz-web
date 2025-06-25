@@ -1,9 +1,40 @@
 import { TableReservationList } from "@/components/tables";
 import { DateSearchBox, TextSearchBox } from "../../components/input";
 import { Pagination, StatCard } from "../../components/utilities";
+import { useEffect, useState } from "react";
+import axiosInstance from "@/lib/axios"; // Make sure this is your axios setup
+
+type ReservationStats = {
+  total_active_accepted_reservations: number;
+  last_month_reservations: number;
+  running_month_reservations: number;
+};
 
 /* Screen to list of reservations on staff end */
 const ScreenStaffReservations = () => {
+  const [stats, setStats] = useState<ReservationStats>({
+    total_active_accepted_reservations: 0,
+    last_month_reservations: 0,
+    running_month_reservations: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await axiosInstance.get(
+          "/staff/reservations/report-reservation-status/"
+        );
+        setStats(res.data);
+      } catch (err) {
+        // Optionally handle error
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
   const reservationData: ReservationItem[] = [
     {
       reservationId: "1122",
@@ -82,21 +113,21 @@ const ScreenStaffReservations = () => {
         {/* Stats Cards */}
         <div className="flex flex-col md:flex-row gap-6">
           <StatCard
-            count={20}
+            count={stats.total_active_accepted_reservations}
             label="Active booking"
-            barColor="#4F46E5" // indigo
+            barColor="#4F46E5"
             accentColor="#4F46E5"
           />
           <StatCard
-            count={500}
+            count={stats.last_month_reservations}
             label="Booking last month"
-            barColor="#8B5CF6" // violet
+            barColor="#8B5CF6"
             accentColor="#8B5CF6"
           />
           <StatCard
-            count={300}
+            count={stats.running_month_reservations}
             label="Total booking (Jun)"
-            barColor="#0EA5E9" // sky blue
+            barColor="#0EA5E9"
             accentColor="#0EA5E9"
           />
         </div>

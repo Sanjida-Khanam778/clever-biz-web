@@ -149,7 +149,7 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({
     try {
       const response = await axiosInstance.get("/staff/items/status-summary/");
       setStatusSummary(response.data);
-      console.log(response.data)
+      console.log(response.data,"summary")
     } catch (error: any) {
       console.error("Failed to load status summary", error);
       // Only show toast for non-auth errors since interceptor handles auth
