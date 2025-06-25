@@ -60,7 +60,7 @@ type ReviewItem = {
 
 type ChatRoomItem = {
   id: string;
-  name: string;
+  table_name: string;
   time: string;
 };
 type OrderItem = {

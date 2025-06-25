@@ -936,7 +936,7 @@ export const ChatSection = () => {
                 <span>{selectedChat?.id || "N/A"}</span>
               </div>
               <span className="font-medium">
-                {selectedChat?.name || "Select a table"}
+                {selectedChat?.table_name || "Select a table"}
               </span>
             </div>
             <button
@@ -1017,7 +1017,7 @@ export const ChatSection = () => {
                       >
                         <span>{msg.message}</span>
                         <span className="text-[10px] text-primary-text/40 self-end mt-1">
-                          {msg.timestamp}
+                          {formatTimestamp(msg.timestamp)}
                         </span>
                       </div>
                     </div>
@@ -1099,13 +1099,13 @@ export const ChatListItem: React.FC<ChatListItemProps> = ({
       onClick={() => onClick()}
     >
       <p className="h-10 w-10 bg-[#292758]/50 rounded-full flex justify-center items-center">
-        <span>{data.id}</span>
+        <span className="text-xl">{data.table_name}</span>
       </p>
       <div className="flex flex-col items-end gap-y-2">
-        <p className="text-xs text-white/40 h-4 w-4 bg-chat-sender rounded-full flex justify-center items-center">
+        {/* <p className="text-xs text-white/40 h-4 w-4 bg-chat-sender rounded-full flex justify-center items-center">
           <span>2</span>
-        </p>
-        <span className="text-xs text-white/40">{data.time}</span>
+        </p> */}
+       
       </div>
     </div>
   );
@@ -1647,3 +1647,39 @@ export const LogoDashboard: React.FC<LogoProps> = ({ className }) => (
     />
   </svg>
 );
+
+// Utility function to format timestamp
+const formatTimestamp = (timestamp: string): string => {
+  try {
+    const date = new Date(timestamp);
+
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      return "Invalid time";
+    }
+
+    const now = new Date();
+    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+
+    // If less than 24 hours, show time
+    if (diffInHours < 24) {
+      return date.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
+    }
+
+    // If more than 24 hours, show date
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  } catch (error) {
+    console.error("Error formatting timestamp:", error);
+    return "Invalid time";
+  }
+};
