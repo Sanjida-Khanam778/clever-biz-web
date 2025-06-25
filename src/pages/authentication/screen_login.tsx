@@ -8,6 +8,7 @@ import axiosInstance from "@/lib/axios";
 import toast from "react-hot-toast";
 import { useState } from "react";
 import { ImSpinner6 } from "react-icons/im";
+import { useRole } from "../../hooks/useRole";
 
 const ScreenLogin = () => {
   type Inputs = {
@@ -17,6 +18,7 @@ const ScreenLogin = () => {
   };
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const { updateUserData } = useRole();
 
   const { register, handleSubmit, control } = useForm<Inputs>();
 
@@ -31,12 +33,14 @@ const ScreenLogin = () => {
       console.log(response.data);
 
       const { access, refresh, user } = response.data;
+
+      // Use the hook to update user data
+      updateUserData(user, access, refresh);
+
       setLoading(false);
 
-      // Store tokens if needed
-      localStorage.setItem("accessToken", access);
-      localStorage.setItem("refreshToken", refresh);
-      localStorage.setItem("userInfo", JSON.stringify(user));
+      // Show success message with role info
+      toast.success(`Welcome! You are logged in as ${user.role}`);
 
       // Redirect based on role
       switch (user.role) {
@@ -56,9 +60,20 @@ const ScreenLogin = () => {
           navigate("/");
           break;
       }
-    } catch (error) {
+    } catch (error: any) {
+      setLoading(false);
       console.error("Login failed:", error);
-      toast.error("Invalid login credentials");
+
+      // Show more specific error messages
+      if (error.response?.status === 401) {
+        toast.error("Invalid email or password");
+      } else if (error.response?.status === 400) {
+        toast.error("Please check your input fields");
+      } else if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error("Login failed. Please try again.");
+      }
     }
   };
 

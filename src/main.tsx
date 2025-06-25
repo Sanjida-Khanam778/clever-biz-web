@@ -6,17 +6,17 @@ import { store } from "./store/store";
 import "./main.css";
 import { Toaster } from "react-hot-toast";
 import { OwnerProvider } from "./context/ownerContext.tsx";
-
+import { StaffProvider } from "./context/staffContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <Provider store={store}>
     <BrowserRouter>
-    <OwnerProvider>
-        <App />
-        <Toaster/>
-  
-    </OwnerProvider>
-        
+      <OwnerProvider>
+        <StaffProvider>
+          <App />
+          <Toaster />
+        </StaffProvider>
+      </OwnerProvider>
     </BrowserRouter>
   </Provider>
 );

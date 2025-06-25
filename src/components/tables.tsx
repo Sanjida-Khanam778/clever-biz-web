@@ -8,7 +8,7 @@ import { IconCheckmark, IconClose, IconHold } from "./icons";
 import { ButtonStatus as InputButtonStatus, StatusSpan } from "./input";
 import { TooltipTop } from "./utilities";
 import { BiCopy, BiMailSend } from "react-icons/bi";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useOwner } from "@/context/ownerContext";
 
 /* Reservation Table Data ===========================================================>>>>> */
@@ -205,11 +205,35 @@ interface TableDeviceListProps {
 export const TableDeviceList: React.FC<TableDeviceListProps> = ({ data }) => {
   const { updateDeviceStatus } = useOwner();
 
+  // Local state to track device status changes immediately
+  const [localDeviceStatus, setLocalDeviceStatus] = useState<
+    Record<number, string>
+  >({});
+
+  // Initialize local device status state when data changes
+  useEffect(() => {
+    const initialStatus: Record<number, string> = {};
+    data?.forEach((item) => {
+      initialStatus[item.id] = item.action;
+    });
+    setLocalDeviceStatus(initialStatus);
+  }, [data]);
+
   const handleStatusChange = async (deviceId: number, newStatus: string) => {
+    // Immediately update local state for instant UI feedback
+    setLocalDeviceStatus((prev) => ({
+      ...prev,
+      [deviceId]: newStatus.toLowerCase(),
+    }));
+
     try {
       await updateDeviceStatus(deviceId, newStatus.toLowerCase());
     } catch (error) {
-      // Optionally handle error
+      // Revert local state if API call fails
+      setLocalDeviceStatus((prev) => ({
+        ...prev,
+        [deviceId]: prev[deviceId] === "active" ? "hold" : "active",
+      }));
     }
   };
 
@@ -231,7 +255,15 @@ export const TableDeviceList: React.FC<TableDeviceListProps> = ({ data }) => {
             <td className="p-4 text-primary-text">{item.table_name}</td>
             <td className="p-4 text-primary-text">
               <ButtonStatus
-                status={item.action === "active" ? "Active" : "Hold"}
+                status={
+                  localDeviceStatus[item.id] !== undefined
+                    ? localDeviceStatus[item.id] === "active"
+                      ? "Active"
+                      : "Hold"
+                    : item.action === "active"
+                    ? "Active"
+                    : "Hold"
+                }
                 availableStatuses={["Active", "Hold"]}
                 properties={{
                   Active: {
@@ -300,11 +332,36 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
   const statuses = ["Processing", "Delivered", "Cancelled", "Pending"];
   const { updateOrderStatus } = useOwner();
 
+  // Local state to track order status changes immediately
+  const [localOrderStatus, setLocalOrderStatus] = useState<
+    Record<number, string>
+  >({});
+
+  // Initialize local order status state when data changes
+  useEffect(() => {
+    const initialStatus: Record<number, string> = {};
+    data?.forEach((item) => {
+      initialStatus[item.id] = item.status;
+    });
+    setLocalOrderStatus(initialStatus);
+  }, [data]);
+
   const handleStatusChange = async (orderId: number, newStatus: string) => {
+    // Immediately update local state for instant UI feedback
+    setLocalOrderStatus((prev) => ({
+      ...prev,
+      [orderId]: newStatus,
+    }));
+
     try {
       await updateOrderStatus(orderId, newStatus);
     } catch (error) {
       console.error("Failed to update order status:", error);
+      // Revert local state if API call fails
+      setLocalOrderStatus((prev) => ({
+        ...prev,
+        [orderId]: prev[orderId] || "Pending",
+      }));
     }
   };
 
@@ -332,7 +389,11 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
             <td className="p-4 text-primary-text">{item.orderId}</td>
             <td className="p-4 text-primary-text">
               <ButtonStatus
-                status={item.status}
+                status={
+                  localOrderStatus[item.id] !== undefined
+                    ? localOrderStatus[item.id]
+                    : item.status
+                }
                 properties={{
                   Processing: {
                     bg: "bg-blue-800",

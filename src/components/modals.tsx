@@ -32,6 +32,7 @@ import toast from "react-hot-toast";
 import axiosInstance from "@/lib/axios";
 import { ImSpinner6 } from "react-icons/im";
 import { useOwner } from "@/context/ownerContext";
+import { useRole } from "@/hooks/useRole";
 import { FiX } from "react-icons/fi";
 
 /* Edit food item dialog ===========================================================>>>>> */
@@ -56,6 +57,7 @@ export const EditFoodItemModal: React.FC<ModalProps> = ({
   };
   const { categories, fetchCategories, updateFoodItem, createFoodItem } =
     useOwner();
+  const { userRole, isLoading } = useRole();
   const { register, handleSubmit, reset, setValue } = useForm<Inputs>();
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -63,19 +65,27 @@ export const EditFoodItemModal: React.FC<ModalProps> = ({
   const [existingImage, setExistingImage] = useState<string | null>(null);
   const [existingVideo, setExistingVideo] = useState<string | null>(null);
 
-  // Load categories
+  // Load categories when userRole is available
   useEffect(() => {
-    fetchCategories();
-  }, []);
+    if (!isLoading && userRole) {
+      fetchCategories();
+    }
+  }, [userRole, isLoading, fetchCategories]);
+
+  console.log(categories, "categories---------------");
 
   // Load single food item data if in edit mode
   useEffect(() => {
     if (id) {
       const fetchItem = async () => {
         try {
-          const res = await axiosInstance.get(
-            `http://192.168.10.150:8000/owners/items/${id}/`
-          );
+          // Use role-based API endpoint
+          const endpoint =
+            userRole === "owner"
+              ? `/owners/items/${id}/`
+              : `/staff/items/${id}/`;
+
+          const res = await axiosInstance.get(endpoint);
           const item = res.data;
           console.log(item);
           reset({
@@ -104,7 +114,7 @@ export const EditFoodItemModal: React.FC<ModalProps> = ({
       setExistingImage(null);
       setExistingVideo(null);
     }
-  }, [id, reset]);
+  }, [id, reset, userRole]);
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     setLoading(true);
@@ -762,7 +772,7 @@ export const EditCategoryModal: React.FC<ModalProps> = ({
         }
       );
       fetchCategories();
-      console.log(response.data);
+      console.log(response.data, "categories---------------");
       toast.success("Category Created successfully");
       reset();
       setImageFile(null);

@@ -5,8 +5,10 @@ import {
   useState,
   ReactNode,
   useCallback,
+  useEffect,
 } from "react";
 import toast from "react-hot-toast";
+import { useRole } from "@/hooks/useRole";
 
 // Define the type of each category (adjust fields based on actual API)
 interface Category {
@@ -124,6 +126,7 @@ export const OwnerContext = createContext<OwnerContextType | undefined>(
 export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
+  const { userRole, isLoading } = useRole();
   const [categories, setCategories] = useState<Category[]>([]);
   const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
   const [foodItemsCount, setFoodItemsCount] = useState(0);
@@ -144,24 +147,63 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
   const [devicesCurrentPage, setDevicesCurrentPage] = useState(1);
   const [devicesCount, setDevicesCount] = useState(0);
 
+  // Auto-fetch categories when userRole becomes available
+  useEffect(() => {
+    console.log(
+      "useEffect triggered - isLoading:",
+      isLoading,
+      "userRole:",
+      userRole
+    );
+    if (!isLoading && userRole) {
+      console.log("Fetching categories for role:", userRole);
+      // Fetch categories directly here to avoid dependency issues
+      const fetchCategoriesDirectly = async () => {
+        try {
+          const endpoint =
+            userRole === "owner" ? "/owners/categories/" : "/staff/categories/";
+          console.log(userRole, "userRole---------------");
+          const res = await axiosInstance.get(endpoint);
+          setCategories(res.data);
+        } catch (err) {
+          toast.error("Failed to load categories.");
+        }
+      };
+      fetchCategoriesDirectly();
+    }
+  }, [userRole, isLoading]);
+
   const fetchCategories = useCallback(async () => {
+    // Don't fetch if still loading or if userRole is null
+    if (isLoading || !userRole) {
+      return;
+    }
+
     try {
-      const res = await axiosInstance.get(
-        "http://192.168.10.150:8000/owners/categories/"
-      );
-      setCategories(res.data.results);
+      const endpoint =
+        userRole === "owner" ? "/owners/categories/" : "/staff/categories/";
+      console.log(userRole, "userRole---------------");
+      const res = await axiosInstance.get(endpoint);
+      setCategories(res.data);
     } catch (err) {
-      console.error("Failed to load categories", err);
       toast.error("Failed to load categories.");
     }
-  }, []);
+  }, [userRole, isLoading]);
 
   const fetchFoodItems = useCallback(
     async (page: number = currentPage, search?: string) => {
+      // Don't fetch if still loading or if userRole is null
+      if (isLoading || !userRole) {
+        return;
+      }
+
       try {
-        const response = await axiosInstance.get(
-          `/owners/items/?page=${page}&search=${search || ""}`
-        );
+        const endpoint =
+          userRole === "owner"
+            ? `/owners/items/?page=${page}&search=${search || ""}`
+            : `/staff/items/?page=${page}&search=${search || ""}`;
+
+        const response = await axiosInstance.get(endpoint);
         const { results, count } = response.data;
         console.log("Fetched food items:", response.data);
         const formattedItems = results.map((item: any) => ({
@@ -181,15 +223,23 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
         toast.error("Failed to load food items.");
       }
     },
-    []
+    [currentPage, userRole, isLoading]
   );
 
   const fetchOrders = useCallback(
     async (page: number = ordersCurrentPage, search?: string) => {
+      // Don't fetch if still loading or if userRole is null
+      if (isLoading || !userRole) {
+        return;
+      }
+
       try {
-        const response = await axiosInstance.get(
-          `/owners/orders/?page=${page}&search=${search || ""}`
-        );
+        const endpoint =
+          userRole === "owner"
+            ? `/owners/orders/?page=${page}&search=${search || ""}`
+            : `/staff/orders/?page=${page}&search=${search || ""}`;
+
+        const response = await axiosInstance.get(endpoint);
         const { results, count } = response.data;
         console.log("Fetched orders:", response.data);
         const formattedOrders = results.orders?.map((item: any) => ({
@@ -211,15 +261,23 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
         toast.error("Failed to load orders.");
       }
     },
-    []
+    [ordersCurrentPage, userRole, isLoading]
   );
 
   const fetchReservations = useCallback(
     async (page: number = reservationsCurrentPage, search?: string) => {
+      // Don't fetch if still loading or if userRole is null
+      if (isLoading || !userRole) {
+        return;
+      }
+
       try {
-        const response = await axiosInstance.get(
-          `/owners/reservations/?page=${page}&search=${search || ""}`
-        );
+        const endpoint =
+          userRole === "owner"
+            ? `/owners/reservations/?page=${page}&search=${search || ""}`
+            : `/staff/reservations/?page=${page}&search=${search || ""}`;
+
+        const response = await axiosInstance.get(endpoint);
         const { results, count } = response.data;
         console.log("Fetched reservations:", response.data);
         const formattedReservations = results.reservations?.map(
@@ -244,28 +302,44 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
         toast.error("Failed to load reservations.");
       }
     },
-    []
+    [reservationsCurrentPage, userRole, isLoading]
   );
 
   const fetchReservationStatusReport = useCallback(async () => {
+    // Don't fetch if still loading or if userRole is null
+    if (isLoading || !userRole) {
+      return;
+    }
+
     try {
-      const response = await axiosInstance.get(
-        "/owners/reservations/report-reservation-status/"
-      );
+      const endpoint =
+        userRole === "owner"
+          ? "/owners/reservations/report-reservation-status/"
+          : "/staff/reservations/report-reservation-status/";
+
+      const response = await axiosInstance.get(endpoint);
       setReservationStatusReport(response.data);
     } catch (error) {
       console.error("Failed to load reservation status report", error);
       toast.error("Failed to load reservation status report.");
     }
-  }, []);
+  }, [userRole, isLoading]);
 
   const fetchAllDevices = useCallback(
     async (page: number = devicesCurrentPage, search?: string) => {
+      // Don't fetch if still loading or if userRole is null
+      if (isLoading || !userRole) {
+        return;
+      }
+
       try {
         const searchParam = search || devicesSearchQuery;
-        const response = await axiosInstance.get(
-          `/owners/devices/?page=${page}&search=${searchParam}`
-        );
+        const endpoint =
+          userRole === "owner"
+            ? `/owners/devices/?page=${page}&search=${searchParam}`
+            : `/staff/devices/?page=${page}&search=${searchParam}`;
+
+        const response = await axiosInstance.get(endpoint);
         console.log(response, "response");
         const devices = Array.isArray(response.data?.results)
           ? response.data?.results
@@ -278,13 +352,21 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
         toast.error("Failed to load devices.");
       }
     },
-    [devicesCurrentPage, devicesSearchQuery]
+    [devicesCurrentPage, devicesSearchQuery, userRole, isLoading]
   );
 
   const updateFoodItem = useCallback(
     async (id: number, formData: FormData) => {
+      // Don't update if still loading or if userRole is null
+      if (isLoading || !userRole) {
+        return;
+      }
+
       try {
-        await axiosInstance.patch(`/owners/items/${id}/`, formData, {
+        const endpoint =
+          userRole === "owner" ? `/owners/items/${id}/` : `/staff/items/${id}/`;
+
+        await axiosInstance.patch(endpoint, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         toast.success("Food item updated successfully!");
@@ -296,13 +378,21 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
         throw err;
       }
     },
-    [fetchFoodItems, currentPage, searchQuery]
+    [fetchFoodItems, currentPage, searchQuery, userRole, isLoading]
   );
 
   const createFoodItem = useCallback(
     async (formData: FormData) => {
+      // Don't create if still loading or if userRole is null
+      if (isLoading || !userRole) {
+        return;
+      }
+
       try {
-        await axiosInstance.post("/owners/items/", formData, {
+        const endpoint =
+          userRole === "owner" ? "/owners/items/" : "/staff/items/";
+
+        await axiosInstance.post(endpoint, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         toast.success("Food item created successfully!");
@@ -314,13 +404,22 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
         throw err;
       }
     },
-    [fetchFoodItems, currentPage, searchQuery]
+    [fetchFoodItems, currentPage, searchQuery, userRole, isLoading]
   );
 
   const deleteFoodItem = useCallback(
     async (id: number) => {
+      // Don't delete if still loading or if userRole is null
+      if (isLoading || !userRole) {
+        return;
+      }
+
       try {
-        await axiosInstance.delete(`/owners/items/${id}/`);
+        // Use role-based API endpoint
+        const endpoint =
+          userRole === "owner" ? `/owners/items/${id}/` : `/staff/items/${id}/`;
+
+        await axiosInstance.delete(endpoint);
         toast.success("Food item deleted successfully!");
         // Refresh the current page to show updated data
         await fetchFoodItems(currentPage, searchQuery);
@@ -330,13 +429,21 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
         throw err;
       }
     },
-    [fetchFoodItems, currentPage, searchQuery]
+    [fetchFoodItems, currentPage, searchQuery, userRole, isLoading]
   );
 
   const updateAvailability = useCallback(
     async (id: number, available: boolean) => {
+      // Don't update if still loading or if userRole is null
+      if (isLoading || !userRole) {
+        return;
+      }
+
       try {
-        await axiosInstance.patch(`/owners/items/${id}/`, {
+        const endpoint =
+          userRole === "owner" ? `/owners/items/${id}/` : `/staff/items/${id}/`;
+
+        await axiosInstance.patch(endpoint, {
           availability: available.toString(),
         });
         toast.success("Food item availability updated successfully!");
@@ -348,13 +455,23 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
         throw err;
       }
     },
-    [fetchFoodItems, currentPage, searchQuery]
+    [fetchFoodItems, currentPage, searchQuery, userRole, isLoading]
   );
 
   const updateOrderStatus = useCallback(
     async (id: number, status: string) => {
+      // Don't update if still loading or if userRole is null
+      if (isLoading || !userRole) {
+        return;
+      }
+
       try {
-        await axiosInstance.patch(`/owners/orders/${id}/`, {
+        const endpoint =
+          userRole === "owner"
+            ? `/owners/orders/${id}/`
+            : `/staff/orders/${id}/`;
+
+        await axiosInstance.patch(endpoint, {
           status: status,
         });
         toast.success("Order status updated successfully!");
@@ -366,13 +483,23 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
         throw err;
       }
     },
-    [fetchOrders, ordersCurrentPage, ordersSearchQuery]
+    [fetchOrders, ordersCurrentPage, ordersSearchQuery, userRole, isLoading]
   );
 
   const updateDeviceStatus = useCallback(
     async (id: number, action: string) => {
+      // Don't update if still loading or if userRole is null
+      if (isLoading || !userRole) {
+        return;
+      }
+
       try {
-        await axiosInstance.patch(`/owners/devices/${id}/`, { action });
+        const endpoint =
+          userRole === "owner"
+            ? `/owners/devices/${id}/`
+            : `/staff/devices/${id}/`;
+
+        await axiosInstance.patch(endpoint, { action });
         toast.success("Device status updated successfully!");
         await fetchAllDevices(devicesCurrentPage, devicesSearchQuery);
       } catch (err) {
@@ -381,7 +508,13 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
         throw err;
       }
     },
-    [fetchAllDevices, devicesCurrentPage, devicesSearchQuery]
+    [
+      fetchAllDevices,
+      devicesCurrentPage,
+      devicesSearchQuery,
+      userRole,
+      isLoading,
+    ]
   );
 
   const value: OwnerContextType = {

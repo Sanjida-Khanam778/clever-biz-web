@@ -642,6 +642,20 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const { updateAvailability } = useOwner();
 
+  // Local state to track availability changes immediately
+  const [localAvailability, setLocalAvailability] = useState<
+    Record<number, boolean>
+  >({});
+
+  // Initialize local availability state when data changes
+  useEffect(() => {
+    const initialAvailability: Record<number, boolean> = {};
+    data?.forEach((item) => {
+      initialAvailability[item.id] = item.available;
+    });
+    setLocalAvailability(initialAvailability);
+  }, [data]);
+
   function openDelete(id: number) {
     setSelectedItemId(id);
     setDeleteDialogOpen(true);
@@ -668,10 +682,22 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
     newStatus: string
   ) => {
     const available = newStatus === "Available";
+
+    // Immediately update local state for instant UI feedback
+    setLocalAvailability((prev) => ({
+      ...prev,
+      [itemId]: available,
+    }));
+
     try {
       await updateAvailability(itemId, available);
     } catch (error) {
       console.error("Failed to update availability:", error);
+      // Revert local state if API call fails
+      setLocalAvailability((prev) => ({
+        ...prev,
+        [itemId]: !available,
+      }));
     }
   };
 
@@ -729,7 +755,15 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
               </td>
               <td className="p-4">
                 <ButtonStatus
-                  status={item.available ? "Available" : "Unavailable"}
+                  status={
+                    localAvailability[item.id] !== undefined
+                      ? localAvailability[item.id]
+                        ? "Available"
+                        : "Unavailable"
+                      : item.available
+                      ? "Available"
+                      : "Unavailable"
+                  }
                   properties={contextProperties}
                   availableStatuses={contextStatuses}
                   onChange={(newStatus) =>

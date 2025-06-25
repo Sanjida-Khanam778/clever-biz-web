@@ -12,10 +12,12 @@ import {
 } from "../../components/modals";
 import { TableFoodOrderList } from "@/components/tables";
 import { foodItems } from "@/data";
+import { useRole } from "../../hooks/useRole";
 
 const ScreenChefDashboard = () => {
   const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
+  const { userRole, userInfo } = useRole();
 
   function openDelete() {
     setDeleteDialogOpen(true);
@@ -34,6 +36,16 @@ const ScreenChefDashboard = () => {
   return (
     <>
       <div className="flex flex-col">
+        {/* Welcome Message */}
+        <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+          <h1 className="text-xl font-semibold text-blue-800">
+            Welcome, {userInfo?.name || userInfo?.email}!
+          </h1>
+          <p className="text-blue-600">
+            You are logged in as a <strong>{userRole}</strong>
+          </p>
+        </div>
+
         {/* Dashboard Cards */}
         <div className="flex flex-col lg:flex-row gap-y-3 lg:gap-y-0 lg:gap-x-3">
           {/* Card 1 */}
