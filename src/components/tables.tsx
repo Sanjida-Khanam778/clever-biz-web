@@ -8,7 +8,7 @@ import { IconCheckmark, IconClose, IconHold } from "./icons";
 import { ButtonStatus as InputButtonStatus, StatusSpan } from "./input";
 import { TooltipTop } from "./utilities";
 import { BiCopy, BiMailSend } from "react-icons/bi";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useOwner } from "@/context/ownerContext";
 
 /* Reservation Table Data ===========================================================>>>>> */
@@ -106,6 +106,32 @@ export const ButtonStatus: React.FC<ButtonStatusProps> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState(status);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Update selected state when status prop changes
+  useEffect(() => {
+    setSelected(status);
+  }, [status]);
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [open]);
 
   const handleSelect = (newStatus: string) => {
     setSelected(newStatus);
@@ -113,25 +139,37 @@ export const ButtonStatus: React.FC<ButtonStatusProps> = ({
     onChange?.(newStatus); // call parent function
   };
 
+  // Get the current properties with fallback
+  const currentProperties = properties[selected] || {
+    bg: "bg-gray-800",
+    text: "text-gray-300",
+  };
+
   return (
-    <div className="relative">
+    <div className="relative" ref={dropdownRef}>
       <button
-        className={`px-3 py-1 text-sm rounded ${properties[selected].bg} ${properties[selected].text}`}
+        className={`px-3 py-1 text-sm rounded ${currentProperties.bg} ${currentProperties.text}`}
         onClick={() => setOpen(!open)}
       >
         {selected}
       </button>
       {open && (
         <div className="absolute top-full left-0 bg-sidebar text-white mt-1 rounded shadow-lg z-10">
-          {availableStatuses.map((s) => (
-            <div
-              key={s}
-              className={`px-4 py-2 cursor-pointer hover:bg-gray-700 ${properties[s].text}`}
-              onClick={() => handleSelect(s)}
-            >
-              {s}
-            </div>
-          ))}
+          {availableStatuses.map((s) => {
+            const statusProperties = properties[s] || {
+              bg: "bg-gray-800",
+              text: "text-gray-300",
+            };
+            return (
+              <div
+                key={s}
+                className={`px-4 py-2 cursor-pointer hover:bg-gray-700 ${statusProperties.text}`}
+                onClick={() => handleSelect(s)}
+              >
+                {s}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
@@ -221,6 +259,11 @@ export const TableDeviceList: React.FC<TableDeviceListProps> = ({ data }) => {
   }, [data]);
 
   const handleStatusChange = async (deviceId: number, newStatus: string) => {
+    const previousStatus =
+      localDeviceStatus[deviceId] ||
+      data.find((item) => item.id === deviceId)?.action ||
+      "active";
+
     // Immediately update local state for instant UI feedback
     setLocalDeviceStatus((prev) => ({
       ...prev,
@@ -230,10 +273,11 @@ export const TableDeviceList: React.FC<TableDeviceListProps> = ({ data }) => {
     try {
       await updateDeviceStatus(deviceId, newStatus.toLowerCase());
     } catch (error) {
+      console.error("Failed to update device status:", error);
       // Revert local state if API call fails
       setLocalDeviceStatus((prev) => ({
         ...prev,
-        [deviceId]: prev[deviceId] === "active" ? "hold" : "active",
+        [deviceId]: previousStatus,
       }));
     }
   };

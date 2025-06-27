@@ -1,5 +1,9 @@
 import { ButtonAdd, TextSearchBox } from "../../components/input";
-import { DeviceDashboardCard, Pagination } from "../../components/utilities";
+import {
+  DeviceDashboardCard,
+  Pagination,
+  DashboardCard,
+} from "../../components/utilities";
 import { TableDeviceList } from "@/components/tables";
 import { IconDeviceActive, IconDeviceHold } from "@/components/icons";
 import { EditDeviceModal } from "@/components/modals";
@@ -9,70 +13,43 @@ import axiosInstance from "@/lib/axios";
 
 export const ScreenRestaurantDevices = () => {
   const {
-    fetchAllDevices,
     allDevices,
-    setAllDevices,
-    devicesSearchQuery,
-    setDevicesSearchQuery,
-    devicesCurrentPage,
     devicesCount,
+    devicesCurrentPage,
+    devicesSearchQuery,
+    deviceStats,
+    fetchAllDevices,
+    fetchDeviceStats,
     setDevicesCurrentPage,
+    setDevicesSearchQuery,
   } = useOwner();
 
   const [deviceModal, setShowAddModall] = useState(false);
-  const [deviceStats, setDeviceStats] = useState({
-    total_devices: 0,
-    active_devices: 0,
-    hold_devices: 0,
-    restaurant: "",
-  });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchAllDevices();
-  }, [fetchAllDevices]);
-
-  useEffect(() => {
-    // Fetch device stats from API
-    const fetchStats = async () => {
+    const loadData = async () => {
+      setLoading(true);
       try {
-        const res = await axiosInstance.get("/owners/devices/stats/");
-        setDeviceStats(res.data);
-      } catch (err) {
-        setDeviceStats({
-          total_devices: 0,
-          active_devices: 0,
-          hold_devices: 0,
-          restaurant: "",
-        });
+        await Promise.all([fetchDeviceStats(), fetchAllDevices()]);
+      } catch (error) {
+        console.error("Failed to load device data:", error);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchStats();
-  }, []);
+    loadData();
+  }, [fetchDeviceStats, fetchAllDevices]);
 
-  // Debounced search function
-  const debouncedSearch = useCallback(
-    (() => {
-      let timeoutId: NodeJS.Timeout;
-      return (searchTerm: string) => {
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => {
-          setDevicesSearchQuery(searchTerm);
-          setDevicesCurrentPage(1); // Reset to first page when searching
-          fetchAllDevices(1, searchTerm);
-        }, 500);
-      };
-    })(),
-    [fetchAllDevices, setDevicesSearchQuery, setDevicesCurrentPage]
-  );
+  const handlePageChange = (page: number) => {
+    setDevicesCurrentPage(page);
+    fetchAllDevices(page, devicesSearchQuery);
+  };
 
-  // Handle page change
-  const handlePageChange = useCallback(
-    (page: number) => {
-      setDevicesCurrentPage(page);
-      fetchAllDevices(page, devicesSearchQuery);
-    },
-    [fetchAllDevices, devicesSearchQuery, setDevicesCurrentPage]
-  );
+  const handleSearchChange = (query: string) => {
+    setDevicesSearchQuery(query);
+    fetchAllDevices(1, query);
+  };
 
   const showDeviceModal = () => {
     setShowAddModall(true);
@@ -82,48 +59,54 @@ export const ScreenRestaurantDevices = () => {
     setShowAddModall(false);
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg">Loading devices...</div>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="flex flex-col">
         {/* Stats Cards */}
-        <div className="flex flex-col md:flex-row gap-6">
-          <DeviceDashboardCard
-            count={deviceStats.active_devices}
-            label="Active Devices"
-            barColor="#0EA5E9"
-            accentColor="#0EA5E9"
-            icon={<IconDeviceActive />}
+        <div className="flex flex-col lg:flex-row gap-y-3 lg:gap-y-0 lg:gap-x-3">
+          <DashboardCard
+            label="Total devices"
+            data={deviceStats?.total_devices?.toString() || "0"}
+            accentColor="#31BB24"
+            gradientStart="#48E03A"
+            gradientEnd="#161F42"
           />
-          <DeviceDashboardCard
-            count={deviceStats.hold_devices}
-            label="Hold Device"
-            barColor="#D8954A"
-            accentColor="#D8954A"
-            icon={<IconDeviceHold />}
+          <DashboardCard
+            label="Active devices"
+            data={deviceStats?.active_devices?.toString() || "0"}
+            accentColor="#4F46E5"
+            gradientStart="#4F46E5"
+            gradientEnd="#161F42"
           />
-          <DeviceDashboardCard
-            count={deviceStats.total_devices}
-            label="Total Devices"
-            barColor="#8B5CF6"
-            accentColor="#8B5CF6"
+          <DashboardCard
+            label="Hold devices"
+            data={deviceStats?.hold_devices?.toString() || "0"}
+            accentColor="#FFB056"
+            gradientStart="#FFB056"
+            gradientEnd="#161F42"
           />
         </div>
-        {/* Label */}
-        <div className="flex flex-col md:flex-row justify-between md:items-center gap-y-2 md:gap-y-0 my-4">
-          <h2 className="flex-1 text-2xl text-primary-text">
-            Registered Device List
-          </h2>
-          <div className="flex-1 flex gap-x-4 justify-end">
-            <ButtonAdd label="Add Device" onClick={() => showDeviceModal()} />
-            <TextSearchBox
-              placeholder="Search"
-              value={devicesSearchQuery}
-              onChange={(value) => debouncedSearch(value)}
-            />
-          </div>
+
+        {/* Header and search */}
+        <div className="flex flex-row justify-between items-center my-3">
+          <h2 className="text-2xl text-primary-text">List of devices</h2>
+          <TextSearchBox
+            placeholder="Search devices..."
+            value={devicesSearchQuery}
+            onChange={handleSearchChange}
+          />
         </div>
+
         {/* List of content */}
-        <div className="bg-sidebar p-4 rounded-lg overflow-x-auto">
+        <div className="bg-sidebar p-4 rounded-lg">
           <TableDeviceList data={allDevices} />
           <div className="mt-4 flex justify-center">
             <Pagination

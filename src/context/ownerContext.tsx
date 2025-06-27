@@ -74,6 +74,14 @@ interface ReservationStatusReport {
   running_month_reservations: number;
 }
 
+// Define device stats type
+interface DeviceStats {
+  total_devices: number;
+  active_devices: number;
+  hold_devices: number;
+  restaurant: string;
+}
+
 // Define the context type
 interface OwnerContextType {
   categories: Category[];
@@ -94,12 +102,14 @@ interface OwnerContextType {
   devicesSearchQuery: string;
   devicesCurrentPage: number;
   devicesCount: number;
+  deviceStats: DeviceStats | null;
   fetchCategories: () => Promise<void>;
   fetchFoodItems: (page?: number, search?: string) => Promise<void>;
   fetchOrders: (page?: number, search?: string) => Promise<void>;
   fetchReservations: (page?: number, search?: string) => Promise<void>;
   fetchReservationStatusReport: () => Promise<void>;
   fetchAllDevices: (page?: number, search?: string) => Promise<void>;
+  fetchDeviceStats: () => Promise<void>;
   updateFoodItem: (id: number, formData: FormData) => Promise<void>;
   createFoodItem: (formData: FormData) => Promise<void>;
   deleteFoodItem: (id: number) => Promise<void>;
@@ -146,6 +156,7 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
   const [devicesSearchQuery, setDevicesSearchQuery] = useState("");
   const [devicesCurrentPage, setDevicesCurrentPage] = useState(1);
   const [devicesCount, setDevicesCount] = useState(0);
+  const [deviceStats, setDeviceStats] = useState<DeviceStats | null>(null);
 
   // Auto-fetch categories when userRole becomes available
   useEffect(() => {
@@ -345,6 +356,26 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
     [devicesCurrentPage, devicesSearchQuery, userRole, isLoading]
   );
 
+  const fetchDeviceStats = useCallback(async () => {
+    // Don't fetch if still loading or if userRole is null
+    if (isLoading || !userRole) {
+      return;
+    }
+
+    try {
+      const endpoint =
+        userRole === "owner"
+          ? "/owners/devices/stats/"
+          : "/staff/devices/stats/";
+
+      const response = await axiosInstance.get(endpoint);
+      setDeviceStats(response.data);
+    } catch (error) {
+      console.error("Failed to load device stats", error);
+      toast.error("Failed to load device stats.");
+    }
+  }, [userRole, isLoading]);
+
   const updateFoodItem = useCallback(
     async (id: number, formData: FormData) => {
       // Don't update if still loading or if userRole is null
@@ -491,7 +522,11 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
 
         await axiosInstance.patch(endpoint, { action });
         toast.success("Device status updated successfully!");
-        await fetchAllDevices(devicesCurrentPage, devicesSearchQuery);
+        // Refresh both device list and stats
+        await Promise.all([
+          fetchAllDevices(devicesCurrentPage, devicesSearchQuery),
+          fetchDeviceStats(),
+        ]);
       } catch (err) {
         console.error("Failed to update device status", err);
         toast.error("Failed to update device status.");
@@ -500,6 +535,7 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
     },
     [
       fetchAllDevices,
+      fetchDeviceStats,
       devicesCurrentPage,
       devicesSearchQuery,
       userRole,
@@ -526,12 +562,14 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
     devicesSearchQuery,
     devicesCurrentPage,
     devicesCount,
+    deviceStats,
     fetchCategories,
     fetchFoodItems,
     fetchOrders,
     fetchReservations,
     fetchReservationStatusReport,
     fetchAllDevices,
+    fetchDeviceStats,
     updateFoodItem,
     createFoodItem,
     deleteFoodItem,
