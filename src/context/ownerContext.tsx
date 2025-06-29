@@ -82,6 +82,12 @@ interface DeviceStats {
   restaurant: string;
 }
 
+interface OrdersStats {
+  ongoing_orders: number;
+  today_completed_order_price: number;
+  total_completed_orders: number;
+}
+
 // Define the context type
 interface OwnerContextType {
   categories: Category[];
@@ -102,6 +108,7 @@ interface OwnerContextType {
   devicesSearchQuery: string;
   devicesCurrentPage: number;
   devicesCount: number;
+  ordersStats: OrdersStats | null;
   deviceStats: DeviceStats | null;
   fetchCategories: () => Promise<void>;
   fetchFoodItems: (page?: number, search?: string) => Promise<void>;
@@ -157,6 +164,7 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
   const [devicesCurrentPage, setDevicesCurrentPage] = useState(1);
   const [devicesCount, setDevicesCount] = useState(0);
   const [deviceStats, setDeviceStats] = useState<DeviceStats | null>(null);
+  const [ordersStats, setOrdersStats] = useState<OrdersStats | null>(null);
 
   // Auto-fetch categories when userRole becomes available
   useEffect(() => {
@@ -242,18 +250,17 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
 
         const response = await axiosInstance.get(endpoint);
         const { results, count } = response.data;
-        console.log("Fetched orders:", response.data);
+        console.log("Fetched orders:", results.orders);
         const formattedOrders = results.orders?.map((item: any) => ({
           id: item.id,
-          userName: item.userName,
-          guestNo: item.guestNo,
-          tableNo: item.tableNo,
-          orderedItems: item.orderedItems,
-          timeOfOrder: item.timeOfOrder,
-          orderId: item.orderId,
+          tableNo: item.device_name,
+          orderedItems: item.order_items?.length || 0,
+          timeOfOrder: item.created_time,
+          orderId: item.id,
           status: item.status,
         }));
 
+        setOrdersStats(results?.stats);
         setOrders(formattedOrders);
         setOrdersCount(count || 0);
         setOrdersCurrentPage(page);
@@ -280,20 +287,16 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
 
         const response = await axiosInstance.get(endpoint);
         const { results, count } = response.data;
-        console.log("Fetched reservations:", response.data);
-        const formattedReservations = results.reservations?.map(
-          (item: any) => ({
-            id: item.id,
-            reservationId: item.reservationId,
-            customerName: item.customerName,
-            tableNo: item.tableNo,
-            guestNo: item.guestNo,
-            cellNumber: item.cellNumber,
-            email: item.email,
-            reservationTime: item.reservationTime,
-            customRequest: item.customRequest,
-          })
-        );
+        const formattedReservations = results?.map((item: any) => ({
+          id: item.id,
+          customerName: item.customer_name,
+          tableNo: item.device,
+          guestNo: item.guest_no,
+          cellNumber: item.cell_number,
+          email: item.email,
+          reservationTime: item.created_at,
+          customRequest: item.status,
+        }));
 
         setReservations(formattedReservations);
         setReservationsCount(count || 0);
@@ -308,6 +311,7 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
 
   const fetchReservationStatusReport = useCallback(async () => {
     // Don't fetch if still loading or if userRole is null
+
     if (isLoading || !userRole) {
       return;
     }
@@ -317,6 +321,24 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
         userRole === "owner"
           ? "/owners/reservations/report-reservation-status/"
           : "/staff/reservations/report-reservation-status/";
+
+      const response = await axiosInstance.get(endpoint);
+      setReservationStatusReport(response.data);
+    } catch (error) {
+      console.error("Failed to load reservation status report", error);
+      toast.error("Failed to load reservation status report.");
+    }
+  }, [userRole, isLoading]);
+  const fetchOrdersStats = useCallback(async () => {
+    // Don't fetch if still loading or if userRole is null
+
+    if (isLoading || !userRole) {
+      return;
+    }
+
+    try {
+      const endpoint =
+        userRole === "owner" ? "/owners/orders/" : "/staff/orders/";
 
       const response = await axiosInstance.get(endpoint);
       setReservationStatusReport(response.data);
@@ -550,6 +572,7 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
     currentPage,
     searchQuery,
     orders,
+    ordersStats,
     ordersCount,
     ordersCurrentPage,
     ordersSearchQuery,
@@ -600,3 +623,16 @@ export const useOwner = () => {
   }
   return context;
 };
+
+export function formatDateTime(isoString: string): string {
+  const date = new Date(isoString);
+  // Example: 26 Jun 2025, 11:03 AM
+  return date.toLocaleString("en-US", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+}

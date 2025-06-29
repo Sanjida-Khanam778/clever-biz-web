@@ -5,11 +5,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { IconCheckmark, IconClose, IconHold } from "./icons";
-import { ButtonStatus as InputButtonStatus, StatusSpan } from "./input";
 import { TooltipTop } from "./utilities";
-import { BiCopy, BiMailSend } from "react-icons/bi";
+import { BiMailSend } from "react-icons/bi";
 import { useState, useEffect, useRef } from "react";
 import { useOwner } from "@/context/ownerContext";
+import { formatDateTime } from "@/lib/utils";
 
 /* Reservation Table Data ===========================================================>>>>> */
 
@@ -19,14 +19,13 @@ interface TableReservationListProps {
 export const TableReservationList: React.FC<TableReservationListProps> = ({
   data,
 }) => {
-  console.log(data, "data");
   return (
     <table className="w-full table-auto text-left clever-table">
       <thead className="table-header">
         <tr>
           <th className="p-4 rounded-l-md">Reservation ID</th>
           <th className="p-4">Customer Name</th>
-          <th className="p-4">Table No.</th>
+          <th className="p-4">Table Name</th>
           <th className="p-4">Guest No.</th>
           <th className="p-4">Cell number</th>
           <th className="p-4">Email</th>
@@ -37,7 +36,7 @@ export const TableReservationList: React.FC<TableReservationListProps> = ({
       <tbody className="bg-sidebar text-sm">
         {data?.map((item, index) => (
           <tr key={index} className="border-b border-[#1C1E3C]">
-            <td className="p-4 text-primary-text">{item.reservationId}</td>
+            <td className="p-4 text-primary-text">{item.id}</td>
             <td className="p-4 text-primary-text">{item.customerName}</td>
             <td className="p-4 text-primary-text">{item.tableNo}</td>
             <td className="p-4 text-primary-text">{item.guestNo}</td>
@@ -374,7 +373,7 @@ interface TableFoodOrderListProps {
 export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
   data,
 }) => {
-  const statuses = ["Processing", "Delivered", "Cancelled", "Pending"];
+  const statuses = ["Preparing", "Delivered", "Cancelled", "Pending"];
   const { updateOrderStatus } = useOwner();
 
   // Local state to track order status changes immediately
@@ -414,8 +413,6 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
     <table className="w-full table-auto text-left clever-table">
       <thead className="table-header">
         <tr>
-          <th>User Name</th>
-          <th>Guest No.</th>
           <th>Table No.</th>
           <th>Ordered Items</th>
           <th>Timer of order</th>
@@ -426,8 +423,6 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
       <tbody className="bg-sidebar text-sm">
         {data.map((item, index) => (
           <tr key={index} className="border-b border-[#1C1E3C]">
-            <td className="p-4 text-primary-text">{item.userName}</td>
-            <td className="p-4 text-primary-text">{item.guestNo}</td>
             <td className="p-4 text-primary-text">{item.tableNo}</td>
             <td className="p-4 text-primary-text">{item.orderedItems}</td>
             <td className="p-4 text-primary-text">{item.timeOfOrder}</td>
@@ -440,7 +435,7 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
                     : item.status
                 }
                 properties={{
-                  Processing: {
+                  Preparing: {
                     bg: "bg-blue-800",
                     text: "text-blue-300",
                   },
@@ -455,14 +450,6 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
                   Pending: {
                     bg: "bg-yellow-800",
                     text: "text-yellow-300",
-                  },
-                  "In Progress": {
-                    bg: "bg-blue-800",
-                    text: "text-blue-300",
-                  },
-                  Completed: {
-                    bg: "bg-green-800",
-                    text: "text-green-300",
                   },
                 }}
                 availableStatuses={statuses}

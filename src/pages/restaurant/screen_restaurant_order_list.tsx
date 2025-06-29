@@ -7,6 +7,7 @@ import { useOwner } from "@/context/ownerContext";
 const ScreenRestaurantOrderList = () => {
   const {
     orders,
+    ordersStats,
     ordersCount,
     ordersCurrentPage,
     ordersSearchQuery,
@@ -16,7 +17,7 @@ const ScreenRestaurantOrderList = () => {
   } = useOwner();
 
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
-
+  console.log(ordersStats, "orders stats");
   // Debounced search effect
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -51,6 +52,8 @@ const ScreenRestaurantOrderList = () => {
 
   const totalOrders = ordersCount;
 
+  console.log(orders);
+
   return (
     <>
       <div className="flex flex-col">
@@ -59,7 +62,7 @@ const ScreenRestaurantOrderList = () => {
           {/* Card 1 */}
           <OrderlistCard
             label="Ongoing Order"
-            data={ongoingOrders.toString()}
+            data={ordersStats?.ongoing_orders.toString()}
             accentColor="#31BB24"
             gradientStart="#48E03A"
             gradientEnd="#161F42"
@@ -67,7 +70,7 @@ const ScreenRestaurantOrderList = () => {
           {/* Card 2 */}
           <OrderlistCard
             label="Total Orders Today"
-            data={totalOrders.toString()}
+            data={ordersStats?.today_completed_order_price.toString()}
             accentColor="#FFB056"
             gradientStart="#FFB056"
             gradientEnd="#161F42"
@@ -75,7 +78,7 @@ const ScreenRestaurantOrderList = () => {
           {/* Card 3 */}
           <OrderlistCard
             label="Completed order"
-            data={completedOrders.toString()}
+            data={ordersStats?.total_completed_orders.toString()}
             accentColor="#FF6561"
             gradientStart="#EB342E"
             gradientEnd="#161F42"
