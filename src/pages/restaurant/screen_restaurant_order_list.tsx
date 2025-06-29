@@ -41,19 +41,6 @@ const ScreenRestaurantOrderList = () => {
     setOrdersCurrentPage(1); // Reset to first page when searching
   };
 
-  // Calculate dashboard stats from orders data
-  const ongoingOrders = orders.filter(
-    (order) => order.status === "Processing" || order.status === "In Progress"
-  ).length;
-
-  const completedOrders = orders.filter(
-    (order) => order.status === "Completed" || order.status === "Delivered"
-  ).length;
-
-  const totalOrders = ordersCount;
-
-  console.log(orders);
-
   return (
     <>
       <div className="flex flex-col">

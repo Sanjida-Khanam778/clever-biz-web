@@ -48,7 +48,7 @@ interface OrderItem {
   status:
     | "Pending"
     | "Completed"
-    | "Delivered"
+    | "Completed"
     | "Cancelled"
     | "In Progress"
     | "Processing";
@@ -136,6 +136,7 @@ interface OwnerContextType {
   setDevicesSearchQuery: (query: string) => void;
   setDevicesCurrentPage: (page: number) => void;
   updateDeviceStatus: (id: number, action: string) => Promise<void>;
+  setOrders: React.Dispatch<React.SetStateAction<OrderItem[]>>;
 }
 
 // Create the context
@@ -524,22 +525,31 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
       try {
         const endpoint =
           userRole === "owner"
-            ? `/owners/orders/${id}/`
-            : `/staff/orders/${id}/`;
+            ? `/owners/orders/status/${id}/`
+            : `/staff/orders/status/${id}/`;
 
-        await axiosInstance.patch(endpoint, {
-          status: status,
+        const response = await axiosInstance.patch(endpoint, {
+          status: status.toLowerCase(),
         });
+
         toast.success("Order status updated successfully!");
-        // Refresh the current page to show updated data
-        await fetchOrders(ordersCurrentPage, ordersSearchQuery);
+
+        // Update local orders state immediately for instant feedback
+        setOrders((prevOrders) =>
+          prevOrders.map((order) =>
+            order.id === id ? { ...order, status: status as any } : order
+          )
+        );
+
+        // Optionally refresh the orders list
+        // await fetchOrders(ordersCurrentPage, ordersSearchQuery);
       } catch (err) {
         console.error("Failed to update order status", err);
         toast.error("Failed to update order status.");
         throw err;
       }
     },
-    [fetchOrders, ordersCurrentPage, ordersSearchQuery, userRole, isLoading]
+    [userRole, isLoading, setOrders]
   );
 
   const updateDeviceStatus = useCallback(
@@ -621,6 +631,7 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
     setDevicesSearchQuery,
     setDevicesCurrentPage,
     updateDeviceStatus,
+    setOrders,
   };
 
   return (

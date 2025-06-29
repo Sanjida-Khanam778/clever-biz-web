@@ -382,39 +382,14 @@ interface TableFoodOrderListProps {
 export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
   data,
 }) => {
-  const statuses = ["Preparing", "Delivered", "Cancelled", "Pending"];
+  const statuses = ["Preparing", "Completed", "Cancelled", "Pending"];
   const { updateOrderStatus } = useOwner();
 
-  // Local state to track order status changes immediately
-  const [localOrderStatus, setLocalOrderStatus] = useState<
-    Record<number, string>
-  >({});
-
-  // Initialize local order status state when data changes
-  useEffect(() => {
-    const initialStatus: Record<number, string> = {};
-    data?.forEach((item) => {
-      initialStatus[item.id] = item.status;
-    });
-    setLocalOrderStatus(initialStatus);
-  }, [data]);
-
   const handleStatusChange = async (orderId: number, newStatus: string) => {
-    // Immediately update local state for instant UI feedback
-    setLocalOrderStatus((prev) => ({
-      ...prev,
-      [orderId]: newStatus,
-    }));
-
     try {
       await updateOrderStatus(orderId, newStatus);
     } catch (error) {
       console.error("Failed to update order status:", error);
-      // Revert local state if API call fails
-      setLocalOrderStatus((prev) => ({
-        ...prev,
-        [orderId]: prev[orderId] || "Pending",
-      }));
     }
   };
 
@@ -438,17 +413,13 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
             <td className="p-4 text-primary-text">{item.orderId}</td>
             <td className="p-4 text-primary-text">
               <ButtonStatus
-                status={
-                  localOrderStatus[item.id] !== undefined
-                    ? localOrderStatus[item.id]
-                    : item.status
-                }
+                status={item.status}
                 properties={{
                   Preparing: {
                     bg: "bg-blue-800",
                     text: "text-blue-300",
                   },
-                  Delivered: {
+                  Completed: {
                     bg: "bg-green-800",
                     text: "text-green-300",
                   },

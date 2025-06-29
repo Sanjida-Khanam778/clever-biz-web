@@ -74,7 +74,7 @@ type OrderItem = {
   status:
     | "Pending"
     | "Completed"
-    | "Delivered"
+    | "Completed"
     | "Cancelled"
     | "In Progress"
     | "Processing";

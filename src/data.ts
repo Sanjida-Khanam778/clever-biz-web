@@ -96,7 +96,7 @@ export const orderTableData: OrderItem[] = [
     orderedItems: 3,
     timeOfOrder: "9.30PM",
     orderId: "1122a456",
-    status: "Delivered",
+    status: "Completed",
   },
   {
     userName: "Pepes",
