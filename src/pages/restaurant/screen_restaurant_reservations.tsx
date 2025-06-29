@@ -96,7 +96,7 @@ const ScreenRestaurantReservations = () => {
             <Pagination
               page={reservationsCurrentPage}
               total={reservationsCount}
-              onPageChange={handlePageChange}
+              onPageChange={handlePageChange} 
             />
           </div>
         </div>
