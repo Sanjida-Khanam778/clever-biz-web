@@ -9,7 +9,7 @@ import { TooltipTop } from "./utilities";
 import { BiMailSend } from "react-icons/bi";
 import { useState, useEffect, useRef } from "react";
 import { useOwner } from "@/context/ownerContext";
-import { formatDateTime } from "@/lib/utils";
+import { formatDateTime, formatDate } from "@/lib/utils";
 
 /* Reservation Table Data ===========================================================>>>>> */
 
@@ -19,6 +19,7 @@ interface TableReservationListProps {
 export const TableReservationList: React.FC<TableReservationListProps> = ({
   data,
 }) => {
+  console.log(data, "reservation data");
   return (
     <table className="w-full table-auto text-left clever-table">
       <thead className="table-header">
@@ -41,8 +42,16 @@ export const TableReservationList: React.FC<TableReservationListProps> = ({
             <td className="p-4 text-primary-text">{item.tableNo}</td>
             <td className="p-4 text-primary-text">{item.guestNo}</td>
             <td className="p-4 text-primary-text">{item.cellNumber}</td>
-            <td className="p-4 text-primary-text/60">{item.email}</td>
-            <td className="p-4 text-primary-text">{item.reservationTime}</td>
+            <td className="p-4 text-primary-text/60">
+              {item.email ? item.email : "N/A"}
+            </td>
+            <td className="p-4 text-primary-text">
+              <div className="flex flex-col">
+                <span className="font-medium">
+                  {formatDateTime(item.reservationTime)}
+                </span>
+              </div>
+            </td>
             <td className="p-4 text-primary-text">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

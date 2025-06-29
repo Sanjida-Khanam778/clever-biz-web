@@ -1,7 +1,7 @@
 import { TableReservationList } from "@/components/tables";
 import { DateSearchBox, TextSearchBox } from "../../components/input";
 import { Pagination, StatCard } from "../../components/utilities";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useOwner } from "@/context/ownerContext";
 
 /* Screen to list of reservations on staff end */
@@ -18,19 +18,54 @@ const ScreenStaffReservations = () => {
     setReservationsSearchQuery,
   } = useOwner();
 
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+  // Helper function to format date properly for API
+  const formatDateForAPI = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   useEffect(() => {
+    const dateString = selectedDate
+      ? formatDateForAPI(selectedDate)
+      : undefined;
     fetchReservationStatusReport();
-    fetchReservations();
-  }, [fetchReservationStatusReport, fetchReservations]);
+    fetchReservations(
+      reservationsCurrentPage,
+      reservationsSearchQuery,
+      dateString
+    );
+  }, [
+    fetchReservationStatusReport,
+    fetchReservations,
+    reservationsCurrentPage,
+    reservationsSearchQuery,
+    selectedDate,
+  ]);
 
   const handlePageChange = (page: number) => {
     setReservationsCurrentPage(page);
-    fetchReservations(page, reservationsSearchQuery);
+    const dateString = selectedDate
+      ? formatDateForAPI(selectedDate)
+      : undefined;
+    fetchReservations(page, reservationsSearchQuery, dateString);
   };
 
   const handleSearchChange = (query: string) => {
     setReservationsSearchQuery(query);
-    fetchReservations(1, query);
+    const dateString = selectedDate
+      ? formatDateForAPI(selectedDate)
+      : undefined;
+    fetchReservations(1, query, dateString);
+  };
+
+  const handleDateChange = (date: Date | null) => {
+    setSelectedDate(date);
+    const dateString = date ? formatDateForAPI(date) : undefined;
+    fetchReservations(1, reservationsSearchQuery, dateString);
   };
 
   return (
@@ -64,7 +99,7 @@ const ScreenStaffReservations = () => {
           <h2 className="flex-1 text-2xl text-primary-text">List of items</h2>
           <div className="flex-1 flex gap-x-4 justify-end">
             {/* Date filter */}
-            <DateSearchBox />
+            <DateSearchBox onDateChange={handleDateChange} />
             {/* Search box by id */}
             <TextSearchBox
               placeholder="Search by Reservation ID"

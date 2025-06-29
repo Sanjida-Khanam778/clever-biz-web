@@ -19,6 +19,8 @@ const ScreenRestaurantReservations = () => {
   } = useOwner();
 
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  console.log(reservations, "reservations data");
 
   // Debounced search effect
   useEffect(() => {
@@ -31,11 +33,19 @@ const ScreenRestaurantReservations = () => {
 
   // Load reservations and status report on component mount
   useEffect(() => {
-    fetchReservations(reservationsCurrentPage, debouncedSearchQuery);
+    const dateString = selectedDate
+      ? formatDateForAPI(selectedDate)
+      : undefined;
+    fetchReservations(
+      reservationsCurrentPage,
+      debouncedSearchQuery,
+      dateString
+    );
     fetchReservationStatusReport();
   }, [
     reservationsCurrentPage,
     debouncedSearchQuery,
+    selectedDate,
     fetchReservations,
     fetchReservationStatusReport,
   ]);
@@ -47,6 +57,20 @@ const ScreenRestaurantReservations = () => {
   const handleSearch = (query: string) => {
     setReservationsSearchQuery(query);
     setReservationsCurrentPage(1); // Reset to first page when searching
+  };
+
+  const handleDateChange = (date: Date | null) => {
+    console.log(date, "date");
+    setSelectedDate(date);
+    setReservationsCurrentPage(1); // Reset to first page when date changes
+  };
+
+  // Helper function to format date properly for API
+  const formatDateForAPI = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
   };
 
   return (
@@ -80,7 +104,7 @@ const ScreenRestaurantReservations = () => {
           <h2 className="flex-1 text-2xl text-primary-text">List of items</h2>
           <div className="flex-1 flex gap-x-4 justify-end">
             {/* Date filter */}
-            <DateSearchBox />
+            <DateSearchBox onDateChange={handleDateChange} />
             {/* Search box by id */}
             <TextSearchBox
               placeholder="Search by Reservation ID"
@@ -96,7 +120,7 @@ const ScreenRestaurantReservations = () => {
             <Pagination
               page={reservationsCurrentPage}
               total={reservationsCount}
-              onPageChange={handlePageChange} 
+              onPageChange={handlePageChange}
             />
           </div>
         </div>

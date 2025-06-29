@@ -113,7 +113,11 @@ interface OwnerContextType {
   fetchCategories: () => Promise<void>;
   fetchFoodItems: (page?: number, search?: string) => Promise<void>;
   fetchOrders: (page?: number, search?: string) => Promise<void>;
-  fetchReservations: (page?: number, search?: string) => Promise<void>;
+  fetchReservations: (
+    page?: number,
+    search?: string,
+    date?: string
+  ) => Promise<void>;
   fetchReservationStatusReport: () => Promise<void>;
   fetchAllDevices: (page?: number, search?: string) => Promise<void>;
   fetchDeviceStats: () => Promise<void>;
@@ -273,17 +277,26 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
   );
 
   const fetchReservations = useCallback(
-    async (page: number = reservationsCurrentPage, search?: string) => {
+    async (
+      page: number = reservationsCurrentPage,
+      search?: string,
+      date?: string
+    ) => {
       // Don't fetch if still loading or if userRole is null
       if (isLoading || !userRole) {
         return;
       }
 
       try {
-        const endpoint =
+        let endpoint =
           userRole === "owner"
             ? `/owners/reservations/?page=${page}&search=${search || ""}`
             : `/staff/reservations/?page=${page}&search=${search || ""}`;
+
+        // Add date parameter if provided
+        if (date) {
+          endpoint += `&date=${date}`;
+        }
 
         const response = await axiosInstance.get(endpoint);
         const { results, count } = response.data;
@@ -294,7 +307,7 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
           guestNo: item.guest_no,
           cellNumber: item.cell_number,
           email: item.email,
-          reservationTime: item.created_at,
+          reservationTime: item.reservation_time,
           customRequest: item.status,
         }));
 

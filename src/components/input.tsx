@@ -734,8 +734,21 @@ export const InputVideoUploadBox: React.FC<InputVideoUploadBoxProps> = ({
 /* <<<<<<<<===================================================== Pick Video */
 
 /* Date picker input ===========================================================>>>>> */
-export const DateSearchBox = () => {
+export const DateSearchBox = ({
+  onDateChange,
+}: {
+  onDateChange?: (date: Date | null) => void;
+}) => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+  const handleDateSelect = (date: Date) => {
+    setSelectedDate(date);
+    onDateChange?.(date);
+  };
+
+  const handleSearch = () => {
+    onDateChange?.(selectedDate);
+  };
 
   return (
     <div className="w-full max-w-sm max-h-14">
@@ -751,7 +764,10 @@ export const DateSearchBox = () => {
                     : "Search by Date"}
                 </span>
               </PopoverButton>
-              <button className="h-full bg-table-header px-6 flex items-center justify-center hover:bg-[#2B274D]">
+              <button
+                className="h-full bg-table-header px-6 flex items-center justify-center hover:bg-[#2B274D]"
+                onClick={handleSearch}
+              >
                 <FaMagnifyingGlass className="w-4 h-4  text-primary-text" />
               </button>
             </div>
@@ -768,7 +784,7 @@ export const DateSearchBox = () => {
                   >
                     <DatePicker
                       selected={selectedDate}
-                      onSelect={(date) => setSelectedDate(date)}
+                      onSelect={handleDateSelect}
                       inline
                       calendarClassName="!bg-[#1F1D3B] !text-white"
                       dayClassName={() => "hover:bg-[#292758]"}
