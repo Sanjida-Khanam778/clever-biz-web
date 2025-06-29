@@ -19,7 +19,50 @@ interface TableReservationListProps {
 export const TableReservationList: React.FC<TableReservationListProps> = ({
   data,
 }) => {
-  console.log(data, "reservation data");
+  const { updateReservationStatus } = useOwner();
+
+  const handleStatusChange = async (
+    reservationId: number,
+    newStatus: string
+  ) => {
+    try {
+      await updateReservationStatus(reservationId, newStatus);
+    } catch (error) {
+      console.error("Failed to update reservation status:", error);
+    }
+  };
+
+  const getStatusDisplay = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "accept":
+        return {
+          icon: (
+            <IconCheckmark className="h-7 w-7 text-green-500 cursor-pointer" />
+          ),
+          label: "Accept",
+        };
+      case "hold":
+        return {
+          icon: <IconHold className="h-6 w-6 text-yellow-500 cursor-pointer" />,
+          label: "Hold",
+        };
+      case "cancel":
+        return {
+          icon: <IconClose className="h-6 w-6 text-red-500 cursor-pointer" />,
+          label: "Cancel",
+        };
+      default:
+        return {
+          icon: (
+            <span className="min-h-8 inline-flex items-center justify-center px-2 py-1 border rounded cursor-pointer">
+              {status}
+            </span>
+          ),
+          label: status,
+        };
+    }
+  };
+
   return (
     <table className="w-full table-auto text-left clever-table">
       <thead className="table-header">
@@ -35,58 +78,55 @@ export const TableReservationList: React.FC<TableReservationListProps> = ({
         </tr>
       </thead>
       <tbody className="bg-sidebar text-sm">
-        {data?.map((item, index) => (
-          <tr key={index} className="border-b border-[#1C1E3C]">
-            <td className="p-4 text-primary-text">{item.id}</td>
-            <td className="p-4 text-primary-text">{item.customerName}</td>
-            <td className="p-4 text-primary-text">{item.tableNo}</td>
-            <td className="p-4 text-primary-text">{item.guestNo}</td>
-            <td className="p-4 text-primary-text">{item.cellNumber}</td>
-            <td className="p-4 text-primary-text/60">
-              {item.email ? item.email : "N/A"}
-            </td>
-            <td className="p-4 text-primary-text">
-              <div className="flex flex-col">
+        {data?.map((item, index) => {
+          const statusDisplay = getStatusDisplay(item.customRequest);
+          return (
+            <tr key={index} className="border-b border-[#1C1E3C]">
+              <td className="p-4 text-primary-text">{item.id}</td>
+              <td className="p-4 text-primary-text">{item.customerName}</td>
+              <td className="p-4 text-primary-text">{item.tableNo}</td>
+              <td className="p-4 text-primary-text">{item.guestNo}</td>
+              <td className="p-4 text-primary-text">{item.cellNumber}</td>
+              <td className="p-4 text-primary-text/60">
+                {item.email ? item.email : "N/A"}
+              </td>
+              <td className="p-4 text-primary-text">
                 <span className="font-medium">
                   {formatDateTime(item.reservationTime)}
                 </span>
-              </div>
-            </td>
-            <td className="p-4 text-primary-text">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  {item.customRequest === "accepted" ? (
-                    <IconCheckmark className="h-7 w-7 text-green-500 cursor-pointer" />
-                  ) : item.customRequest === "hold" ? (
-                    <IconHold className="h-6 w-6 text-yellow-500 cursor-pointer" />
-                  ) : (
-                    <span className="min-h-8 inline-flex items-center justify-center px-2 py-1 border rounded cursor-pointer">
-                      {item.customRequest}
-                    </span>
-                  )}
-                </DropdownMenuTrigger>
+              </td>
+              <td className="p-4 text-primary-text">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    {statusDisplay.icon}
+                  </DropdownMenuTrigger>
 
-                <DropdownMenuContent className=" text-primary-text border-none">
-                  <DropdownMenuItem
-                    onClick={() => {}}
-                    className="flex focus:outline-none"
-                  >
-                    <IconCheckmark className="mr-2 h-5 w-5 text-green-500" />
-                    Accept
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => {}}>
-                    <IconHold className="mr-2 h-5 w-5 text-yellow-500" />
-                    Hold
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => {}}>
-                    <IconClose className="mr-2 h-5 w-5 text-yellow-500" />{" "}
-                    Cancel
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </td>
-          </tr>
-        ))}
+                  <DropdownMenuContent className=" text-primary-text border-none">
+                    <DropdownMenuItem
+                      onClick={() => handleStatusChange(item.id, "accept")}
+                      className="flex focus:outline-none"
+                    >
+                      <IconCheckmark className="mr-2 h-5 w-5 text-green-500" />
+                      Accept
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleStatusChange(item.id, "hold")}
+                    >
+                      <IconHold className="mr-2 h-5 w-5 text-yellow-500" />
+                      Hold
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleStatusChange(item.id, "cancel")}
+                    >
+                      <IconClose className="mr-2 h-5 w-5 text-red-500" />
+                      Cancel
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );
@@ -377,13 +417,22 @@ export const TableReviewList: React.FC<TableReviewListProps> = ({ data }) => {
 
 /* Food Order List ===========================================================>>>>> */
 interface TableFoodOrderListProps {
-  data: OrderItem[];
+  data: any[] | { orders: any[] };
+  updateOrderStatus?: (id: number, status: string) => Promise<void>;
 }
 export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
   data,
+  updateOrderStatus: propUpdateOrderStatus,
 }) => {
+  console.log(data, "data");
   const statuses = ["Preparing", "Completed", "Cancelled", "Pending"];
-  const { updateOrderStatus } = useOwner();
+  const { updateOrderStatus: contextUpdateOrderStatus } = useOwner();
+
+  // Use prop if provided (for staff), otherwise use context (for owner)
+  const updateOrderStatus = propUpdateOrderStatus || contextUpdateOrderStatus;
+
+  // Handle different data structures
+  const ordersData = Array.isArray(data) ? data : data?.orders || [];
 
   const handleStatusChange = async (orderId: number, newStatus: string) => {
     try {
@@ -397,20 +446,35 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
     <table className="w-full table-auto text-left clever-table">
       <thead className="table-header">
         <tr>
-          <th>Table No.</th>
+          <th>Table Name</th>
           <th>Ordered Items</th>
+          <th>Quantity</th>
+          <th>Price</th>
           <th>Timer of order</th>
           <th>Order Id</th>
           <th>Status</th>
         </tr>
       </thead>
       <tbody className="bg-sidebar text-sm">
-        {data.map((item, index) => (
+        {ordersData?.map((item, index) => (
           <tr key={index} className="border-b border-[#1C1E3C]">
-            <td className="p-4 text-primary-text">{item.tableNo}</td>
-            <td className="p-4 text-primary-text">{item.orderedItems}</td>
-            <td className="p-4 text-primary-text">{item.timeOfOrder}</td>
-            <td className="p-4 text-primary-text">{item.orderId}</td>
+            <td className="p-4 text-primary-text">{item.device_name}</td>
+            <td className="p-4 text-primary-text">
+              {item.order_items?.[0]?.item_name || "N/A"}
+            </td>
+            <td className="p-4 text-primary-text">
+              {item.order_items?.[0]?.quantity || "N/A"}
+            </td>
+            <td className="p-4 text-primary-text">
+              {item.order_items?.[0]?.price || "N/A"}
+            </td>
+            <td className="p-4 text-primary-text">
+              {" "}
+              <span className="font-medium">
+                {formatDateTime(item.created_time)}
+              </span>
+            </td>
+            <td className="p-4 text-primary-text">{item.id}</td>
             <td className="p-4 text-primary-text">
               <ButtonStatus
                 status={item.status}

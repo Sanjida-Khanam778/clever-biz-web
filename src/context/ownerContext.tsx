@@ -126,6 +126,7 @@ interface OwnerContextType {
   deleteFoodItem: (id: number) => Promise<void>;
   updateAvailability: (id: number, available: boolean) => Promise<void>;
   updateOrderStatus: (id: number, status: string) => Promise<void>;
+  updateReservationStatus: (id: number, status: string) => Promise<void>;
   setCurrentPage: (page: number) => void;
   setSearchQuery: (query: string) => void;
   setOrdersCurrentPage: (page: number) => void;
@@ -137,6 +138,7 @@ interface OwnerContextType {
   setDevicesCurrentPage: (page: number) => void;
   updateDeviceStatus: (id: number, action: string) => Promise<void>;
   setOrders: React.Dispatch<React.SetStateAction<OrderItem[]>>;
+  setReservations: React.Dispatch<React.SetStateAction<ReservationItem[]>>;
 }
 
 // Create the context
@@ -552,6 +554,45 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
     [userRole, isLoading, setOrders]
   );
 
+  const updateReservationStatus = useCallback(
+    async (id: number, status: string) => {
+      // Don't update if still loading or if userRole is null
+      if (isLoading || !userRole) {
+        return;
+      }
+
+      try {
+        const endpoint =
+          userRole === "owner"
+            ? `/owners/reservations/${id}/`
+            : `/staff/reservations/${id}/`;
+
+        const response = await axiosInstance.patch(endpoint, {
+          status: status.toLowerCase(),
+        });
+
+        toast.success("Reservation status updated successfully!");
+
+        // Update local reservations state immediately for instant feedback
+        setReservations((prevReservations) =>
+          prevReservations.map((reservation) =>
+            reservation.id === id
+              ? { ...reservation, customRequest: status as any }
+              : reservation
+          )
+        );
+
+        // Optionally refresh the reservations list
+        // await fetchReservations(reservationsCurrentPage, reservationsSearchQuery);
+      } catch (err) {
+        console.error("Failed to update reservation status", err);
+        toast.error("Failed to update reservation status.");
+        throw err;
+      }
+    },
+    [userRole, isLoading, setReservations]
+  );
+
   const updateDeviceStatus = useCallback(
     async (id: number, action: string) => {
       // Don't update if still loading or if userRole is null
@@ -621,6 +662,7 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
     deleteFoodItem,
     updateAvailability,
     updateOrderStatus,
+    updateReservationStatus,
     setCurrentPage,
     setSearchQuery,
     setOrdersCurrentPage,
@@ -632,6 +674,7 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
     setDevicesCurrentPage,
     updateDeviceStatus,
     setOrders,
+    setReservations,
   };
 
   return (

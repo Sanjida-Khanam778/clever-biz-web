@@ -39,17 +39,14 @@ interface OrderItem {
   id: number;
   userName: string;
   guestNo: number;
-  tableNo: string;
-  orderedItems: number;
-  timeOfOrder: string;
-  orderId: string;
-  status:
-    | "Pending"
-    | "Completed"
-    | "Completed"
-    | "Cancelled"
-    | "In Progress"
-    | "Processing";
+  device_name: string;
+  order_items: Array<{
+    item_name: string;
+    quantity: number;
+    price: number;
+  }>;
+  created_time: string;
+  status: "Pending" | "Completed" | "Cancelled" | "In Progress" | "Processing";
 }
 
 // Define reservation item type
@@ -79,6 +76,13 @@ interface StatusSummary {
   pending_orders_count: number;
 }
 
+// Define orders stats type
+interface OrdersStats {
+  ongoing_orders: number;
+  today_completed_order_price: number;
+  total_completed_orders: number;
+}
+
 // Define the context type
 interface StaffContextType {
   categories: Category[];
@@ -100,8 +104,11 @@ interface StaffContextType {
   devicesCurrentPage: number;
   devicesCount: number;
   statusSummary: StatusSummary | null;
+  ordersStats: OrdersStats | null;
   fetchStatusSummary: () => Promise<void>;
   fetchFoodItems: (page?: number, search?: string) => Promise<void>;
+  fetchOrders: (page?: number, search?: string) => Promise<void>;
+  updateOrderStatus: (id: number, status: string) => Promise<void>;
   setCurrentPage: (page: number) => void;
   setSearchQuery: (query: string) => void;
   setOrdersCurrentPage: (page: number) => void;
@@ -111,6 +118,7 @@ interface StaffContextType {
   setAllDevices: (devices: DeviceItem[]) => void;
   setDevicesSearchQuery: (query: string) => void;
   setDevicesCurrentPage: (page: number) => void;
+  setOrders: React.Dispatch<React.SetStateAction<OrderItem[]>>;
 }
 
 // Create the context
@@ -144,6 +152,7 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({
   const [statusSummary, setStatusSummary] = useState<StatusSummary | null>(
     null
   );
+  const [ordersStats, setOrdersStats] = useState<OrdersStats | null>(null);
 
   const fetchStatusSummary = useCallback(async () => {
     try {
@@ -190,6 +199,66 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({
     [currentPage]
   );
 
+  const fetchOrders = useCallback(async (page?: number, search?: string) => {
+    try {
+      const response = await axiosInstance.get("/staff/orders/", {
+        params: { page: page, search: search },
+      });
+      const { results, count } = response.data;
+      console.log("Fetched orders:", response.data);
+
+      // Handle both array and object with orders property
+      const ordersData = Array.isArray(results)
+        ? results
+        : results?.orders || [];
+
+      setOrders(ordersData);
+      setOrdersCount(count || 0);
+      setOrdersCurrentPage(page || 1);
+    } catch (error: any) {
+      console.error("Failed to load orders", error);
+      // Only show toast for non-auth errors since interceptor handles auth
+      if (error.response?.status !== 401 && error.response?.status !== 403) {
+        toast.error("Failed to load orders.");
+      }
+    }
+  }, []);
+
+  const updateOrderStatus = useCallback(
+    async (id: number, status: string) => {
+      try {
+        const response = await axiosInstance.patch(
+          `/staff/orders/status/${id}/`,
+          {
+            status: status.toLowerCase(),
+          }
+        );
+
+        toast.success("Order status updated successfully!");
+
+        // Update local orders state immediately for instant feedback
+        setOrders((prevOrders) => {
+          // Ensure prevOrders is an array before mapping
+          if (!Array.isArray(prevOrders)) {
+            console.warn("prevOrders is not an array:", prevOrders);
+            return prevOrders;
+          }
+
+          return prevOrders.map((order) =>
+            order.id === id ? { ...order, status: status as any } : order
+          );
+        });
+
+        console.log("Order status updated:", response.data);
+      } catch (error: any) {
+        console.error("Failed to update order status", error);
+        toast.error("Failed to update order status.");
+        throw error;
+      }
+    },
+    [setOrders]
+  );
+
   const value: StaffContextType = {
     categories,
     foodItems,
@@ -210,8 +279,11 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({
     devicesCurrentPage,
     devicesCount,
     statusSummary,
+    ordersStats,
     fetchStatusSummary,
     fetchFoodItems,
+    fetchOrders,
+    updateOrderStatus,
     setCurrentPage,
     setSearchQuery,
     setOrdersCurrentPage,
@@ -221,6 +293,7 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({
     setAllDevices,
     setDevicesSearchQuery,
     setDevicesCurrentPage,
+    setOrders,
   };
 
   return (

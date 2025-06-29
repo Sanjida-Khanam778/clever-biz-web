@@ -40,6 +40,7 @@ const ScreenStaffDashboard = () => {
   } = useOwner();
 
   const { statusSummary, fetchStatusSummary } = useStaff();
+  console.log(foodItems, "status summary");
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,18 +64,7 @@ const ScreenStaffDashboard = () => {
 
         await Promise.all([fetchStatusSummary(), fetchFoodItems()]);
 
-        const fetchReservations = async () => {
-          try {
-            const res = await axiosInstance.get("/staff/reservations");
-            // If your API returns data in res.data.results
-            setReservations(res.data.results);
-          } catch (err) {
-            // Optionally handle error
-          } finally {
-            setLoadingReservations(false);
-          }
-        };
-        fetchReservations();
+       
       } catch (err) {
         console.error("Dashboard load error:", err);
         setError("Failed to load dashboard data");
@@ -160,11 +150,7 @@ const ScreenStaffDashboard = () => {
               onPageChange={handlePageChange}
             />
           </div>
-          {loadingReservations ? (
-            <div>Loading...</div>
-          ) : (
-            <TableReservationList data={reservations} />
-          )}
+       
         </div>
       </div>
     </>

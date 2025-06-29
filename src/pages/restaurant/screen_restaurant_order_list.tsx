@@ -30,7 +30,7 @@ const ScreenRestaurantOrderList = () => {
   // Load orders on component mount and when page or debounced search changes
   useEffect(() => {
     fetchOrders(ordersCurrentPage, debouncedSearchQuery);
-  }, [ordersCurrentPage, debouncedSearchQuery, fetchOrders]);
+  }, [ordersCurrentPage, debouncedSearchQuery, fetchOrders]); 
 
   const handlePageChange = (page: number) => {
     setOrdersCurrentPage(page);
