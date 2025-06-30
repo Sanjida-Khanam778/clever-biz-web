@@ -156,27 +156,42 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({
   );
   const [ordersStats, setOrdersStats] = useState<OrdersStats | null>(null);
   const { userRole, isLoading } = useRole();
-
+  console.log(userRole, "user role in staff context");
   const fetchStatusSummary = useCallback(async () => {
+    if (!userRole) return;
+    let endpoint = "";
+    if (userRole === "staff") {
+      endpoint = "/staff/items/status-summary/";
+    } else if (userRole === "chef") {
+      endpoint = "/chef/items/status-summary/";
+    } else {
+      return;
+    }
     try {
-      const response = await axiosInstance.get("/staff/items/status-summary/");
+      const response = await axiosInstance.get(endpoint);
       setStatusSummary(response.data);
       console.log(response.data, "summary");
     } catch (error: any) {
       console.error("Failed to load status summary", error);
-      // Only show toast for non-auth errors since interceptor handles auth
       if (error.response?.status !== 401 && error.response?.status !== 403) {
         toast.error("Failed to load status summary.");
       }
     }
-  }, []);
+  }, [userRole]);
 
   const fetchFoodItems = useCallback(
     async (page: number = currentPage, search?: string) => {
+      if (!userRole) return;
+      let endpoint = "";
+      if (userRole === "staff") {
+        endpoint = `/staff/items/?page=${page}&search=${search || ""}`;
+      } else if (userRole === "chef") {
+        endpoint = `/chef/items/?page=${page}&search=${search || ""}`;
+      } else {
+        return;
+      }
       try {
-        const response = await axiosInstance.get(
-          `/staff/items/?page=${page}&search=${search || ""}`
-        );
+        const response = await axiosInstance.get(endpoint);
         const { results, count } = response.data;
         console.log("Fetched food items:", response.data);
         const formattedItems = results.map((item: any) => ({
@@ -195,11 +210,11 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({
         console.error("Failed to load food items", error);
         // Only show toast for non-auth errors since interceptor handles auth
         if (error.response?.status !== 401 && error.response?.status !== 403) {
-          toast.error("Failed to load food items.");
+          // toast.error("Failed to load food items.");
         }
       }
     },
-    [currentPage]
+    [currentPage, userRole]
   );
 
   const fetchOrders = useCallback(async (page?: number, search?: string) => {

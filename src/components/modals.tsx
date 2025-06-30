@@ -72,17 +72,23 @@ export const EditFoodItemModal: React.FC<ModalProps> = ({
     }
   }, [userRole, isLoading, fetchCategories]);
 
-
   // Load single food item data if in edit mode
   useEffect(() => {
     if (id) {
       const fetchItem = async () => {
         try {
+          let endpoint;
           // Use role-based API endpoint
-          const endpoint =
-            userRole === "owner"
-              ? `/owners/items/${id}/`
-              : `/staff/items/${id}/`;
+          if (userRole === "owner") {
+            endpoint = `/owners/items/${id}/`;
+          } else if (userRole === "staff") {
+            endpoint = `/staff/items/${id}/`;
+          } else if (userRole === "chef") {
+            endpoint = `/chef/items/${id}/`;
+          } else {
+            throw new Error("Invalid user role");
+          }
+       
 
           const res = await axiosInstance.get(endpoint);
           const item = res.data;

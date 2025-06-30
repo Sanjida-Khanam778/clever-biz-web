@@ -27,8 +27,7 @@ import { Link } from "react-router";
 import toast from "react-hot-toast";
 import axiosInstance from "@/lib/axios";
 import { useOwner } from "@/context/ownerContext";
-import axios from "axios";
-
+import { useStaff } from "@/context/staffContext";
 /* Logo Component */
 type LogoProps = {
   className?: string; // Optional className for styling wrapper div
@@ -641,6 +640,7 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const { updateAvailability } = useOwner();
+  const { fetchStatusSummary } = useStaff();
 
   // Local state to track availability changes immediately
   const [localAvailability, setLocalAvailability] = useState<
@@ -691,6 +691,8 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
 
     try {
       await updateAvailability(itemId, available);
+      await fetchStatusSummary();
+
     } catch (error) {
       console.error("Failed to update availability:", error);
       // Revert local state if API call fails
@@ -812,7 +814,6 @@ export const ChatSection = () => {
     const fetchDevices = async () => {
       try {
         const response = await axiosInstance.get("/owners/devicesall/");
-        console.log(response.data, "response data in chat section");
         const chatList = Array.isArray(response.data) ? response.data : [];
         setChatData(chatList);
         if (chatList.length > 0) {
@@ -838,6 +839,7 @@ export const ChatSection = () => {
         const response = await axiosInstance.get(
           `/message/chat/?device_id=${device_id}&restaurant_id=${restaurant_id}`
         );
+        console.log(response.data, "response data in chat section");
         setMessages(response.data || []);
       } catch (error) {
         toast.error("Failed to load previous messages.");

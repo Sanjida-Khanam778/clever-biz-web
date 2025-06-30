@@ -19,7 +19,7 @@ const ScreenStaffDashboard = () => {
   } = useOwner();
 
   const { statusSummary, fetchStatusSummary } = useStaff();
-  console.log(foodItems, "status summary");
+  console.log(statusSummary, "status summary");
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,8 +39,6 @@ const ScreenStaffDashboard = () => {
         }
 
         await Promise.all([fetchStatusSummary(), fetchFoodItems()]);
-
-       
       } catch (err) {
         console.error("Dashboard load error:", err);
         setError("Failed to load dashboard data");
@@ -56,7 +54,6 @@ const ScreenStaffDashboard = () => {
     setCurrentPage(page);
     fetchFoodItems(page, searchQuery);
   };
-
 
   if (loading) {
     return (
@@ -108,9 +105,9 @@ const ScreenStaffDashboard = () => {
         {/* Header and dropdown */}
         <div className="flex flex-row justify-between items-center my-3">
           <h2 className="text-2xl text-primary-text">List of items</h2>
-          <DashboardDropDown
+          {/* <DashboardDropDown
             options={["All", "Fruits", "Vegetables", "Dairy", "Meat", "Snacks"]}
-          />
+          /> */}
         </div>
         {/* List of content */}
         <div className="bg-sidebar p-4 rounded-lg">

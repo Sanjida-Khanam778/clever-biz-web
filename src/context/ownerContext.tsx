@@ -234,10 +234,16 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
       }
 
       try {
-        const endpoint =
-          userRole === "owner"
-            ? `/owners/items/?page=${page}&search=${search || ""}`
-            : `/staff/items/?page=${page}&search=${search || ""}`;
+        let endpoint;
+        if (userRole === "owner") {
+          endpoint = `/owners/items/?page=${page}&search=${search || ""}`;
+        } else if (userRole === "staff") {
+          endpoint = `/staff/items/?page=${page}&search=${search || ""}`;
+        } else if (userRole === "chef") {
+          endpoint = `/chef/items/?page=${page}&search=${search || ""}`;
+        } else {
+          throw new Error("Invalid user role");
+        }
 
         const response = await axiosInstance.get(endpoint);
         const { results, count } = response.data;
@@ -255,7 +261,7 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
         setCurrentPage(page);
       } catch (error) {
         console.error("Failed to load food items", error);
-        toast.error("Failed to load food items.");
+        // toast.error("Failed to load food items.");
       }
     },
     [currentPage, userRole, isLoading]
@@ -447,8 +453,16 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
       }
 
       try {
-        const endpoint =
-          userRole === "owner" ? `/owners/items/${id}/` : `/staff/items/${id}/`;
+        let endpoint;
+        if (userRole === "owner") {
+          endpoint = `/owners/items/${id}/`;
+        } else if (userRole === "staff") {
+          endpoint = `/staff/items/${id}/`;
+        } else if (userRole === "chef") {
+          endpoint = `/chef/items/${id}/`;
+        } else {
+          throw new Error("Invalid user role");
+        }
 
         await axiosInstance.patch(endpoint, formData, {
           headers: { "Content-Type": "multipart/form-data" },
@@ -500,8 +514,16 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
 
       try {
         // Use role-based API endpoint
-        const endpoint =
-          userRole === "owner" ? `/owners/items/${id}/` : `/staff/items/${id}/`;
+        let endpoint;
+        if (userRole === "owner") {
+          endpoint = `/owners/items/${id}/`;
+        } else if (userRole === "staff") {
+          endpoint = `/staff/items/${id}/`;
+        } else if (userRole === "chef") {
+          endpoint = `/chef/items/${id}/`;
+        } else {
+          throw new Error("Invalid user role");
+        }
 
         await axiosInstance.delete(endpoint);
         toast.success("Food item deleted successfully!");
@@ -524,8 +546,16 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
       }
 
       try {
-        const endpoint =
-          userRole === "owner" ? `/owners/items/${id}/` : `/staff/items/${id}/`;
+        let endpoint;
+        if (userRole === "owner") {
+          endpoint = `/owners/items/${id}/`;
+        } else if (userRole === "staff") {
+          endpoint = `/staff/items/${id}/`;
+        } else if (userRole === "chef") {
+          endpoint = `/chef/items/${id}/`;
+        } else {
+          throw new Error("Invalid user role");
+        }
 
         await axiosInstance.patch(endpoint, {
           availability: available.toString(),

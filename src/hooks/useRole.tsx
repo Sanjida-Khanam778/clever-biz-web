@@ -14,7 +14,6 @@ export const useRole = () => {
   const [userRole, setUserRole] = useState<UserRole>(null);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
   // Get user role from localStorage
   const getUserRole = (): UserRole => {
     try {
