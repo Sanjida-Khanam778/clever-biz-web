@@ -1,3 +1,4 @@
+import { useRole } from "@/hooks/useRole";
 import axiosInstance from "@/lib/axios";
 import {
   createContext,
@@ -81,6 +82,7 @@ interface OrdersStats {
   ongoing_orders: number;
   today_completed_order_price: number;
   total_completed_orders: number;
+  total_ongoing_orders: number;
 }
 
 // Define the context type
@@ -153,6 +155,7 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({
     null
   );
   const [ordersStats, setOrdersStats] = useState<OrdersStats | null>(null);
+  const { userRole, isLoading } = useRole();
 
   const fetchStatusSummary = useCallback(async () => {
     try {
@@ -201,11 +204,14 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({
 
   const fetchOrders = useCallback(async (page?: number, search?: string) => {
     try {
-      const response = await axiosInstance.get("/staff/orders/", {
+      const endpoint =
+        userRole === "staff" ? `/staff/orders/` : `/chef/orders/`;
+      const response = await axiosInstance.get(endpoint, {
         params: { page: page, search: search },
       });
       const { results, count } = response.data;
       console.log("Fetched orders:", response.data);
+      setOrdersStats(results.stats);
 
       // Handle both array and object with orders property
       const ordersData = Array.isArray(results)
@@ -227,12 +233,13 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({
   const updateOrderStatus = useCallback(
     async (id: number, status: string) => {
       try {
-        const response = await axiosInstance.patch(
-          `/staff/orders/status/${id}/`,
-          {
-            status: status.toLowerCase(),
-          }
-        );
+        const endpoint =
+          userRole === "staff"
+            ? `/staff/orders/status/${id}/`
+            : `/chef/orders/status/${id}/`;
+        const response = await axiosInstance.patch(endpoint, {
+          status: status.toLowerCase(),
+        });
 
         toast.success("Order status updated successfully!");
 

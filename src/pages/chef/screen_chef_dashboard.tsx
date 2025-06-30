@@ -1,23 +1,19 @@
-import { ButtonStatus, DashboardDropDown } from "../../components/input";
+import { DashboardDropDown } from "../../components/input";
 import {
   DashboardCard,
   Pagination,
   TableFoodList,
 } from "../../components/utilities";
-import { IconDelete, IconEdit } from "../../components/icons";
 import { useState } from "react";
 import {
   DeleteFoodItemModal,
   EditFoodItemModal,
 } from "../../components/modals";
-import { TableFoodOrderList } from "@/components/tables";
 import { foodItems } from "@/data";
-import { useRole } from "../../hooks/useRole";
 
 const ScreenChefDashboard = () => {
   const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
-  const { userRole, userInfo } = useRole();
 
   function openDelete() {
     setDeleteDialogOpen(true);

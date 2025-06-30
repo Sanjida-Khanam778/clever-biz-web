@@ -1,13 +1,45 @@
 import { TableFoodOrderList } from "@/components/tables";
-import {
-  ButtonStatus,
-  DashboardDropDown,
-  TextSearchBox,
-} from "../../components/input";
+import { TextSearchBox } from "../../components/input";
 import { OrderlistCard, Pagination } from "../../components/utilities";
-import { orderTableData } from "@/data";
+import { useStaff } from "@/context/staffContext";
+import { useEffect, useState } from "react";
 
 const ScreenChefOrderList = () => {
+  const {
+    orders,
+    ordersStats,
+    ordersCount,
+    ordersCurrentPage,
+    ordersSearchQuery,
+    fetchOrders,
+    updateOrderStatus,
+    setOrdersCurrentPage,
+    setOrdersSearchQuery,
+  } = useStaff();
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+  console.log(ordersStats, "orders stats");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(ordersSearchQuery);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [ordersSearchQuery]);
+
+  // Load orders on component mount and when page or debounced search changes
+  useEffect(() => {
+    fetchOrders(ordersCurrentPage, debouncedSearchQuery);
+  }, [ordersCurrentPage, debouncedSearchQuery, fetchOrders]);
+
+  const handlePageChange = (page: number) => {
+    setOrdersCurrentPage(page);
+  };
+
+  const handleSearch = (query: string) => {
+    setOrdersSearchQuery(query);
+    setOrdersCurrentPage(1); // Reset to first page when searching
+  };
   return (
     <>
       <div className="flex flex-col">
@@ -16,7 +48,7 @@ const ScreenChefOrderList = () => {
           {/* Card 1 */}
           <OrderlistCard
             label="Ongoing Order"
-            data={"100"}
+            data={ordersStats?.total_ongoing_orders?.toString() || "0"}
             accentColor="#6B8CED"
             gradientStart="#6189FF"
             gradientEnd="#161F42"
@@ -24,7 +56,7 @@ const ScreenChefOrderList = () => {
           {/* Card 2 */}
           <OrderlistCard
             label="Completed order"
-            data={"20"}
+            data={ordersStats?.total_completed_orders?.toString() || "0"}
             accentColor="#48E03A"
             gradientStart="#48E03A"
             gradientEnd="#161F42"
@@ -37,25 +69,25 @@ const ScreenChefOrderList = () => {
 
           <div className="flex-1 flex gap-x-4 flex-row-reverse md:flex-row justify-end">
             {/* Search box by id */}
-            <TextSearchBox placeholder="Search by Reservation ID" />
-            {/* Food filter dropdown */}
-            <DashboardDropDown
-              options={[
-                "All",
-                "Fruits",
-                "Vegetables",
-                "Dairy",
-                "Meat",
-                "Snacks",
-              ]}
+            <TextSearchBox
+              placeholder="Search by Order ID"
+              value={ordersSearchQuery}
+              onChange={handleSearch}
             />
           </div>
         </div>
         {/* List of content */}
         <div className="bg-sidebar p-4 rounded-lg">
-          <TableFoodOrderList data={orderTableData} />
+          <TableFoodOrderList
+            data={orders}
+            updateOrderStatus={updateOrderStatus}
+          />
           <div className="mt-4 flex justify-center">
-            <Pagination page={1} />
+            <Pagination
+              page={ordersCurrentPage}
+              total={ordersCount}
+              onPageChange={handlePageChange}
+            />
           </div>
         </div>
       </div>

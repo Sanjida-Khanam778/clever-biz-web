@@ -1,5 +1,5 @@
 import { TableFoodOrderList } from "@/components/tables";
-import { DashboardDropDown, TextSearchBox } from "../../components/input";
+import { TextSearchBox } from "../../components/input";
 import { OrderlistCard, Pagination } from "../../components/utilities";
 import { useEffect, useState } from "react";
 import { useStaff } from "@/context/staffContext";
@@ -73,20 +73,9 @@ const ScreenStaffOrderList = () => {
           <div className="flex-1 flex gap-x-4 flex-row-reverse md:flex-row justify-end">
             {/* Search box by id */}
             <TextSearchBox
-              placeholder="Search by Reservation ID"
+              placeholder="Search by Order ID"
               value={ordersSearchQuery}
               onChange={handleSearch}
-            />
-            {/* Food filter dropdown */}
-            <DashboardDropDown
-              options={[
-                "All",
-                "Fruits",
-                "Vegetables",
-                "Dairy",
-                "Meat",
-                "Snacks",
-              ]}
             />
           </div>
         </div>

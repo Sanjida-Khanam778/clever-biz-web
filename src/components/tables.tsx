@@ -506,4 +506,3 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
     </table>
   );
 };
-/* <<<<<<<<===================================================== Food Order List */

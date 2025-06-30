@@ -83,6 +83,7 @@ interface DeviceStats {
 }
 
 interface OrdersStats {
+  total_ongoing_orders: number;
   ongoing_orders: number;
   today_completed_order_price: number;
   total_completed_orders: number;
@@ -179,8 +180,17 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
       // Fetch categories directly here to avoid dependency issues
       const fetchCategoriesDirectly = async () => {
         try {
-          const endpoint =
-            userRole === "owner" ? "/owners/categories/" : "/staff/categories/";
+          let endpoint;
+          if (userRole === "owner") {
+            endpoint = "/owners/categories/";
+          } else if (userRole === "staff") {
+            endpoint = "/staff/categories/";
+          } else if (userRole === "chef") {
+            endpoint = "/chef/categories/";
+          } else {
+            throw new Error("Invalid user role");
+          }
+
           const res = await axiosInstance.get(endpoint);
           setCategories(res.data);
         } catch (err) {
@@ -198,8 +208,17 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
     }
 
     try {
-      const endpoint =
-        userRole === "owner" ? "/owners/categories/" : "/staff/categories/";
+      let endpoint;
+      if (userRole === "owner") {
+        endpoint = "/owners/categories/";
+      } else if (userRole === "staff") {
+        endpoint = "/staff/categories/";
+      } else if (userRole === "chef") {
+        endpoint = "/chef/categories/";
+      } else {
+        throw new Error("Invalid user role");
+      }
+
       const res = await axiosInstance.get(endpoint);
       setCategories(res.data);
     } catch (err) {
@@ -250,10 +269,16 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
       }
 
       try {
-        const endpoint =
-          userRole === "owner"
-            ? `/owners/orders/?page=${page}&search=${search || ""}`
-            : `/staff/orders/?page=${page}&search=${search || ""}`;
+        let endpoint;
+        if (userRole === "owner") {
+          endpoint = `/owners/orders/?page=${page}&search=${search || ""}`;
+        } else if (userRole === "staff") {
+          endpoint = `/staff/orders/?page=${page}&search=${search || ""}`;
+        } else if (userRole === "chef") {
+          endpoint = `/chef/orders/?page=${page}&search=${search || ""}`;
+        } else {
+          throw new Error("Invalid user role");
+        }
 
         const response = await axiosInstance.get(endpoint);
         const { results, count } = response.data;
@@ -525,10 +550,16 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
       }
 
       try {
-        const endpoint =
-          userRole === "owner"
-            ? `/owners/orders/status/${id}/`
-            : `/staff/orders/status/${id}/`;
+        let endpoint;
+        if (userRole === "owner") {
+          endpoint = `/owners/orders/status/${id}/`;
+        } else if (userRole === "staff") {
+          endpoint = `/staff/orders/status/${id}/`;
+        } else if (userRole === "chef") {
+          endpoint = `/chef/orders/status/${id}/`;
+        } else {
+          throw new Error("Invalid user role");
+        }
 
         const response = await axiosInstance.patch(endpoint, {
           status: status.toLowerCase(),

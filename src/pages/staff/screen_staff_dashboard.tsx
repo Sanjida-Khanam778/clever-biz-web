@@ -7,26 +7,6 @@ import {
   TableFoodList,
 } from "../../components/utilities";
 import { useOwner } from "@/context/ownerContext";
-import axiosInstance from "@/lib/axios";
-import { TableReservationList } from "../../components/tables";
-
-type ReservationStats = {
-  total_active_accepted_reservations: number;
-  last_month_reservations: number;
-  running_month_reservations: number;
-};
-
-type ReservationItem = {
-  id: number;
-  reservationId: string;
-  customerName: string;
-  tableNo: string;
-  guestNo: number;
-  cellNumber: string;
-  email: string;
-  reservationTime: string;
-  customRequest: string;
-};
 
 const ScreenStaffDashboard = () => {
   const {
@@ -36,7 +16,6 @@ const ScreenStaffDashboard = () => {
     searchQuery,
     fetchFoodItems,
     setCurrentPage,
-    setSearchQuery,
   } = useOwner();
 
   const { statusSummary, fetchStatusSummary } = useStaff();
@@ -44,8 +23,6 @@ const ScreenStaffDashboard = () => {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [reservations, setReservations] = useState<ReservationItem[]>([]);
-  const [loadingReservations, setLoadingReservations] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
@@ -55,7 +32,6 @@ const ScreenStaffDashboard = () => {
       try {
         // Check authentication status
         const token = localStorage.getItem("accessToken");
-        const userInfo = localStorage.getItem("userInfo");
 
         if (!token) {
           setError("No authentication token found");
@@ -81,10 +57,6 @@ const ScreenStaffDashboard = () => {
     fetchFoodItems(page, searchQuery);
   };
 
-  const handleSearchChange = (query: string) => {
-    setSearchQuery(query);
-    fetchFoodItems(1, query);
-  };
 
   if (loading) {
     return (
@@ -150,7 +122,6 @@ const ScreenStaffDashboard = () => {
               onPageChange={handlePageChange}
             />
           </div>
-       
         </div>
       </div>
     </>
