@@ -6,7 +6,7 @@ interface UserInfo {
   id: number;
   email: string;
   role: UserRole;
-  name?: string;
+  username?: string;
   restaurants?: any[];
   // Add other user properties as needed
 }

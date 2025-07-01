@@ -153,19 +153,46 @@ export const OtpTimer: React.FC<OtpTimerProps> = ({
 
 /* Header ===========================================================>>>>> */
 
+// Helper function to get current day name
+const getCurrentDayName = (): string => {
+  const days = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+  return days[new Date().getDay()];
+};
+
+// Helper function to get formatted current date
+const getFormattedCurrentDate = (): string => {
+  const now = new Date();
+  const day = now.getDate();
+  const month = now
+    .toLocaleDateString("en-US", { month: "long" })
+    .toLowerCase();
+  const year = now.getFullYear();
+  return `${day} ${month}, ${year}`;
+};
+
 export const Header = () => {
+  const { userInfo } = useRole();
+  console.log(userInfo, "user info in header");
   return (
     <header className="bg-sidebar shadow-md p-8">
       <div className="flex items-center justify-between">
         <h2 className="text-primary-text text-2xl font-medium">
-          Thursday
+          {getCurrentDayName()}
           <span className="ms-2 text-base font-normal text-primary-text/70">
-            25 july, 2025
+            {getFormattedCurrentDate()}
           </span>
         </h2>
         <div className="rounded-full flex flex-row items-center gap-x-2">
           <span className="text-lg text-primary-text font-medium">
-            Hi, Thomas
+            Hi, {userInfo?.username}
           </span>
           <img src={profile} alt="Profile" className=" w-8 h-8" />
         </div>
