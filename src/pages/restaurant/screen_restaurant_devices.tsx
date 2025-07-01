@@ -99,7 +99,7 @@ export const ScreenRestaurantDevices = () => {
         <div className="flex flex-row justify-between items-center my-3">
           <h2 className="text-2xl text-primary-text">List of devices</h2>
           <TextSearchBox
-            placeholder="Search devices..."
+            placeholder="Search by table name"
             value={devicesSearchQuery}
             onChange={handleSearchChange}
           />

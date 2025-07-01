@@ -56,8 +56,8 @@ const ScreenRestaurantOrderList = () => {
           />
           {/* Card 2 */}
           <OrderlistCard
-            label="Total Orders Today"
-            data={ordersStats?.today_completed_order_price.toString()}
+            label="Completed Order Today"
+            data={ordersStats?.today_completed_order_count.toString()}
             accentColor="#FFB056"
             gradientStart="#FFB056"
             gradientEnd="#161F42"

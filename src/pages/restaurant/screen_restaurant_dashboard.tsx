@@ -10,6 +10,8 @@ import { useEffect, useState, useCallback } from "react";
 import { EditCategoryModal, EditFoodItemModal } from "@/components/modals";
 import { IconGrowth, IconSales, IconTeam } from "@/components/icons";
 import { useOwner } from "@/context/ownerContext";
+import axiosInstance from "@/lib/axios";
+import toast from "react-hot-toast";
 
 const ScreenRestaurantDashboard = () => {
   const {
@@ -25,6 +27,7 @@ const ScreenRestaurantDashboard = () => {
   const [categoryModal, setShowCategoryModal] = useState(false);
   const [foodItemModal, setShowFoodItemModal] = useState(false);
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+  const [sellingItemData, setSellingItemData] = useState([]);
 
   const showFoodItemAddModal = () => setShowFoodItemModal(true);
   const showCategoryAddModal = () => setShowCategoryModal(true);
@@ -54,9 +57,21 @@ const ScreenRestaurantDashboard = () => {
     setCurrentPage(1); // Reset to first page when searching
   };
 
-  const sellingItemData = [
-    /* same as before */
-  ];
+  // Fetch most selling items
+  const fetchMostSellingItems = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get("/owners/most-selling-items/");
+      setSellingItemData(response.data);
+    } catch (error) {
+      console.error("Failed to fetch most selling items:", error);
+      toast.error("Failed to load most selling items.");
+    }
+  }, []);
+
+  // Load most selling items on component mount
+  useEffect(() => {
+    fetchMostSellingItems();
+  }, [fetchMostSellingItems]);
 
   return (
     <>
@@ -91,26 +106,16 @@ const ScreenRestaurantDashboard = () => {
             tail="Team"
           />
         </div>
-
         {/* Charts */}
         <div className="grid grid-cols-3 mt-4 z-10 gap-x-4">
-          <div className="col-span-2 bg-sidebar rounded-xl p-4">
+          <div className="col-span-3 bg-sidebar rounded-xl p-4 w-full h-[600px] ">
             <YearlyChart
               title="Sales Report"
               firstData={[30, 50, 60, 20, 40, 60, 70, 20, 50, 4, 12, 200]}
               secondData={[56, 12, 89, 27, 33, 84, 3, 4, 55, 34, 34, 10]}
             />
           </div>
-          <div className="col-span-1 bg-sidebar rounded-xl p-4 flex justify-center items-center">
-            <MonthlyChart
-              title="Customer Flow"
-              firstData={[15, 30, 45, 60]}
-              secondData={[152, 303, 451, 603]}
-            />
-          </div>
-          <div className="col-span-1"></div>
         </div>
-
         {/* Search + Add Buttons */}
         <div className="grid grid-cols-3 grid-rows-[auto_1fr] gap-x-4 items-start mt-4">
           <div className="col-span-2 flex items-center justify-end mb-4 gap-x-4">

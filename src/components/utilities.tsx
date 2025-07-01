@@ -668,6 +668,7 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const { updateAvailability } = useOwner();
+  const { fetchFoodItems } = useOwner();
   const { fetchStatusSummary } = useStaff();
 
   // Local state to track availability changes immediately
@@ -720,6 +721,7 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
     try {
       await updateAvailability(itemId, available);
       await fetchStatusSummary();
+      await fetchFoodItems();
     } catch (error) {
       console.error("Failed to update availability:", error);
       // Revert local state if API call fails
@@ -1154,8 +1156,8 @@ export const ChatListItem: React.FC<ChatListItemProps> = ({
 
 interface DashboardMostSellingItemsProps {
   data: {
-    label: string;
-    itemSell: number;
+    item_name: string;
+    percentage: number;
     totalSell: number;
   }[];
   containerProps?: React.HTMLAttributes<HTMLDivElement>;
@@ -1166,20 +1168,15 @@ export const DashboardMostSellingItems: React.FC<
   const { className, ...rest } = containerProps ?? {};
   return (
     <div className={cn("flex flex-col gap-y-2", className)} {...rest}>
-      {data.map((item, idx) => (
+      {data?.map((item, idx) => (
         <div key={idx} className="flex flex-col gap-y-1">
           <div className="flex flex-row justify-between">
-            <p className="text-primary-text">{item.label}</p>
-            <p className="text-primary-text">
-              {item.totalSell
-                ? ((item.itemSell / item.totalSell) * 100).toFixed(0)
-                : 0}
-              %
-            </p>
+            <p className="text-primary-text">{item.item_name}</p>
+            <p className="text-primary-text">{item.percentage}%</p>
           </div>
           <Progress
             className="bg-primary-text/30"
-            value={item.itemSell}
+            value={item.percentage}
             max={item.totalSell}
             indicatorProps={{
               className: "bg-orange-400",

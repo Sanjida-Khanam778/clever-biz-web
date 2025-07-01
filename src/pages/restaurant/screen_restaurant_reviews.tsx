@@ -23,7 +23,7 @@ const ScreenRestaurantReviews = () => {
           `/owners/reviews/?page=${page}`
         );
         const { results, count, status } = response.data;
-        console.log(response.data);
+        console.log(results, "results");
         setReviews(results || []);
         setCount(count || 0);
         setStats({

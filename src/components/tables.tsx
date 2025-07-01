@@ -9,7 +9,7 @@ import { TooltipTop } from "./utilities";
 import { BiMailSend } from "react-icons/bi";
 import { useState, useEffect, useRef } from "react";
 import { useOwner } from "@/context/ownerContext";
-import { formatDateTime, formatDate } from "@/lib/utils";
+import { formatDateTime, formatDate, formatTime } from "@/lib/utils";
 import { useStaff } from "@/context/staffContext";
 import axiosInstance from "@/lib/axios";
 import toast from "react-hot-toast";
@@ -390,7 +390,7 @@ export const TableDeviceList: React.FC<TableDeviceListProps> = ({ data }) => {
         <tr>
           <th>ID</th>
           <th>Username</th>
-          <th>Table No.</th>
+          <th>Table Name</th>
           <th>Action</th>
         </tr>
       </thead>
@@ -446,7 +446,7 @@ export const TableReviewList: React.FC<TableReviewListProps> = ({ data }) => {
           <th>Date</th>
           <th>Time of Order</th>
           <th>Guest No.</th>
-          <th>Table No.</th>
+          <th>Table Name</th>
           <th>Order ID</th>
           <th>Review</th>
         </tr>
@@ -454,13 +454,15 @@ export const TableReviewList: React.FC<TableReviewListProps> = ({ data }) => {
       <tbody className="bg-sidebar text-sm">
         {data.map((item, index) => (
           <tr key={index} className="border-b border-[#1C1E3C]">
-            <td className="p-4 text-primary-text">{item.customerName}</td>
-            <td className="p-4 text-primary-text">{item.date}</td>
-            <td className="p-4 text-primary-text">{item.timeOfOrder}</td>
-            <td className="p-4 text-primary-text">{item.guestNo}</td>
-            <td className="p-4 text-primary-text">{item.tableNo}</td>
-            <td className="p-4 text-primary-text">{item.orderId}</td>
-            <td className="p-4 text-primary-text">{item.review}</td>
+            <td className="p-4 text-primary-text">{item.name}</td>
+            <td className="p-4 text-primary-text"> {formatDate(item.created_time)}</td>
+            <td className="p-4 text-primary-text">
+              {formatTime(item.created_time)}
+            </td>
+            <td className="p-4 text-primary-text">{item.guest_no}</td>
+            <td className="p-4 text-primary-text">{item.device_table}</td>
+            <td className="p-4 text-primary-text">{item.order_id}</td>
+            <td className="p-4 text-primary-text">{item.rating}</td>
           </tr>
         ))}
       </tbody>

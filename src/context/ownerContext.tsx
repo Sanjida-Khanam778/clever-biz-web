@@ -85,7 +85,7 @@ interface DeviceStats {
 interface OrdersStats {
   total_ongoing_orders: number;
   ongoing_orders: number;
-  today_completed_order_price: number;
+  today_completed_order_count: number;
   total_completed_orders: number;
 }
 

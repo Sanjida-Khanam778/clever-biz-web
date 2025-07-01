@@ -89,3 +89,24 @@ export function formatDate(isoString: string): string {
     return isoString;
   }
 }
+
+// Format time only (without date)
+export function formatTime(isoString: string): string {
+  try {
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) {
+      return isoString;
+    }
+    // Use UTC methods to avoid timezone conversion
+    const hours = date.getUTCHours();
+    const minutes = date.getUTCMinutes();
+    const ampm = hours >= 12 ? "PM" : "AM";
+    const displayHours = hours % 12 || 12;
+    const displayMinutes = minutes.toString().padStart(2, "0");
+    // Format: "2:15 PM"
+    return `${displayHours}:${displayMinutes} ${ampm}`;
+  } catch (error) {
+    console.error("Error formatting time:", error);
+    return isoString;
+  }
+}

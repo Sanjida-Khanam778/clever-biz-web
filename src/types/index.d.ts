@@ -49,13 +49,12 @@ type DeviceItem = {
 };
 
 type ReviewItem = {
-  customerName: string;
-  date: string;
-  timeOfOrder: string;
-  guestNo: string | number;
-  tableNo: string;
-  orderId: number;
-  review: number;
+  name: string;
+  created_time: string;
+  guest_no: string | number;
+  device_table: string;
+  order_id: number;
+  rating: number;
 };
 
 type ChatRoomItem = {

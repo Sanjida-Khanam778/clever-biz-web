@@ -14,6 +14,7 @@ export const YearlyChart: React.FC<ChartStatProps> = ({
 }) => {
   const options: ChartOptions<"line"> = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       tooltip: {
         enabled: true, // Enable tooltips
@@ -135,7 +136,11 @@ export const YearlyChart: React.FC<ChartStatProps> = ({
       },
     ],
   };
-  return <Line options={options} data={data} />;
+  return (
+    <div className="w-full h-full">
+      <Line options={options} data={data} />
+    </div>
+  );
 };
 
 export const MonthlyChart: React.FC<ChartStatProps> = ({
