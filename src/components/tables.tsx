@@ -11,6 +11,8 @@ import { useState, useEffect, useRef } from "react";
 import { useOwner } from "@/context/ownerContext";
 import { formatDateTime, formatDate } from "@/lib/utils";
 import { useStaff } from "@/context/staffContext";
+import axiosInstance from "@/lib/axios";
+import toast from "react-hot-toast";
 
 /* Reservation Table Data ===========================================================>>>>> */
 
@@ -231,6 +233,50 @@ interface TableTeamManagementProps {
 export const TableTeamManagement: React.FC<TableTeamManagementProps> = ({
   data,
 }) => {
+  const [localMemberStatus, setLocalMemberStatus] = useState<
+    Record<number, string>
+  >({});
+
+  // Initialize local member status state when data changes
+  useEffect(() => {
+    const initialStatus: Record<number, string> = {};
+    data?.forEach((item) => {
+      initialStatus[item.id] = item.action;
+    });
+    setLocalMemberStatus(initialStatus);
+  }, [data]);
+
+  const handleStatusChange = async (memberId: number, newStatus: string) => {
+    const previousStatus =
+      localMemberStatus[memberId] ||
+      data.find((item) => item.id === memberId)?.action ||
+      "active";
+
+    // Immediately update local state for instant UI feedback
+    setLocalMemberStatus((prev) => ({
+      ...prev,
+      [memberId]: newStatus.toLowerCase(),
+    }));
+
+    try {
+      const response = await axiosInstance.patch(
+        `/owners/chef-staff/${memberId}/`,
+        {
+          action: newStatus.toLowerCase(),
+        }
+      );
+      console.log("Status updated successfully:", response.data);
+    } catch (error) {
+      console.error("Failed to update member status:", error);
+      toast.error("Failed to update member status.");
+      // Revert local state if API call fails
+      setLocalMemberStatus((prev) => ({
+        ...prev,
+        [memberId]: previousStatus,
+      }));
+    }
+  };
+
   return (
     <table className="w-full table-auto text-left clever-table">
       <thead className="table-header">
@@ -261,22 +307,29 @@ export const TableTeamManagement: React.FC<TableTeamManagementProps> = ({
               )}
             </td>
             <td className="p-4 text-primary-text">
-              {
-                <ButtonStatus
-                  status="Active"
-                  availableStatuses={["Active", "Hold"]}
-                  properties={{
-                    Active: {
-                      bg: "bg-green-800",
-                      text: "text-green-300",
-                    },
-                    Hold: {
-                      bg: "bg-yellow-800",
-                      text: "text-yellow-300",
-                    },
-                  }}
-                />
-              }
+              <ButtonStatus
+                status={
+                  localMemberStatus[item.id] !== undefined
+                    ? localMemberStatus[item.id] === "active"
+                      ? "Active"
+                      : "Hold"
+                    : item.action === "active"
+                    ? "Active"
+                    : "Hold"
+                }
+                availableStatuses={["Active", "Hold"]}
+                properties={{
+                  Active: {
+                    bg: "bg-green-800",
+                    text: "text-green-300",
+                  },
+                  Hold: {
+                    bg: "bg-yellow-800",
+                    text: "text-yellow-300",
+                  },
+                }}
+                onChange={(newStatus) => handleStatusChange(item.id, newStatus)}
+              />
             </td>
           </tr>
         ))}

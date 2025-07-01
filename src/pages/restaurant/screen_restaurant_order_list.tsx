@@ -79,21 +79,11 @@ const ScreenRestaurantOrderList = () => {
           <div className="flex-1 flex gap-x-4 flex-row-reverse md:flex-row justify-end">
             {/* Search box by id */}
             <TextSearchBox
-              placeholder="Search by Reservation ID"
+              placeholder="Search by Order ID"
               value={ordersSearchQuery}
               onChange={handleSearch}
             />
-            {/* Food filter dropdown */}
-            <DashboardDropDown
-              options={[
-                "All",
-                "Fruits",
-                "Vegetables",
-                "Dairy",
-                "Meat",
-                "Snacks",
-              ]}
-            />
+         
           </div>
         </div>
         {/* List of content */}

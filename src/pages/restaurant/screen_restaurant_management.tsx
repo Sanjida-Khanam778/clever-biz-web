@@ -20,13 +20,15 @@ type Member = {
 
 export const ScreenRestaurantManagement = () => {
   const [member, setMember] = useState<Member[]>([]);
-
+  const [searchQuery, setSearchQuery] = useState("");
   const [staffModal, setShowStaffModal] = useState(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axiosInstance.get("/owners/chef-staff/");
+        const response = await axiosInstance.get(
+          `/owners/chef-staff/?search=${searchQuery}`
+        );
         setMember(response.data.results);
         console.log("------------------", response.data.results);
       } catch (error) {
@@ -36,7 +38,7 @@ export const ScreenRestaurantManagement = () => {
     };
 
     fetchCategories();
-  }, []);
+  }, [searchQuery]);
 
   const showModal = () => {
     setShowStaffModal(true);
@@ -53,14 +55,18 @@ export const ScreenRestaurantManagement = () => {
           <h2 className="flex-1 text-2xl text-primary-text">Team management</h2>
           <div className="flex-1 flex gap-x-4 justify-end">
             <ButtonAdd label="Add Member" onClick={() => showModal()} />
-            <TextSearchBox placeholder="Search by Email or ID" />
+            <TextSearchBox
+              placeholder="Search by name"
+              value={searchQuery}
+              onChange={setSearchQuery}
+            />
           </div>
         </div>
         {/* List of content */}
         <div className="bg-sidebar p-4 rounded-lg overflow-x-auto">
           <TableTeamManagement data={member} />
           <div className="mt-4 flex justify-center">
-            <Pagination page={1} />
+            <Pagination page={1} total={0} onPageChange={() => {}} />
           </div>
         </div>
       </div>
