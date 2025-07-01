@@ -267,48 +267,30 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
     [currentPage, userRole, isLoading]
   );
 
-  const fetchOrders = useCallback(
-    async (page: number = ordersCurrentPage, search?: string) => {
-      // Don't fetch if still loading or if userRole is null
-      if (isLoading || !userRole) {
-        return;
-      }
+  const fetchOrders = useCallback(async (page?: number, search?: string) => {
+    try {
+      const endpoint = `/owners/orders/`;
+      const response = await axiosInstance.get(endpoint, {
+        params: { page: page, search: search },
+      });
+      const { results, count } = response.data;
+      console.log("Fetched orders:", response.data);
+      setOrdersStats(results.stats);
 
-      try {
-        let endpoint;
-        if (userRole === "owner") {
-          endpoint = `/owners/orders/?page=${page}&search=${search || ""}`;
-        } else if (userRole === "staff") {
-          endpoint = `/staff/orders/?page=${page}&search=${search || ""}`;
-        } else if (userRole === "chef") {
-          endpoint = `/chef/orders/?page=${page}&search=${search || ""}`;
-        } else {
-          throw new Error("Invalid user role");
-        }
+      // Handle both array and object with orders property
+      const ordersData = Array.isArray(results)
+        ? results
+        : results?.orders || [];
 
-        const response = await axiosInstance.get(endpoint);
-        const { results, count } = response.data;
-        console.log("Fetched orders:", results.orders);
-        const formattedOrders = results.orders?.map((item: any) => ({
-          id: item.id,
-          tableNo: item.device_name,
-          orderedItems: item.order_items?.length || 0,
-          timeOfOrder: item.created_time,
-          orderId: item.id,
-          status: item.status,
-        }));
-
-        setOrdersStats(results?.stats);
-        setOrders(formattedOrders);
-        setOrdersCount(count || 0);
-        setOrdersCurrentPage(page);
-      } catch (error) {
-        console.error("Failed to load orders", error);
-        toast.error("Failed to load orders.");
-      }
-    },
-    [ordersCurrentPage, userRole, isLoading]
-  );
+      setOrders(ordersData);
+      setOrdersCount(count || 0);
+      setOrdersCurrentPage(page || 1);
+    } catch (error: any) {
+      console.error("Failed to load orders", error);
+      // Only show toast for non-auth errors since interceptor handles auth
+     
+    }
+  }, []);
 
   const fetchReservations = useCallback(
     async (

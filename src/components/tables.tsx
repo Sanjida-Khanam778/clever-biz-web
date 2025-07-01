@@ -488,7 +488,7 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
 
   // Handle different data structures
   const ordersData = Array.isArray(data) ? data : data?.orders || [];
-
+  console.log(ordersData, "orders data");
   const handleStatusChange = async (orderId: number, newStatus: string) => {
     try {
       await updateOrderStatus(orderId, newStatus);

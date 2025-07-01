@@ -219,8 +219,15 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({
 
   const fetchOrders = useCallback(async (page?: number, search?: string) => {
     try {
-      const endpoint =
-        userRole === "staff" ? `/staff/orders/` : `/chef/orders/`;
+      let endpoint = "";
+      if (userRole === "staff") {
+        endpoint = `/staff/orders/`;
+      } else if (userRole === "chef") {
+        endpoint = `/chef/orders/`;
+      } else {
+        return;
+      }
+
       const response = await axiosInstance.get(endpoint, {
         params: { page: page, search: search },
       });
