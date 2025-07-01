@@ -4,6 +4,25 @@ import { Pagination, StatCard } from "../../components/utilities";
 import { useEffect, useState } from "react";
 import { useOwner } from "@/context/ownerContext";
 
+// Helper function to get current month name
+const getCurrentMonthName = (): string => {
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  return months[new Date().getMonth()];
+};
+
 /* Screen to list of reservations on staff end */
 const ScreenStaffReservations = () => {
   const {
@@ -89,7 +108,7 @@ const ScreenStaffReservations = () => {
           />
           <StatCard
             count={reservationStatusReport?.running_month_reservations || 0}
-            label="Total booking (Jun)"
+            label={`Total booking (${getCurrentMonthName()})`}
             barColor="#0EA5E9"
             accentColor="#0EA5E9"
           />

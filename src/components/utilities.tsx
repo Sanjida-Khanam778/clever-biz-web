@@ -28,6 +28,7 @@ import toast from "react-hot-toast";
 import axiosInstance from "@/lib/axios";
 import { useOwner } from "@/context/ownerContext";
 import { useStaff } from "@/context/staffContext";
+import { useRole } from "@/hooks/useRole";
 /* Logo Component */
 type LogoProps = {
   className?: string; // Optional className for styling wrapper div
@@ -692,7 +693,6 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
     try {
       await updateAvailability(itemId, available);
       await fetchStatusSummary();
-
     } catch (error) {
       console.error("Failed to update availability:", error);
       // Revert local state if API call fails
@@ -803,9 +803,10 @@ export const ChatSection = () => {
   const [chatData, setChatData] = useState<ChatRoomItem[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const socket = useRef<WebSocket | null>(null);
-  const [inputMessage, setInputMessage] = useState(""); // For textarea input
-  const [messages, setMessages] = useState<any[]>([]); // Accepts API and WS messages
-
+  const [inputMessage, setInputMessage] = useState("");
+  const [messages, setMessages] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const { userInfo } = useRole();
   // Add a ref for the chat body
   const chatBodyRef = useRef<HTMLDivElement | null>(null);
 
@@ -813,10 +814,12 @@ export const ChatSection = () => {
   useEffect(() => {
     const fetchDevices = async () => {
       try {
-        const response = await axiosInstance.get("/owners/devicesall/");
+        const response = await axiosInstance.get(
+          `/owners/devicesall/?search=${searchQuery}`
+        );
         const chatList = Array.isArray(response.data) ? response.data : [];
         setChatData(chatList);
-        if (chatList.length > 0) {
+        if (chatList.length > 0 && !selectedChat) {
           setSelectedChat(chatList[0]);
         }
       } catch (error) {
@@ -827,13 +830,13 @@ export const ChatSection = () => {
       }
     };
     fetchDevices();
-  }, []);
+  }, [searchQuery]);
 
   // Fetch previous messages when selectedChat changes
   useEffect(() => {
     if (!selectedChat) return;
     const device_id = selectedChat.id;
-    const restaurant_id = 24; // static for now
+    const restaurant_id = userInfo?.restaurants[0].id; // static for now
     const fetchMessages = async () => {
       try {
         const response = await axiosInstance.get(
@@ -930,7 +933,12 @@ export const ChatSection = () => {
         </h2>
         <div className="flex flex-row items-center">
           <div className="w-92 p-4">
-            <TextSearchBoxCompact className="h-12" />
+            <TextSearchBoxCompact
+              className="h-12"
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Search by table name..."
+            />
           </div>
           {/* Header */}
           <div className="flex-1 flex items-center justify-between p-4 border-[#2B2A40] text-primary-text">

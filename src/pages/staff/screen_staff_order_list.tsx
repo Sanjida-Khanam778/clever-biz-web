@@ -51,7 +51,7 @@ const ScreenStaffOrderList = () => {
           {/* Card 1 */}
           <OrderlistCard
             label="Ongoing Order"
-            data={ordersStats?.ongoing_orders?.toString() || "0"}
+            data={ordersStats?.ongoing_orders?.toString() ||ordersStats?.total_ongoing_orders?.toString()|| "0"}
             accentColor="#6B8CED"
             gradientStart="#6189FF"
             gradientEnd="#161F42"

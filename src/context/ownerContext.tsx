@@ -451,7 +451,7 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
       if (isLoading || !userRole) {
         return;
       }
-
+      console.log(userRole, "user role in update food item");
       try {
         let endpoint;
         if (userRole === "owner") {

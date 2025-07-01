@@ -35,6 +35,7 @@ const ScreenChefOrderList = () => {
   const handlePageChange = (page: number) => {
     setOrdersCurrentPage(page);
   };
+  console.log(orders, "orders");
 
   const handleSearch = (query: string) => {
     setOrdersSearchQuery(query);

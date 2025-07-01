@@ -845,15 +845,31 @@ export const TextSearchBox = ({
   );
 };
 /* <<<<<<<<===================================================== Text Search Box */
-interface TextSearchBoxCompactProps extends HTMLAttributes<HTMLDivElement> {
+interface TextSearchBoxCompactProps
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange"> {
   className?: string;
   placeholder?: string;
+  value?: string;
+  onChange?: (value: string) => void;
 }
 export const TextSearchBoxCompact: React.FC<TextSearchBoxCompactProps> = ({
   className,
   placeholder = "Search...",
+  value = "",
+  onChange,
 }) => {
-  const [value, setValue] = useState("");
+  const [internalValue, setInternalValue] = useState(value);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setInternalValue(newValue);
+    onChange?.(newValue);
+  };
+
+  // Update internal value when prop changes
+  useEffect(() => {
+    setInternalValue(value);
+  }, [value]);
 
   return (
     <div className="w-full max-w-sm">
@@ -866,8 +882,8 @@ export const TextSearchBoxCompact: React.FC<TextSearchBoxCompactProps> = ({
         <FaMagnifyingGlass className="ms-4 w-4 h-4 text-primary-text" />
         <input
           type="text"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
+          value={internalValue}
+          onChange={handleChange}
           placeholder={placeholder}
           className="w-full h-full px-4 text-sm bg-transparent text-primary-text placeholder:text-primary-text/70 focus:outline-none"
         />

@@ -10,6 +10,7 @@ import { BiMailSend } from "react-icons/bi";
 import { useState, useEffect, useRef } from "react";
 import { useOwner } from "@/context/ownerContext";
 import { formatDateTime, formatDate } from "@/lib/utils";
+import { useStaff } from "@/context/staffContext";
 
 /* Reservation Table Data ===========================================================>>>>> */
 
@@ -424,7 +425,8 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
   data,
   updateOrderStatus: propUpdateOrderStatus,
 }) => {
-  console.log(data, "data");
+  const { fetchOrders } = useStaff();
+  const { fetchOrders: fetchOwnerOrders } = useOwner();
   const statuses = ["Preparing", "Completed", "Cancelled", "Pending"];
   const { updateOrderStatus: contextUpdateOrderStatus } = useOwner();
 
@@ -437,6 +439,8 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
   const handleStatusChange = async (orderId: number, newStatus: string) => {
     try {
       await updateOrderStatus(orderId, newStatus);
+      fetchOrders();
+      fetchOwnerOrders();
     } catch (error) {
       console.error("Failed to update order status:", error);
     }
