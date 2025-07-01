@@ -15,12 +15,14 @@ const ScreenRestaurantReviews = () => {
 
   const [page, setPage] = useState(1);
   const [count, setCount] = useState(0);
+  const [searchDate, setSearchDate] = useState<string>("");
+  const [searchOrderId, setSearchOrderId] = useState<string>("");
 
   useEffect(() => {
     const fetchReviews = async () => {
       try {
         const response = await axiosInstance.get(
-          `/owners/reviews/?page=${page}`
+          `/owners/reviews/?page=${page}&date=${searchDate}&search=${searchOrderId}`
         );
         const { results, count, status } = response.data;
         console.log(results, "results");
@@ -38,7 +40,28 @@ const ScreenRestaurantReviews = () => {
     };
 
     fetchReviews();
-  }, [page]);
+  }, [page, searchDate, searchOrderId]);
+
+  // Handler for date change (expects Date or null)
+  const handleDateChange = (date: Date | null) => {
+    if (date) {
+      // Format as YYYY-MM-DD
+      const yyyy = date.getFullYear();
+      const mm = String(date.getMonth() + 1).padStart(2, "0");
+      const dd = String(date.getDate()).padStart(2, "0");
+      setSearchDate(`${yyyy}-${mm}-${dd}`);
+      setPage(1);
+    } else {
+      setSearchDate("");
+      setPage(1);
+    }
+  };
+
+  // Handler for order ID search
+  const handleOrderIdChange = (value: string) => {
+    setSearchOrderId(value);
+    setPage(1);
+  };
 
   return (
     <div className="flex flex-col">
@@ -73,8 +96,12 @@ const ScreenRestaurantReviews = () => {
           Registered Device List
         </h2>
         <div className="flex-1 flex gap-x-4 justify-end">
-          <DateSearchBox />
-          <TextSearchBox placeholder="Search" />
+          <DateSearchBox onDateChange={handleDateChange} />
+          <TextSearchBox
+            placeholder="Search by Order ID"
+            value={searchOrderId}
+            onChange={handleOrderIdChange}
+          />
         </div>
       </div>
 
