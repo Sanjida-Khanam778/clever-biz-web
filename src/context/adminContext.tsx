@@ -98,7 +98,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({
     setIsLoading(true);
     try {
       const response = await axiosInstance.get("adminapi/terms-and-conditions/");
-      setTermsAndConditions(response.data);
+      setTermsAndConditions(response.data.results);
     } catch (error: any) {
       console.error("Failed to load terms and conditions", error);
       if (error.response?.status !== 401 && error.response?.status !== 403) {
@@ -109,10 +109,10 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, []);
 
-  const updateTermsAndConditions = useCallback(async (content: string) => {
+  const updateTermsAndConditions = useCallback(async (id: number, content: string) => {
     setIsLoading(true);
     try {
-      const response = await axiosInstance.post("adminapi/terms-and-conditions/", {
+      const response = await axiosInstance.patch(`adminapi/terms-and-conditions/${id}/`, {
         text: content,
       });
       setTermsAndConditions(response.data);

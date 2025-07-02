@@ -35,8 +35,8 @@ const ScreenAdminTermsAndCondition = () => {
 
   // Update local html state when terms and conditions is fetched
   useEffect(() => {
-    if (termsAndConditions?.content) {
-      setHtml(termsAndConditions.content);
+    if (termsAndConditions?.length && termsAndConditions[0]?.text) {
+      setHtml(termsAndConditions[0].text);
     }
   }, [termsAndConditions]);
 
@@ -47,7 +47,7 @@ const ScreenAdminTermsAndCondition = () => {
 
   const handleUpdate = async () => {
     try {
-      await updateTermsAndConditions(html);
+      await updateTermsAndConditions(termsAndConditions[0].id, html);
       setEdit(false);
     } catch (error) {
       // Error is handled in the context
