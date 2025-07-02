@@ -1,4 +1,4 @@
-import { MouseEvent, useState } from "react";
+import { MouseEvent, useState, useEffect } from "react";
 import {
   BtnBold,
   BtnBulletList,
@@ -15,78 +15,40 @@ import {
   Toolbar,
 } from "react-simple-wysiwyg";
 import { IconEdit } from "../../components/icons";
+import { useAdmin } from "../../context/adminContext";
 
 const ScreenAdminPrivacy = () => {
   const [edit, setEdit] = useState(false);
+  const { privacyPolicy, isLoading, fetchPrivacyPolicy, updatePrivacyPolicy } =
+    useAdmin();
+  console.log(privacyPolicy);
+  const [html, setHtml] = useState("");
 
-  const [html, setHtml] = useState(`
-     <ol className="flex flex-col gap-y-4 list-outside list-decimal">
-            <li>
-              A dialog is a type of modal window that appears in front of app
-              content to provide critical information, or prompt for a decision
-              to be made.A dialog is a type of modal window that appears in
-              front of app content to provide critical information, or prompt
-              for a decision to be made.A dialog is a type of modal window that
-              appears in front of app content to provide critical information,
-              or prompt for a decision to be made.
-            </li>
-            <li>
-              A dialog is a type of modal window that appears in front of app
-              content to provide critical information, or prompt for a decision
-              to be made.A dialog is a type of modal window that appears in
-              front of app content to provide critical information, or prompt
-              for a decision to be made.
-            </li>
-            <li>
-              A dialog is a type of modal window that appears in front of app
-              content to provide critical information, or prompt for a decision
-              to be made.A dialog is a type of modal window that appears in
-              front of app content to provide critical information, or prompt
-              for a decision to be made.A dialog is a type of modal window that
-              appears in front of app content to provide critical information,
-              or prompt for a decision to be made.A dialog is a type of modal
-              window that appears in front of app content to provide critical
-              information, or prompt for a decision to be made.A dialog is a
-              type of modal window that appears in front of app content to
-              provide critical information, or prompt for a decision to be made.
-            </li>
-            <li>
-              A dialog is a type of modal window that appears in front of app
-              content to provide critical information, or prompt for a decision
-              to be made.A dialog is a type of modal window that appears in
-              front of app content to provide critical information, or prompt
-              for a decision to be made.A dialog is a type of modal window that
-              appears in front of app content to provide critical information,
-              or prompt for a decision to be made.
-            </li>
-            <li>
-              A dialog is a type of modal window that appears in front of app
-              content to provide critical information, or prompt for a decision
-              to be made.A dialog is a type of modal window that appears in
-              front of app content to provide critical information, or prompt
-              for a decision to be made.A dialog is a type of modal window that
-              appears in front of app content to provide critical information,
-              or prompt for a decision to be made.
-            </li>
-            <li>
-              A dialog is a type of modal window that appears in front of app
-              content to provide critical information, or prompt for a decision
-              to be made.A dialog is a type of modal window that appears in
-              front of app content to provide critical information, or prompt
-              for a decision to be made.
-            </li>
-            <li>
-              A dialog is a type of modal window that appears in front of app
-              content to provide critical information, or prompt for a decision
-              to be made.A dialog is a type of modal window that appears in
-              front of app content to provide critical information, or prompt
-              for a decision to be made.
-            </li>
-          </ol>`);
+  // Fetch privacy policy on component mount
+  useEffect(() => {
+    fetchPrivacyPolicy();
+  }, [fetchPrivacyPolicy]);
+
+  // Update local html state when privacy policy is fetched
+  useEffect(() => {
+    if (privacyPolicy?.length && privacyPolicy[0]?.text) {
+      setHtml(privacyPolicy[0].text);
+    }
+  }, [privacyPolicy]);
 
   const onEditTerms = (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     setEdit(true);
+  };
+
+  const handleUpdate = async () => {
+    try {
+      await updatePrivacyPolicy(privacyPolicy[0].id, html);
+      setEdit(false);
+    } catch (error) {
+      // Error is handled in the context
+      console.error("Failed to update privacy policy");
+    }
   };
 
   function onChange(e: ContentEditableEvent) {
@@ -102,25 +64,31 @@ const ScreenAdminPrivacy = () => {
           {!edit ? (
             <button
               onClick={() => setEdit(true)}
-              className="button-primary bg-accent flex flex-row justify-center items-center py-2 gap-x-2"
+              disabled={isLoading}
+              className="button-primary bg-accent flex flex-row justify-center items-center py-2 gap-x-2 disabled:opacity-50"
             >
               <IconEdit color="#e1e8ff" /> <span>Edit</span>
             </button>
           ) : (
             <button
-              onClick={() => setEdit(false)}
-              className="button-primary bg-accent flex flex-row justify-center items-center py-2 gap-x-2"
+              onClick={handleUpdate}
+              disabled={isLoading}
+              className="button-primary bg-accent flex flex-row justify-center items-center py-2 gap-x-2 disabled:opacity-50"
             >
-              <span>Update</span>
+              <span>{isLoading ? "Updating..." : "Update"}</span>
             </button>
           )}
         </div>
         <div className="h-10"></div>
-        {!edit ? (
+        {isLoading && !privacyPolicy ? (
+          <div className="flex justify-center items-center py-8">
+            <div className="text-primary-text">Loading privacy policy...</div>
+          </div>
+        ) : !edit ? (
           <div
             className="[&_*]:list-auto text-primary-text/80 ps-8 list-decimal"
             dangerouslySetInnerHTML={{
-              __html: html,
+              __html: html || "<p>No privacy policy content available.</p>",
             }}
           />
         ) : (

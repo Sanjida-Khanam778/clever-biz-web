@@ -7,14 +7,17 @@ import "./main.css";
 import { Toaster } from "react-hot-toast";
 import { OwnerProvider } from "./context/ownerContext.tsx";
 import { StaffProvider } from "./context/staffContext.tsx";
+import { AdminProvider } from "./context/adminContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <Provider store={store}>
     <BrowserRouter>
       <OwnerProvider>
         <StaffProvider>
-          <App />
-          <Toaster />
+          <AdminProvider>
+            <App />
+            <Toaster />
+          </AdminProvider>
         </StaffProvider>
       </OwnerProvider>
     </BrowserRouter>

@@ -29,6 +29,11 @@ const ScreenRestaurantDashboard = () => {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [sellingItemData, setSellingItemData] = useState([]);
 
+  // Analytics state
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
+  const [analyticsError, setAnalyticsError] = useState<string | null>(null);
+
   const showFoodItemAddModal = () => setShowFoodItemModal(true);
   const showCategoryAddModal = () => setShowCategoryModal(true);
   const closeFoodItemModal = () => setShowFoodItemModal(false);
@@ -73,6 +78,25 @@ const ScreenRestaurantDashboard = () => {
     fetchMostSellingItems();
   }, [fetchMostSellingItems]);
 
+  // Fetch analytics data
+  const fetchAnalytics = useCallback(async () => {
+    setAnalyticsLoading(true);
+    setAnalyticsError(null);
+    try {
+      const response = await axiosInstance.get("/owners/orders/analytics/");
+      setAnalytics(response.data);
+    } catch (error) {
+      setAnalyticsError("Failed to load analytics data.");
+      toast.error("Failed to load analytics data.");
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, [fetchAnalytics]);
+
   return (
     <>
       <div className="flex flex-col">
@@ -81,25 +105,49 @@ const ScreenRestaurantDashboard = () => {
           <DashboardCard
             icon={<IconSales />}
             label="Total Sells today"
-            data={"$100k"}
+            data={
+              analyticsLoading
+                ? "..."
+                : analytics?.status?.today_total_completed_order_price
+                ? `$${analytics.status.today_total_completed_order_price}`
+                : "$0"
+            }
             accentColor="#31BB24"
             gradientStart="#48E03A"
             gradientEnd="#161F42"
-            tail="(45)"
+            tail={analyticsLoading ? "" : analytics?.status ? "" : "(0)"}
           />
           <DashboardCard
             icon={<IconGrowth />}
             label="Weekly growth"
-            data={"$11,375"}
+            data={
+              analyticsLoading
+                ? "..."
+                : analytics?.status?.weekly_growth !== undefined
+                ? `$${analytics.status.weekly_growth}`
+                : "$0"
+            }
             accentColor="#FFB056"
             gradientStart="#FFB056"
             gradientEnd="#161F42"
-            tail="19.91%"
+            tail={
+              analyticsLoading
+                ? ""
+                : analytics?.status?.weekly_growth !== undefined
+                ? `${analytics.status.weekly_growth}%`
+                : "0%"
+            }
           />
           <DashboardCard
             icon={<IconTeam />}
             label="Total member"
-            data={"12"}
+            data={
+              analyticsLoading
+                ? "..."
+                : analytics?.status?.total_member !== undefined
+                ? `${analytics.status.total_member}`
+                : "0"
+            }
             accentColor="#FF6561"
             gradientStart="#EB342E"
             gradientEnd="#161F42"
@@ -111,8 +159,20 @@ const ScreenRestaurantDashboard = () => {
           <div className="col-span-3 bg-sidebar rounded-xl p-4 w-full h-[600px] ">
             <YearlyChart
               title="Sales Report"
-              firstData={[30, 50, 60, 20, 40, 60, 70, 20, 50, 4, 12, 200]}
-              secondData={[56, 12, 89, 27, 33, 84, 3, 4, 55, 34, 34, 10]}
+              firstData={
+                analyticsLoading
+                  ? Array(12).fill(0)
+                  : analytics?.current_year
+                  ? Object.values(analytics.current_year)
+                  : Array(12).fill(0)
+              }
+              secondData={
+                analyticsLoading
+                  ? Array(12).fill(0)
+                  : analytics?.last_year
+                  ? Object.values(analytics.last_year)
+                  : Array(12).fill(0)
+              }
             />
           </div>
         </div>

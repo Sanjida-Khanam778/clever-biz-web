@@ -34,6 +34,7 @@ import { ImSpinner6 } from "react-icons/im";
 import { useOwner } from "@/context/ownerContext";
 import { useRole } from "@/hooks/useRole";
 import { FiX } from "react-icons/fi";
+import { useAdmin } from "@/context/adminContext";
 
 /* Edit food item dialog ===========================================================>>>>> */
 type ModalProps = {
@@ -88,7 +89,6 @@ export const EditFoodItemModal: React.FC<ModalProps> = ({
           } else {
             throw new Error("Invalid user role");
           }
-       
 
           const res = await axiosInstance.get(endpoint);
           const item = res.data;
@@ -488,13 +488,54 @@ export const ModalCall: React.FC<ModalProps> = ({ isOpen, close }) => {
 /* <<<<<<<<===================================================== Call dialog */
 
 /* Dialog Faq Editor ===========================================================>>>>> */
-export const ModalFaqEditor: React.FC<ModalProps> = ({ isOpen, close }) => {
-  const [html, setHtml] = useState(
-    `Students can engage with the AI tutor in several ways for a seamless learning experience. They can: Type their questions directly into the chat interface: This is ideal for quick queries and specific problems. Upload homework or problem sets as an image: Our AI will analyze the image, identify the problems, and allow students to work through them with guidance. Potentially speak their questions: Our voice input allows for an even more natural interaction. The AI will then analyze the student's input, highlight any errors, and provide step-by-step correct solutions with clear explanations. This ensures the student not only gets the right answer but also understands the underlying concepts.`
-  );
+export const ModalFaqEditor: React.FC<ModalProps> = ({ isOpen, close, id }) => {
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { createFAQ, updateFAQ, faqs } = useAdmin();
+
+  // Reset form when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      if (id) {
+        // Edit mode - find the FAQ to edit
+        const faqToEdit = faqs.find((faq) => faq.id === id);
+        if (faqToEdit) {
+          setQuestion(faqToEdit.question);
+          setAnswer(faqToEdit.answer);
+        }
+      } else {
+        // Create mode - reset form
+        setQuestion("");
+        setAnswer("");
+      }
+    }
+  }, [isOpen, id, faqs]);
+
+  const handleSubmit = async () => {
+    if (!question.trim() || !answer.trim()) {
+      toast.error("Please fill in both question and answer fields.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      if (id) {
+        await updateFAQ(id, question, answer);
+      } else {
+        await createFAQ(question, answer);
+      }
+      close();
+    } catch (error) {
+      // Error is handled in the context
+      console.error("Failed to save FAQ");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   function onChange(e: ContentEditableEvent) {
-    setHtml(e.target.value);
+    setAnswer(e.target.value);
   }
 
   return (
@@ -510,10 +551,24 @@ export const ModalFaqEditor: React.FC<ModalProps> = ({ isOpen, close }) => {
         <DialogPanel className=" bg-primary p-4 rounded-lg shadow-xl min-w-lg">
           <div className="flex flex-col justify-center items-stretch">
             <div className="flex flex-col max-h-120 overflow-y-auto scrollbar-hide max-w-xl">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-primary-text">
+                  {id ? "Edit FAQ" : "Add New FAQ"}
+                </h3>
+                <button
+                  onClick={() => close()}
+                  className="text-primary-text hover:text-gray-300"
+                >
+                  <FiX size={24} />
+                </button>
+              </div>
+
               <LabelInput
                 label="Question"
                 inputProps={{
-                  placeholder: "Faq question",
+                  placeholder: "Enter FAQ question",
+                  value: question,
+                  onChange: (e) => setQuestion(e.target.value),
                 }}
               />
               <label htmlFor="text" className="mt-2 text-primary-text">
@@ -522,7 +577,7 @@ export const ModalFaqEditor: React.FC<ModalProps> = ({ isOpen, close }) => {
 
               <Editor
                 id="text"
-                value={html}
+                value={answer}
                 onChange={onChange}
                 containerProps={{
                   className: "max-h-200",
@@ -542,12 +597,21 @@ export const ModalFaqEditor: React.FC<ModalProps> = ({ isOpen, close }) => {
                 </Toolbar>
               </Editor>
             </div>
-            <div className="mt-8 flex flex-row justify-center items-center gap-x-16">
+
+            <div className="flex justify-end gap-x-2 mt-4">
               <button
-                onClick={() => confirm()}
-                className="button-primary px-8 py-3 text-primary-text"
+                onClick={() => close()}
+                disabled={loading}
+                className="px-4 py-2 text-primary-text border border-primary-text rounded-md hover:bg-primary-text hover:text-primary disabled:opacity-50"
               >
-                Update
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={loading}
+                className="button-primary px-8 py-2 text-primary-text disabled:opacity-50"
+              >
+                {loading ? "Saving..." : id ? "Update" : "Create"}
               </button>
             </div>
           </div>
