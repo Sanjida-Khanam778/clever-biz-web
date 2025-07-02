@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import { Disclosure } from "@headlessui/react";
 import { DisclosureButton } from "@headlessui/react";
 import { MouseEvent, useState, useEffect } from "react";
-import { ModalFaqEditor } from "../../components/modals";
+import { ModalFaqEditor, DeleteFaqModal } from "../../components/modals";
 import { IoMdAdd } from "react-icons/io";
 import { EditorProvider } from "react-simple-wysiwyg";
 import { useAdmin } from "../../context/adminContext";
@@ -13,8 +13,13 @@ import { useAdmin } from "../../context/adminContext";
 const ScreenAdminFaq = () => {
   const [edit, setEdit] = useState(false);
   const [editingFaqId, setEditingFaqId] = useState<number | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [faqToDelete, setFaqToDelete] = useState<{
+    id: number;
+    question: string;
+  } | null>(null);
   const { faqs, isLoading, fetchFAQs, deleteFAQ } = useAdmin();
-
+  console.log(faqs);
   // Fetch FAQs on component mount
   useEffect(() => {
     fetchFAQs();
@@ -34,13 +39,19 @@ const ScreenAdminFaq = () => {
 
   const onDeleteFaq = async (
     e: MouseEvent<HTMLButtonElement>,
-    faqId: number
+    faqId: number,
+    faqQuestion: string
   ) => {
     e.preventDefault();
     e.stopPropagation();
-    if (window.confirm("Are you sure you want to delete this FAQ?")) {
+    setFaqToDelete({ id: faqId, question: faqQuestion });
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (faqToDelete) {
       try {
-        await deleteFAQ(faqId);
+        await deleteFAQ(faqToDelete.id);
       } catch (error) {
         console.error("Failed to delete FAQ");
       }
@@ -73,7 +84,7 @@ const ScreenAdminFaq = () => {
               </div>
             ) : (
               /* Faq list section */
-              faqs.map((faq, index) => (
+              faqs?.map((faq, index) => (
                 <Disclosure key={index} defaultOpen={index === 0} as="div">
                   {({ open }) => (
                     <>
@@ -118,7 +129,9 @@ const ScreenAdminFaq = () => {
                           </button>
                           <button
                             className="button-primary px-4 py-2 hover:scale-110 bg-red-600 hover:bg-red-700"
-                            onClick={(e) => onDeleteFaq(e, faq.id)}
+                            onClick={(e) =>
+                              onDeleteFaq(e, faq.id, faq.question)
+                            }
                           >
                             Delete
                           </button>
@@ -166,6 +179,13 @@ const ScreenAdminFaq = () => {
         isOpen={edit}
         close={() => setEdit(false)}
         id={editingFaqId}
+      />
+      <DeleteFaqModal
+        isOpen={deleteModalOpen}
+        close={() => setDeleteModalOpen(false)}
+        faqId={faqToDelete?.id || null}
+        faqQuestion={faqToDelete?.question || ""}
+        onConfirm={handleConfirmDelete}
       />
     </EditorProvider>
   );

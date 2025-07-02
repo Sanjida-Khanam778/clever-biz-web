@@ -131,7 +131,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({
     setIsLoading(true);
     try {
       const response = await axiosInstance.get("/adminapi/faq/");
-      setFaqs(response.data);
+      setFaqs(response.data.results);
     } catch (error: any) {
       console.error("Failed to load FAQs", error);
       if (error.response?.status !== 401 && error.response?.status !== 403) {

@@ -487,6 +487,100 @@ export const ModalCall: React.FC<ModalProps> = ({ isOpen, close }) => {
 };
 /* <<<<<<<<===================================================== Call dialog */
 
+/* Delete FAQ Confirmation Modal ===========================================================>>>>> */
+interface DeleteFaqModalProps extends ModalProps {
+  faqId: number | null;
+  faqQuestion: string;
+  onConfirm: () => void;
+}
+
+export const DeleteFaqModal: React.FC<DeleteFaqModalProps> = ({
+  isOpen,
+  close,
+  faqId,
+  faqQuestion,
+  onConfirm,
+}) => {
+  const handleConfirm = () => {
+    onConfirm();
+    close();
+  };
+
+  return (
+    <Dialog
+      open={isOpen}
+      onClose={() => close()}
+      className="relative z-50 transition duration-300 ease-out data-[closed]:opacity-0"
+      transition={true}
+    >
+      <DialogBackdrop className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
+
+      <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
+        <DialogPanel className="bg-sidebar/95 backdrop-blur-xl p-6 rounded-xl shadow-2xl min-w-md max-w-md border border-primary/20">
+          <div className="flex flex-col items-center text-center">
+            {/* Warning Icon */}
+            <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
+              <svg
+                className="w-8 h-8 text-red-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                />
+              </svg>
+            </div>
+
+            {/* Title */}
+            <h3 className="text-xl font-semibold text-primary-text mb-2">
+              Delete FAQ
+            </h3>
+
+            {/* Message */}
+            <p className="text-primary-text/80 mb-6 leading-relaxed">
+              Are you sure you want to delete this FAQ?
+            </p>
+
+            {/* FAQ Question Preview */}
+            <div className="bg-primary/20 rounded-lg p-3 mb-6 w-full">
+              <p className="text-primary-text/90 text-sm font-medium">
+                "{faqQuestion}"
+              </p>
+            </div>
+
+            {/* Warning */}
+            <p className="text-red-400/80 text-sm mb-6">
+              This action cannot be undone.
+            </p>
+
+            {/* Buttons */}
+            <div className="flex gap-3 w-full">
+              <button
+                onClick={() => close()}
+                className="flex-1 px-4 py-2.5 text-primary-text border border-primary-text/30 rounded-lg hover:bg-primary-text/10 transition-colors duration-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirm}
+                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 font-medium"
+              >
+                Delete FAQ
+              </button>
+            </div>
+          </div>
+        </DialogPanel>
+      </div>
+    </Dialog>
+  );
+};
+/* <<<<<<<<===================================================== Delete FAQ Confirmation Modal */
+
 /* Dialog Faq Editor ===========================================================>>>>> */
 export const ModalFaqEditor: React.FC<ModalProps> = ({ isOpen, close, id }) => {
   const [question, setQuestion] = useState("");
