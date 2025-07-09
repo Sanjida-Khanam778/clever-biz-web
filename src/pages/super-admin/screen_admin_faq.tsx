@@ -161,9 +161,12 @@ const ScreenAdminFaq = () => {
                             }}
                             className="overflow-hidden pt-0 text-primary"
                           >
-                            <div className="bg-primary-text p-4 rounded-b-md">
-                              {faq.answer}
-                            </div>
+                            <div
+                              className="bg-primary-text p-4 rounded-b-md"
+                              dangerouslySetInnerHTML={{
+                                __html: faq.answer,
+                              }}
+                            />
                           </motion.div>
                         )}
                       </AnimatePresence>

@@ -107,7 +107,6 @@ const ScreenAdminPrivacy = () => {
                 <BtnBold />
                 <BtnItalic />
                 <BtnBulletList />
-                <BtnNumberedList />
                 <BtnStrikeThrough />
                 <BtnLink />
                 <BtnUndo />

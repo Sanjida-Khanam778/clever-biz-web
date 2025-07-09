@@ -77,27 +77,32 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, []);
 
-  const updatePrivacyPolicy = useCallback(async (id: number, content: string) => {
-    setIsLoading(true);
-    try {
-      const response = await axiosInstance.patch(`/adminapi/policy/${id}/`, {
-        text: content,
-      });
-      setPrivacyPolicy(response.data);
-      toast.success("Privacy policy updated successfully!");
-    } catch (error: any) {
-      console.error("Failed to update privacy policy", error);
-      toast.error("Failed to update privacy policy.");
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const updatePrivacyPolicy = useCallback(
+    async (id: number, content: string) => {
+      setIsLoading(true);
+      try {
+        const response = await axiosInstance.patch(`/adminapi/policy/${id}/`, {
+          text: content,
+        });
+        setPrivacyPolicy(response.data);
+        toast.success("Privacy policy updated successfully!");
+      } catch (error: any) {
+        console.error("Failed to update privacy policy", error);
+        toast.error("Failed to update privacy policy.");
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
 
   const fetchTermsAndConditions = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await axiosInstance.get("adminapi/terms-and-conditions/");
+      const response = await axiosInstance.get(
+        "adminapi/terms-and-conditions/"
+      );
       setTermsAndConditions(response.data.results);
     } catch (error: any) {
       console.error("Failed to load terms and conditions", error);
@@ -109,23 +114,29 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, []);
 
-  const updateTermsAndConditions = useCallback(async (id: number, content: string) => {
-    setIsLoading(true);
-    try {
-      const response = await axiosInstance.patch(`adminapi/terms-and-conditions/${id}/`, {
-        text: content,
-      });
-      setTermsAndConditions(response.data);
-      console.log(response.data);
-      toast.success("Terms and conditions updated successfully!");
-    } catch (error: any) {
-      console.error("Failed to update terms and conditions", error);
-      toast.error("Failed to update terms and conditions.");
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const updateTermsAndConditions = useCallback(
+    async (id: number, content: string) => {
+      setIsLoading(true);
+      try {
+        const response = await axiosInstance.patch(
+          `adminapi/terms-and-conditions/${id}/`,
+          {
+            text: content,
+          }
+        );
+        setTermsAndConditions(response.data);
+        console.log(response.data);
+        toast.success("Terms and conditions updated successfully!");
+      } catch (error: any) {
+        console.error("Failed to update terms and conditions", error);
+        toast.error("Failed to update terms and conditions.");
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
 
   const fetchFAQs = useCallback(async () => {
     setIsLoading(true);

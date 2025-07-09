@@ -61,7 +61,9 @@ type ChatRoomItem = {
   id: string;
   table_name: string;
   time: string;
+  user_id: number;
 };
+
 type OrderItem = {
   id: number;
   userName: string;

@@ -838,6 +838,15 @@ export const ChatSection = () => {
   const { userInfo } = useRole();
   // Add a ref for the chat body
   const chatBodyRef = useRef<HTMLDivElement | null>(null);
+  // React Hooks for Refs
+  const localAudioRef = useRef<HTMLAudioElement>(null);
+  const remoteAudioRef = useRef<HTMLAudioElement>(null);
+  const socketRef = useRef<WebSocket | null>(null);
+  const peerRef = useRef<RTCPeerConnection | null>(null);
+  const localStreamRef = useRef<MediaStream | null>(null);
+  const [callStatus, setCallStatus] = useState<
+    "idle" | "calling" | "in_call" | "ended"
+  >("idle");
 
   // Fetch devices and set initial chat
   useEffect(() => {
@@ -901,6 +910,11 @@ export const ChatSection = () => {
     socket.current.onmessage = (event) => {
       const data = JSON.parse(event.data);
       setMessages((prevMessages) => [...prevMessages, data]);
+      if (data.type === "answer") {
+        setCallStatus("in_call");
+      } else if (data.action === "call_ended") {
+        setCallStatus("ended");
+      }
     };
     socket.current.onclose = () => {
       console.log("WebSocket disconnected");
@@ -923,6 +937,127 @@ export const ChatSection = () => {
       chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
     }
   }, [messages, selectedChat]);
+
+  console.log(selectedChat?.user_id);
+  const startConnection = async () => {
+    const device_id = selectedChat?.id;
+    const restaurant_id = userInfo?.restaurants[0].id;
+    const user_id = selectedChat?.user_id;
+    if (!selectedChat) return;
+    const accessToken = localStorage.getItem("accessToken");
+    // Step 1: WebSocket Connect
+    const socket = new WebSocket(
+      `ws://192.168.10.150:8000/ws/call/${device_id}/?token=${accessToken}`
+    );
+
+    socket.onopen = async () => {
+      console.log("Socket connected");
+
+      // Step 2: Microphone Access
+      const localStream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+      });
+      localAudioRef.current.srcObject = localStream;
+
+      // Step 3: Setup Peer Connection
+      const peer = new RTCPeerConnection({
+        iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+      });
+
+      localStream.getTracks().forEach((track) => {
+        peer.addTrack(track, localStream);
+      });
+
+      // Step 4: ICE Candidates Send to Socket
+      peer.onicecandidate = (event) => {
+        if (event.candidate) {
+          socket.send(
+            JSON.stringify({ type: "candidate", candidate: event.candidate })
+          );
+        }
+      };
+
+      // Step 5: Remote Audio Stream
+      peer.ontrack = (event) => {
+        remoteAudioRef.current.srcObject = event.streams[0];
+      };
+
+      // Step 6: Create Offer & Send to Backend
+      const offer = await peer.createOffer();
+      await peer.setLocalDescription(offer);
+
+      socket.send(
+        JSON.stringify({
+          action: "start_call",
+          receiver_id: user_id, // From React state
+          device_id: device_id,
+          type: "offer",
+          offer,
+        })
+      );
+
+      // // Step 7: Handle Socket Message (Answer & Candidate)
+      // socket.onmessage = async (event) => {
+      //   const data = JSON.parse(event.data);
+      //   if (data.type === "answer") {
+      //     await peer.setRemoteDescription(
+      //       new RTCSessionDescription(data.answer)
+      //     );
+      //   } else if (data.type === "candidate") {
+      //     await peer.addIceCandidate(new RTCIceCandidate(data.candidate));
+      //   } else if (data.action === "call_ended") {
+      //     // Handle call end
+      //     peer.close();
+      //     socket.close();
+      //     console.log("Call ended");
+      //   }
+      // };
+
+      // Add this above startConnection or inside the function
+      let remoteCandidatesQueue = [];
+
+      // Inside socket.onmessage:
+      socket.onmessage = async (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === "answer") {
+          await peer.setRemoteDescription(
+            new RTCSessionDescription(data.answer)
+          );
+          // Add any queued candidates
+          remoteCandidatesQueue.forEach(async (candidate) => {
+            try {
+              await peer.addIceCandidate(new RTCIceCandidate(candidate));
+            } catch (e) {
+              console.error("Error adding queued ICE candidate", e);
+            }
+          });
+          remoteCandidatesQueue = [];
+          setCallStatus("in_call");
+        } else if (data.type === "candidate") {
+          if (peer.remoteDescription && peer.remoteDescription.type) {
+            try {
+              await peer.addIceCandidate(new RTCIceCandidate(data.candidate));
+            } catch (e) {
+              console.error("Error adding ICE candidate", e);
+            }
+          } else {
+            remoteCandidatesQueue.push(data.candidate);
+          }
+        } else if (data.action === "call_ended") {
+          // Handle call end
+          peer.close();
+          socket.close();
+          console.log("Call ended");
+          setCallStatus("ended");
+        }
+      };
+
+      // Save to Ref (for future)
+      socketRef.current = socket;
+      peerRef.current = peer;
+      localStreamRef.current = localStream;
+    };
+  };
 
   const handleSend = () => {
     if (!inputMessage.trim()) return;
@@ -1105,12 +1240,23 @@ export const ChatSection = () => {
         confirm={() => {
           setIsConfirmOpen(false);
           setIsCallOpen(true);
+          startConnection();
         }}
         close={() => {
           setIsConfirmOpen(false);
         }}
       />
-      <ModalCall isOpen={isCallOpen} close={() => setIsCallOpen(false)} />
+      <ModalCall
+        socketRef={socketRef}
+        peerRef={peerRef}
+        localStreamRef={localStreamRef}
+        isOpen={isCallOpen}
+        callStatus={callStatus} // <-- new prop
+        close={() => setIsCallOpen(false)}
+      />
+      {/* Audio elements for call */}
+      <audio ref={localAudioRef} autoPlay muted style={{ display: "none" }} />
+      <audio ref={remoteAudioRef} autoPlay style={{ display: "none" }} />
     </>
   );
 };
