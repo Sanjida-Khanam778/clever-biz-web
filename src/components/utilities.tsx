@@ -902,7 +902,7 @@ export const ChatSection = () => {
       socket.current.close();
     }
     socket.current = new WebSocket(
-      `ws://192.168.10.150:8000/ws/chat/${selectedChat.id}/?token=${accessToken}`
+      `ws://10.10.13.26:9000/ws/chat/${selectedChat.id}/?token=${accessToken}`
     );
     socket.current.onopen = () => {
       setIsConnected(true);
@@ -947,7 +947,7 @@ export const ChatSection = () => {
     const accessToken = localStorage.getItem("accessToken");
     // Step 1: WebSocket Connect
     const socket = new WebSocket(
-      `ws://192.168.10.150:8000/ws/call/${device_id}/?token=${accessToken}`
+      `ws://10.10.13.26:9000/ws/call/${device_id}/?token=${accessToken}`
     );
 
     socket.onopen = async () => {
@@ -1311,6 +1311,7 @@ interface DashboardMostSellingItemsProps {
 export const DashboardMostSellingItems: React.FC<
   DashboardMostSellingItemsProps
 > = ({ data, containerProps }) => {
+  console.log(data);
   const { className, ...rest } = containerProps ?? {};
   return (
     <div className={cn("flex flex-col gap-y-2", className)} {...rest}>

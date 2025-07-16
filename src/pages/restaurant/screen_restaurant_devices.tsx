@@ -96,13 +96,18 @@ export const ScreenRestaurantDevices = () => {
         </div>
 
         {/* Header and search */}
-        <div className="flex flex-row justify-between items-center my-3">
-          <h2 className="text-2xl text-primary-text">List of devices</h2>
-          <TextSearchBox
-            placeholder="Search by table name"
-            value={devicesSearchQuery}
-            onChange={handleSearchChange}
-          />
+        <div className="flex flex-col md:flex-row justify-between md:items-center gap-y-2 md:gap-y-0 my-4">
+          <h2 className="flex-1 text-2xl text-primary-text">
+            Registered Device List
+          </h2>
+          <div className="flex-1 flex gap-x-4 justify-end">
+            <ButtonAdd label="Add Device" onClick={() => showDeviceModal()} />
+            <TextSearchBox
+              placeholder="Search by table name"
+              value={devicesSearchQuery}
+              onChange={handleSearchChange}
+            />
+          </div>
         </div>
 
         {/* List of content */}

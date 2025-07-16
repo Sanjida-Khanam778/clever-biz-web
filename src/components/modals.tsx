@@ -74,7 +74,7 @@ export const EditFoodItemModal: React.FC<ModalProps> = ({
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [existingImage, setExistingImage] = useState<string | null>(null);
   const [existingVideo, setExistingVideo] = useState<string | null>(null);
-
+console.log(categories)
   // Load categories when userRole is available
   useEffect(() => {
     if (!isLoading && userRole) {
