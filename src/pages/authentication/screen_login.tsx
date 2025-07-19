@@ -77,18 +77,6 @@ const ScreenLogin = () => {
     }
   };
 
-  // const onSubmit: SubmitHandler<Inputs> = (data) => {
-  //   if (data.email == "chef@gmail.com") {
-  //     navigate("/chef");
-  //   } else if (data.email == "staff@gmail.com") {
-  //     navigate("/staff");
-  //   } else if (data.email == "restaurant@gmail.com") {
-  //     navigate("/restaurant");
-  //   } else if (data.email == "admin@gmail.com") {
-  //     navigate("/admin");
-  //   }
-  // };
-
   return (
     <div className="bg-primary text-black p-8 rounded-xl shadow-lg w-full max-w-lg">
       <h2 className="text-3xl mb-6 text-center text-primary-text">Welcome</h2>
@@ -158,7 +146,7 @@ const ScreenLogin = () => {
           </button>
         </div>
         <div className="text-center flex justify-center items-center">
-          <p className="text-sm text-primary-text/40">Dont have account?</p>
+          <p className="text-sm text-primary-text/40">Don't have account?</p>
           <div className="w-2"></div>
           <Link
             className="text-sm text-primary-text border border-primary-text/20 rounded-md p-1"

@@ -75,8 +75,7 @@ type OrderItem = {
   status:
     | "Pending"
     | "Completed"
-    | "Completed"
+    | "Served"
     | "Cancelled"
-    | "In Progress"
-    | "Processing";
+    | "Preparing";
 };

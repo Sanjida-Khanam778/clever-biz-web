@@ -47,7 +47,7 @@ interface OrderItem {
     price: number;
   }>;
   created_time: string;
-  status: "Pending" | "Completed" | "Cancelled" | "In Progress" | "Processing";
+  status: "Pending" | "Completed" | "Cancelled" | "Served" | "Preparing";
 }
 
 // Define reservation item type

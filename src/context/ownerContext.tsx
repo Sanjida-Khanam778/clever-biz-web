@@ -45,13 +45,12 @@ interface OrderItem {
   orderedItems: number;
   timeOfOrder: string;
   orderId: string;
-  status:
+   status:
     | "Pending"
     | "Completed"
-    | "Completed"
+    | "Served"
     | "Cancelled"
-    | "In Progress"
-    | "Processing";
+    | "Preparing";
 }
 
 // Define reservation item type

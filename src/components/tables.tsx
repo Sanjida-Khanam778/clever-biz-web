@@ -455,7 +455,10 @@ export const TableReviewList: React.FC<TableReviewListProps> = ({ data }) => {
         {data.map((item, index) => (
           <tr key={index} className="border-b border-[#1C1E3C]">
             <td className="p-4 text-primary-text">{item.name}</td>
-            <td className="p-4 text-primary-text"> {formatDate(item.created_time)}</td>
+            <td className="p-4 text-primary-text">
+              {" "}
+              {formatDate(item.created_time)}
+            </td>
             <td className="p-4 text-primary-text">
               {formatTime(item.created_time)}
             </td>
@@ -482,7 +485,7 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
 }) => {
   const { fetchOrders } = useStaff();
   const { fetchOrders: fetchOwnerOrders } = useOwner();
-  const statuses = ["Preparing", "Completed", "Cancelled", "Pending"];
+  const statuses = ["Pending", "Preparing", "served", "Completed", "Cancelled"];
   const { updateOrderStatus: contextUpdateOrderStatus } = useOwner();
 
   // Use prop if provided (for staff), otherwise use context (for owner)
@@ -522,13 +525,12 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
               {item.order_items?.[0]?.item_name || "N/A"}
             </td>
             <td className="p-4 text-primary-text">
-              {item.order_items?.[0]?.quantity || "N/A"}
+              {item.order_items.length || "N/A"}
             </td>
             <td className="p-4 text-primary-text">
-              {item.order_items?.[0]?.price || "N/A"}
+              {item.total_price || "N/A"}
             </td>
             <td className="p-4 text-primary-text">
-              {" "}
               <span className="font-medium">
                 {formatDateTime(item.created_time)}
               </span>
@@ -553,6 +555,10 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
                   Pending: {
                     bg: "bg-yellow-800",
                     text: "text-yellow-300",
+                  },
+                  served: {
+                    bg: "bg-orange-200",
+                    text: "text-orange-500",
                   },
                 }}
                 availableStatuses={statuses}
