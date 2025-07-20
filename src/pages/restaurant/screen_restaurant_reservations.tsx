@@ -3,8 +3,12 @@ import { DateSearchBox, TextSearchBox } from "../../components/input";
 import { Pagination, StatCard } from "../../components/utilities";
 import { useEffect, useState } from "react";
 import { useOwner } from "@/context/ownerContext";
+import { AssistantModal } from "@/components/modals";
+import { AssistantCredentials } from "@/types";
+import { FiHeadphones } from "react-icons/fi";
+import { ImSpinner6 } from "react-icons/im";
 
-/* Screen to list of reservations on staff end */
+/* Screen to list of reservations on restaurant end */
 const ScreenRestaurantReservations = () => {
   const {
     reservations,
@@ -20,7 +24,9 @@ const ScreenRestaurantReservations = () => {
 
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  console.log(reservations, "reservations data");
+  const [assistantModalOpen, setAssistantModalOpen] = useState(false);
+  const [assistant, setAssistant] = useState<AssistantCredentials | null>(null);
+  const [assistantLoading, setAssistantLoading] = useState(false);
 
   // Debounced search effect
   useEffect(() => {
@@ -60,9 +66,25 @@ const ScreenRestaurantReservations = () => {
   };
 
   const handleDateChange = (date: Date | null) => {
-    console.log(date, "date");
     setSelectedDate(date);
     setReservationsCurrentPage(1); // Reset to first page when date changes
+  };
+
+  // Assistant modal handlers
+  const handleAssistantButtonClick = () => {
+    setAssistantModalOpen(true);
+  };
+  const handleAssistantModalClose = () => {
+    setAssistantModalOpen(false);
+  };
+  const handleSaveAssistant = (data: AssistantCredentials) => {
+    setAssistantLoading(true);
+    // Simulate API call delay
+    setTimeout(() => {
+      setAssistant(data);
+      setAssistantModalOpen(false);
+      setAssistantLoading(false);
+    }, 1000);
   };
 
   // Helper function to format date properly for API
@@ -111,6 +133,16 @@ const ScreenRestaurantReservations = () => {
               value={reservationsSearchQuery}
               onChange={handleSearch}
             />
+            {/* Assistant button */}
+            <button
+              className="h-14 w-96 flex items-center justify-center bg-green-700 text-primary-text rounded-lg overflow-hidden shadow-md px-6 text-base font-medium transition-colors disabled:opacity-50"
+              onClick={handleAssistantButtonClick}
+              type="button"
+              disabled={assistantLoading}
+            >
+              <FiHeadphones className="mr-3 text-xl" />
+              Assistant
+            </button>
           </div>
         </div>
         {/* List of content */}
@@ -125,6 +157,13 @@ const ScreenRestaurantReservations = () => {
           </div>
         </div>
       </div>
+      {/* Assistant Modal */}
+      <AssistantModal
+        isOpen={assistantModalOpen}
+        close={handleAssistantModalClose}
+        onSave={handleSaveAssistant}
+        initialData={assistant}
+      />
     </>
   );
 };

@@ -996,23 +996,6 @@ export const ChatSection = () => {
         })
       );
 
-      // // Step 7: Handle Socket Message (Answer & Candidate)
-      // socket.onmessage = async (event) => {
-      //   const data = JSON.parse(event.data);
-      //   if (data.type === "answer") {
-      //     await peer.setRemoteDescription(
-      //       new RTCSessionDescription(data.answer)
-      //     );
-      //   } else if (data.type === "candidate") {
-      //     await peer.addIceCandidate(new RTCIceCandidate(data.candidate));
-      //   } else if (data.action === "call_ended") {
-      //     // Handle call end
-      //     peer.close();
-      //     socket.close();
-      //     console.log("Call ended");
-      //   }
-      // };
-
       // Add this above startConnection or inside the function
       let remoteCandidatesQueue = [];
 

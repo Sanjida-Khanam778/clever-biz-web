@@ -27,7 +27,7 @@ import RestaurantLayout from "./pages/restaurant/layout";
 import ScreenRestaurantOrderList from "./pages/restaurant/screen_restaurant_order_list";
 import ScreenRestaurantReservations from "./pages/restaurant/screen_restaurant_reservations";
 import ScreenRestaurantDashboard from "./pages/restaurant/screen_restaurant_dashboard";
-import { ScreenRestaurantManagement } from "./pages/restaurant/screen_restaurant_management";
+import ScreenRestaurantManagement from "./pages/restaurant/screen_restaurant_management";
 import { ScreenRestaurantDevices } from "./pages/restaurant/screen_restaurant_devices";
 import ScreenRestaurantReviews from "./pages/restaurant/screen_restaurant_reviews";
 import ScreenRestaurantChat from "./pages/restaurant/screen_restaurant_chat";

@@ -9,6 +9,7 @@ import {
 } from "react";
 import toast from "react-hot-toast";
 import { useRole } from "@/hooks/useRole";
+import { Member } from "@/types";
 
 // Define the type of each category (adjust fields based on actual API)
 interface Category {
@@ -45,12 +46,7 @@ interface OrderItem {
   orderedItems: number;
   timeOfOrder: string;
   orderId: string;
-   status:
-    | "Pending"
-    | "Completed"
-    | "Served"
-    | "Cancelled"
-    | "Preparing";
+  status: "Pending" | "Completed" | "Served" | "Cancelled" | "Preparing";
 }
 
 // Define reservation item type
@@ -110,6 +106,8 @@ interface OwnerContextType {
   devicesCount: number;
   ordersStats: OrdersStats | null;
   deviceStats: DeviceStats | null;
+  members: Member[];
+  membersSearchQuery: string;
   fetchCategories: () => Promise<void>;
   fetchFoodItems: (page?: number, search?: string) => Promise<void>;
   fetchOrders: (page?: number, search?: string) => Promise<void>;
@@ -121,6 +119,9 @@ interface OwnerContextType {
   fetchReservationStatusReport: () => Promise<void>;
   fetchAllDevices: (page?: number, search?: string) => Promise<void>;
   fetchDeviceStats: () => Promise<void>;
+  fetchMembers: (search?: string) => Promise<void>;
+  createMember: (formData: FormData) => Promise<void>;
+  updateMemberStatus: (id: number, action: string) => Promise<void>;
   updateFoodItem: (id: number, formData: FormData) => Promise<void>;
   createFoodItem: (formData: FormData) => Promise<void>;
   deleteFoodItem: (id: number) => Promise<void>;
@@ -136,9 +137,11 @@ interface OwnerContextType {
   setAllDevices: (devices: DeviceItem[]) => void;
   setDevicesSearchQuery: (query: string) => void;
   setDevicesCurrentPage: (page: number) => void;
+  setMembersSearchQuery: (query: string) => void;
   updateDeviceStatus: (id: number, action: string) => Promise<void>;
   setOrders: React.Dispatch<React.SetStateAction<OrderItem[]>>;
   setReservations: React.Dispatch<React.SetStateAction<ReservationItem[]>>;
+  setMembers: React.Dispatch<React.SetStateAction<Member[]>>;
 }
 
 // Create the context
@@ -172,6 +175,8 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
   const [devicesCount, setDevicesCount] = useState(0);
   const [deviceStats, setDeviceStats] = useState<DeviceStats | null>(null);
   const [ordersStats, setOrdersStats] = useState<OrdersStats | null>(null);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [membersSearchQuery, setMembersSearchQuery] = useState("");
 
   // Auto-fetch categories when userRole becomes available
   useEffect(() => {
@@ -287,7 +292,6 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
     } catch (error: any) {
       console.error("Failed to load orders", error);
       // Only show toast for non-auth errors since interceptor handles auth
-     
     }
   }, []);
 
@@ -425,6 +429,75 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
       toast.error("Failed to load device stats.");
     }
   }, [userRole, isLoading]);
+
+  const fetchMembers = useCallback(
+    async (search?: string) => {
+      if (isLoading || !userRole) {
+        return;
+      }
+
+      try {
+        const searchParam = search || membersSearchQuery;
+        const endpoint = `/owners/chef-staff/?search=${searchParam}`;
+        const response = await axiosInstance.get(endpoint);
+        setMembers(response.data.results || []);
+      } catch (error) {
+        console.error("Failed to load members", error);
+        toast.error("Failed to load members.");
+      }
+    },
+    [userRole, isLoading, membersSearchQuery]
+  );
+
+  const createMember = useCallback(
+    async (formData: FormData) => {
+      if (isLoading || !userRole) {
+        return;
+      }
+
+      try {
+        await axiosInstance.post("/owners/chef-staff/", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        toast.success("Member created successfully!");
+        // Refresh the members list
+        await fetchMembers();
+      } catch (error: any) {
+        console.error("Failed to create member", error);
+        toast.error(error.response?.data?.email || "Failed to create member.");
+        throw error;
+      }
+    },
+    [userRole, isLoading, fetchMembers]
+  );
+
+  const updateMemberStatus = useCallback(
+    async (id: number, action: string) => {
+      if (isLoading || !userRole) {
+        return;
+      }
+
+      try {
+        await axiosInstance.patch(`/owners/chef-staff/${id}/`, {
+          action: action.toLowerCase(),
+        });
+        toast.success("Member status updated successfully!");
+        // Update local state immediately for instant feedback
+        setMembers((prevMembers) =>
+          prevMembers.map((member) =>
+            member.id === id
+              ? { ...member, action: action.toLowerCase() }
+              : member
+          )
+        );
+      } catch (error) {
+        console.error("Failed to update member status", error);
+        toast.error("Failed to update member status.");
+        throw error;
+      }
+    },
+    [userRole, isLoading]
+  );
 
   const updateFoodItem = useCallback(
     async (id: number, formData: FormData) => {
@@ -692,6 +765,8 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
     devicesCurrentPage,
     devicesCount,
     deviceStats,
+    members,
+    membersSearchQuery,
     fetchCategories,
     fetchFoodItems,
     fetchOrders,
@@ -699,6 +774,9 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
     fetchReservationStatusReport,
     fetchAllDevices,
     fetchDeviceStats,
+    fetchMembers,
+    createMember,
+    updateMemberStatus,
     updateFoodItem,
     createFoodItem,
     deleteFoodItem,
@@ -714,9 +792,11 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
     setAllDevices,
     setDevicesSearchQuery,
     setDevicesCurrentPage,
+    setMembersSearchQuery,
     updateDeviceStatus,
     setOrders,
     setReservations,
+    setMembers,
   };
 
   return (

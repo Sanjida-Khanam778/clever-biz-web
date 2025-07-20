@@ -28,6 +28,8 @@ const ScreenRestaurantDashboard = () => {
   const [foodItemModal, setShowFoodItemModal] = useState(false);
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [sellingItemData, setSellingItemData] = useState([]);
+  const [currentYear, setCurrentYear] = useState(null);
+  const [lastYear, setLastYear] = useState(null);
 
   // Analytics state
   const [analytics, setAnalytics] = useState<any>(null);
@@ -84,6 +86,8 @@ const ScreenRestaurantDashboard = () => {
     setAnalyticsError(null);
     try {
       const response = await axiosInstance.get("/owners/orders/analytics/");
+      setCurrentYear(response.data?.status?.current_year);
+      setLastYear(response.data?.status?.last_year);
       setAnalytics(response.data);
     } catch (error) {
       setAnalyticsError("Failed to load analytics data.");
@@ -173,6 +177,8 @@ const ScreenRestaurantDashboard = () => {
                   ? Object.values(analytics.last_year)
                   : Array(12).fill(0)
               }
+              currentYear={currentYear}
+              lastYear = {lastYear}
             />
           </div>
         </div>

@@ -1,76 +1,87 @@
-import { EditStaffModal } from "@/components/modals";
 import { TableTeamManagement } from "@/components/tables";
-import { useEffect, useState } from "react";
-import { ButtonAdd, TextSearchBox } from "../../components/input";
+import { TextSearchBox } from "../../components/input";
 import { Pagination } from "../../components/utilities";
-import axiosInstance from "@/lib/axios";
-import toast from "react-hot-toast";
-type Member = {
-  id: number;
-  email: string;
-  username: string;
-  role: string;
-  action: string;
-  generate: string;
-  created_at: string;
-  updated_time: string;
-  restaurant: string;
-  image: string | null;
-};
+import { useEffect, useState } from "react";
+import { useOwner } from "@/context/ownerContext";
+import { EditStaffModal } from "@/components/modals";
 
-export const ScreenRestaurantManagement = () => {
-  const [member, setMember] = useState<Member[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [staffModal, setShowStaffModal] = useState(false);
+/* Screen to list of team management on restaurant end */
+const ScreenRestaurantManagement = () => {
+  const {
+    members,
+    membersSearchQuery,
+    fetchMembers,
+    createMember,
+    updateMemberStatus,
+    setMembersSearchQuery,
+  } = useOwner();
 
+  const [modalOpen, setModalOpen] = useState(false);
+
+  // Load members on component mount and when search query changes
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await axiosInstance.get(
-          `/owners/chef-staff/?search=${searchQuery}`
-        );
-        setMember(response.data.results);
-        console.log("------------------", response.data.results);
-      } catch (error) {
-        console.error("Failed to load all members", error);
-        toast.error("Failed to load all members.");
-      }
-    };
+    fetchMembers();
+  }, [fetchMembers]);
 
-    fetchCategories();
-  }, [searchQuery]);
-
-  const showModal = () => {
-    setShowStaffModal(true);
+  const handleSearch = (query: string) => {
+    setMembersSearchQuery(query);
+    fetchMembers(query);
   };
 
-  const closeModal = () => {
-    setShowStaffModal(false);
+  const handleCreateMember = async (formData: FormData) => {
+    try {
+      await createMember(formData);
+      setModalOpen(false);
+    } catch (error) {
+      // Error is handled in the context
+      console.error("Failed to create member");
+    }
   };
+
+  const handleStatusChange = async (memberId: number, newStatus: string) => {
+    try {
+      await updateMemberStatus(memberId, newStatus);
+    } catch (error) {
+      // Error is handled in the context
+      console.error("Failed to update member status");
+    }
+  };
+
   return (
     <>
       <div className="flex flex-col">
         {/* Label */}
         <div className="flex flex-col md:flex-row justify-between md:items-center gap-y-2 md:gap-y-0 my-4">
-          <h2 className="flex-1 text-2xl text-primary-text">Team management</h2>
+          <h2 className="flex-1 text-2xl text-primary-text">Team Management</h2>
           <div className="flex-1 flex gap-x-4 justify-end">
-            <ButtonAdd label="Add Member" onClick={() => showModal()} />
+            {/* Search box */}
             <TextSearchBox
-              placeholder="Search by name"
-              value={searchQuery}
-              onChange={setSearchQuery}
+              placeholder="Search by name or email"
+              value={membersSearchQuery}
+              onChange={handleSearch}
             />
+            {/* Add member button */}
+            <button
+              className="h-14 flex items-center bg-sidebar text-primary-text rounded-lg overflow-hidden shadow-md px-6 text-base font-medium hover:bg-primary/80 transition-colors"
+              onClick={() => setModalOpen(true)}
+              type="button"
+            >
+              Add Member
+            </button>
           </div>
         </div>
         {/* List of content */}
-        <div className="bg-sidebar p-4 rounded-lg overflow-x-auto">
-          <TableTeamManagement data={member} />
+        <div className="bg-sidebar p-4 rounded-lg">
+          <TableTeamManagement data={members} />
           <div className="mt-4 flex justify-center">
             <Pagination page={1} total={0} onPageChange={() => {}} />
           </div>
         </div>
       </div>
-      <EditStaffModal isOpen={staffModal} close={closeModal} />
+      {/* Create Member Modal */}
+      <EditStaffModal isOpen={modalOpen} close={() => setModalOpen(false)} />
     </>
   );
 };
+
+export default ScreenRestaurantManagement;

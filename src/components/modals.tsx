@@ -35,6 +35,7 @@ import { useOwner } from "@/context/ownerContext";
 import { useRole } from "@/hooks/useRole";
 import { FiX } from "react-icons/fi";
 import { useAdmin } from "@/context/adminContext";
+import { AssistantCredentials } from "@/types";
 
 /* Edit food item dialog ===========================================================>>>>> */
 type ModalPropsCall = {
@@ -74,7 +75,7 @@ export const EditFoodItemModal: React.FC<ModalProps> = ({
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [existingImage, setExistingImage] = useState<string | null>(null);
   const [existingVideo, setExistingVideo] = useState<string | null>(null);
-console.log(categories)
+  console.log(categories);
   // Load categories when userRole is available
   useEffect(() => {
     if (!isLoading && userRole) {
@@ -1103,8 +1104,10 @@ export const EditStaffModal: React.FC<ModalProps> = ({ isOpen, close }) => {
   };
   const { register, handleSubmit, control } = useForm<Inputs>();
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    setLoading(true);
     try {
       const formData = new FormData();
       formData.append("email", data.email);
@@ -1126,8 +1129,9 @@ export const EditStaffModal: React.FC<ModalProps> = ({ isOpen, close }) => {
     } catch (error) {
       console.error("Failed:", error);
       toast.error(error.response?.data?.email || "An error occurred");
+    } finally {
+      setLoading(false);
     }
-    0;
   };
 
   return (
@@ -1180,8 +1184,18 @@ export const EditStaffModal: React.FC<ModalProps> = ({ isOpen, close }) => {
               />
               <InputImageUploadBox file={imageFile} setFile={setImageFile} />
 
-              <button type="submit" className="button-primary">
-                Submit
+              <button
+                type="submit"
+                className="button-primary"
+                disabled={loading}
+              >
+                {loading ? (
+                  <span className="flex gap-3 items-center justify-center">
+                    <ImSpinner6 className="animate-spin" /> Loading...
+                  </span>
+                ) : (
+                  "Submit"
+                )}
               </button>
             </form>
           </DialogPanel>
@@ -1192,3 +1206,104 @@ export const EditStaffModal: React.FC<ModalProps> = ({ isOpen, close }) => {
 };
 
 /* <<<<<<<<=====================================================  EditStaffModal Modal  */
+
+type AssistantModalProps = {
+  isOpen: boolean;
+  close: () => void;
+  onSave: (data: AssistantCredentials) => void;
+  initialData: AssistantCredentials | null;
+};
+
+export const AssistantModal: React.FC<AssistantModalProps> = ({
+  isOpen,
+  close,
+  onSave,
+  initialData,
+}) => {
+  const { register, handleSubmit, reset, setValue } =
+    useForm<AssistantCredentials>({
+      defaultValues: initialData || {
+        TwilioNumber: "",
+        TwilioSID: "",
+        TwilioToken: "",
+      },
+    });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (initialData) {
+      reset(initialData);
+    } else {
+      reset({ TwilioNumber: "", TwilioSID: "", TwilioToken: "" });
+    }
+  }, [initialData, reset]);
+
+  const onSubmit = (data: AssistantCredentials) => {
+    setLoading(true);
+    onSave(data);
+    setLoading(false);
+  };
+
+  const isEdit = Boolean(initialData);
+
+  return (
+    <Dialog open={isOpen} as="div" className="relative z-10" onClose={close}>
+      <DialogBackdrop className="fixed inset-0 bg-black/30" />
+      <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+        <div className="flex min-h-full items-center justify-center p-4">
+          <DialogPanel className="w-full max-w-md rounded-xl bg-sidebar/80 p-6 backdrop-blur-xl">
+            <DialogTitle className="text-base font-medium text-white mb-8">
+              {isEdit ? "Edit Assistant" : "Add Assistant"}
+            </DialogTitle>
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="flex flex-col gap-y-4"
+            >
+              <LabelInput
+                label="Twilio Number"
+                inputProps={{
+                  className: "bg-[#201C3F] shadow-md text-sm",
+                  ...register("TwilioNumber", { required: true }),
+                  placeholder: "Enter Twilio Number",
+                }}
+              />
+              <LabelInput
+                label="Twilio SID"
+                inputProps={{
+                  className: "bg-[#201C3F] shadow-md text-sm",
+                  ...register("TwilioSID", { required: true }),
+                  placeholder: "Enter Twilio SID",
+                }}
+              />
+              <LabelInput
+                label="Twilio Token"
+                inputProps={{
+                  className: "bg-[#201C3F] shadow-md text-sm",
+                  ...register("TwilioToken", { required: true }),
+                  placeholder: "Enter Twilio Token",
+                }}
+              />
+              <div className="flex justify-end gap-x-2 mt-4">
+                <button
+                  type="button"
+                  onClick={close}
+                  className="px-4 py-2 text-primary-text border border-primary-text rounded-md hover:bg-primary-text hover:text-primary disabled:opacity-50"
+                  disabled={loading}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="button-primary px-8 py-2 text-primary-text disabled:opacity-50"
+                  disabled={loading}
+                >
+                  {loading ? "Saving..." : isEdit ? "Update" : "Add"}
+                </button>
+              </div>
+            </form>
+          </DialogPanel>
+        </div>
+      </div>
+    </Dialog>
+  );
+};

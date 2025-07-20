@@ -5,12 +5,21 @@ interface ChartStatProps {
   firstData: number[];
   secondData: number[];
   title: string;
+  currentYear : null;
+  lastYear : null;
+}
+interface MonthChartStatProps {
+  firstData: number[];
+  secondData: number[];
+  title: string;
 }
 
 export const YearlyChart: React.FC<ChartStatProps> = ({
   firstData,
   secondData,
   title,
+  currentYear= null,
+  lastYear=null
 }) => {
   const options: ChartOptions<"line"> = {
     responsive: true,
@@ -120,7 +129,7 @@ export const YearlyChart: React.FC<ChartStatProps> = ({
     datasets: [
       {
         fill: true,
-        label: "2024",
+        label: currentYear,
         data: firstData,
         borderColor: "#D20D5C",
         backgroundColor: "rgba(15, 57, 193, 0.3)",
@@ -128,7 +137,7 @@ export const YearlyChart: React.FC<ChartStatProps> = ({
       },
       {
         fill: true,
-        label: "2025",
+        label: lastYear,
         data: secondData,
         borderColor: "#053AE7",
         backgroundColor: "rgba(137, 121, 255, 0.3)",
@@ -143,7 +152,7 @@ export const YearlyChart: React.FC<ChartStatProps> = ({
   );
 };
 
-export const MonthlyChart: React.FC<ChartStatProps> = ({
+export const MonthlyChart: React.FC<MonthChartStatProps> = ({
   firstData,
   secondData,
   title,

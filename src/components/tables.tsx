@@ -13,6 +13,7 @@ import { formatDateTime, formatDate, formatTime } from "@/lib/utils";
 import { useStaff } from "@/context/staffContext";
 import axiosInstance from "@/lib/axios";
 import toast from "react-hot-toast";
+import { Member, ReservationItem, DeviceItem, ReviewItem } from "@/types";
 
 /* Reservation Table Data ===========================================================>>>>> */
 
@@ -233,6 +234,7 @@ interface TableTeamManagementProps {
 export const TableTeamManagement: React.FC<TableTeamManagementProps> = ({
   data,
 }) => {
+  const { updateMemberStatus } = useOwner();
   const [localMemberStatus, setLocalMemberStatus] = useState<
     Record<number, string>
   >({});
@@ -259,16 +261,9 @@ export const TableTeamManagement: React.FC<TableTeamManagementProps> = ({
     }));
 
     try {
-      const response = await axiosInstance.patch(
-        `/owners/chef-staff/${memberId}/`,
-        {
-          action: newStatus.toLowerCase(),
-        }
-      );
-      console.log("Status updated successfully:", response.data);
+      await updateMemberStatus(memberId, newStatus);
     } catch (error) {
       console.error("Failed to update member status:", error);
-      toast.error("Failed to update member status.");
       // Revert local state if API call fails
       setLocalMemberStatus((prev) => ({
         ...prev,

@@ -1,4 +1,4 @@
-type FoodItem = {
+export type FoodItem = {
   id: number;
   image: string;
   name: string;
@@ -6,7 +6,7 @@ type FoodItem = {
   price: number;
   available: boolean;
 };
-type ReservationItem = {
+export type ReservationItem = {
   id: number;
   reservationId: string;
   customerName: string;
@@ -17,7 +17,7 @@ type ReservationItem = {
   reservationTime: string;
   customRequest: string;
 };
-type StaffItem = {
+export type StaffItem = {
   staffId: number;
   name: string;
   role: string;
@@ -26,7 +26,7 @@ type StaffItem = {
   action: "Active" | "Hold";
 };
 
-type Member = {
+export type Member = {
   id: number;
   email: string;
   username: string;
@@ -39,7 +39,7 @@ type Member = {
   image: string | null;
 };
 
-type DeviceItem = {
+export type DeviceItem = {
   id: number;
   table_name: string;
   restaurant: number;
@@ -48,7 +48,7 @@ type DeviceItem = {
   username: string;
 };
 
-type ReviewItem = {
+export type ReviewItem = {
   name: string;
   created_time: string;
   guest_no: string | number;
@@ -57,14 +57,14 @@ type ReviewItem = {
   rating: number;
 };
 
-type ChatRoomItem = {
+export type ChatRoomItem = {
   id: string;
   table_name: string;
   time: string;
   user_id: number;
 };
 
-type OrderItem = {
+export type OrderItem = {
   id: number;
   userName: string;
   guestNo: number;
@@ -72,10 +72,11 @@ type OrderItem = {
   orderedItems: number;
   timeOfOrder: string;
   orderId: string;
-  status:
-    | "Pending"
-    | "Completed"
-    | "Served"
-    | "Cancelled"
-    | "Preparing";
+  status: "Pending" | "Completed" | "Served" | "Cancelled" | "Preparing";
+};
+
+export type AssistantCredentials = {
+  TwilioNumber: string;
+  TwilioSID: string;
+  TwilioToken: string;
 };
