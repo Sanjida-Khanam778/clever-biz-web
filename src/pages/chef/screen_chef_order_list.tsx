@@ -70,6 +70,7 @@ const ScreenChefOrderList = () => {
 
           <div className="flex-1 flex gap-x-4 flex-row-reverse md:flex-row justify-end">
             {/* Search box by id */}
+           
             <TextSearchBox
               placeholder="Search by Order ID"
               value={ordersSearchQuery}
