@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Dialog,
   DialogBackdrop,
@@ -1207,11 +1208,22 @@ export const EditStaffModal: React.FC<ModalProps> = ({ isOpen, close }) => {
 
 /* <<<<<<<<=====================================================  EditStaffModal Modal  */
 
+type AssistantCredentials = {
+  TwilioNumber: string;
+  TwilioSID: string;
+  TwilioToken: string;
+};
+
 type AssistantModalProps = {
   isOpen: boolean;
   close: () => void;
-  onSave: (data: AssistantCredentials) => void;
-  initialData: AssistantCredentials | null;
+  onSave: (data: any) => void;
+  initialData?: Partial<AssistantCredentials> | null;
+};
+
+type ExistingAssistance = {
+  twilio_number?: string | null;
+  twilio_account_sid?: string | null; // usually hashed; we never show it
 };
 
 export const AssistantModal: React.FC<AssistantModalProps> = ({
@@ -1220,34 +1232,126 @@ export const AssistantModal: React.FC<AssistantModalProps> = ({
   onSave,
   initialData,
 }) => {
-  const { register, handleSubmit, reset, setValue } =
+  const { register, handleSubmit, reset, getValues } =
     useForm<AssistantCredentials>({
-      defaultValues: initialData || {
-        TwilioNumber: "",
-        TwilioSID: "",
-        TwilioToken: "",
+      defaultValues: {
+        TwilioNumber: initialData?.TwilioNumber ?? "",
+        TwilioSID: initialData?.TwilioSID ?? "",
+        TwilioToken: initialData?.TwilioToken ?? "",
       },
     });
+
   const [loading, setLoading] = useState(false);
+  const [existing, setExisting] = useState<ExistingAssistance | null>(null);
 
-  useEffect(() => {
-    if (initialData) {
-      reset(initialData);
-    } else {
-      reset({ TwilioNumber: "", TwilioSID: "", TwilioToken: "" });
-    }
-  }, [initialData, reset]);
-
-  const onSubmit = (data: AssistantCredentials) => {
+  // Fetch existing on open (404 = none yet)
+  const fetchAssistant = async () => {
     setLoading(true);
-    onSave(data);
-    setLoading(false);
+    try {
+      const res = await axiosInstance.get(
+        "/owners/get-restaurant-assistance/",
+        {
+          validateStatus: (s) => s === 200 || s === 404,
+        }
+      );
+
+      if (res.status === 404 || !res.data) {
+        setExisting(null);
+        reset({ TwilioNumber: "", TwilioSID: "", TwilioToken: "" });
+        return;
+      }
+
+      const data = res.data as ExistingAssistance;
+      setExisting(data);
+      reset({
+        TwilioNumber: data?.twilio_number || "",
+        TwilioSID: "", // keep blank (server returns hashed)
+        TwilioToken: "", // keep blank (server returns hashed)
+      });
+    } catch (e: any) {
+      console.error("assistant GET error:", e?.response?.data || e);
+      setExisting(null);
+      reset({ TwilioNumber: "", TwilioSID: "", TwilioToken: "" });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const isEdit = Boolean(initialData);
+  useEffect(() => {
+    if (isOpen) fetchAssistant();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  // Submit logic
+  const onSubmit = async (f: AssistantCredentials) => {
+    setLoading(true);
+    try {
+      const number = (f.TwilioNumber || "").trim();
+      const sid = (f.TwilioSID || "").trim();
+      const token = (f.TwilioToken || "").trim();
+
+      const hasExisting = !!(
+        existing?.twilio_number || existing?.twilio_account_sid
+      );
+      const numberChanged = hasExisting && existing?.twilio_number !== number;
+      const hasNewSid = sid.length > 0;
+      const hasNewToken = token.length > 0;
+
+      let res;
+
+      if (!hasExisting) {
+        // brand new → must provide all three
+        res = await axiosInstance.post("/owners/create-assistant/", {
+          twilio_number: number,
+          twilio_account_sid: sid,
+          twilio_auth_token: token,
+        });
+      } else if (hasNewSid || hasNewToken) {
+        // replacing creds → require both SID & Token for safety
+        if (!hasNewSid || !hasNewToken) {
+          console.error(
+            "Provide BOTH a new SID and a new Token to replace credentials."
+          );
+          setLoading(false);
+          return;
+        }
+        res = await axiosInstance.post("/owners/create-assistant/", {
+          twilio_number: number,
+          twilio_account_sid: sid,
+          twilio_auth_token: token,
+        });
+      } else if (numberChanged) {
+        // only number changed
+        res = await axiosInstance.patch("/owners/update-assistant-number/", {
+          twilio_number: number,
+          twilio_account_sid: sid,
+          twilio_auth_token: token,
+        });
+      } else {
+        // nothing changed
+        close();
+        return;
+      }
+
+      console.log("assistant saved:", res.data);
+      onSave(res.data);
+      close();
+    } catch (err: any) {
+      console.error("assistant save error:", err?.response?.data || err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isEdit = Boolean(existing);
 
   return (
-    <Dialog open={isOpen} as="div" className="relative z-10" onClose={close}>
+    <Dialog
+      open={isOpen}
+      as="div"
+      className="relative z-10"
+      onClose={loading ? () => {} : close}
+    >
       <DialogBackdrop className="fixed inset-0 bg-black/30" />
       <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
         <div className="flex min-h-full items-center justify-center p-4">
@@ -1255,6 +1359,7 @@ export const AssistantModal: React.FC<AssistantModalProps> = ({
             <DialogTitle className="text-base font-medium text-white mb-8">
               {isEdit ? "Edit Assistant" : "Add Assistant"}
             </DialogTitle>
+
             <form
               onSubmit={handleSubmit(onSubmit)}
               className="flex flex-col gap-y-4"
@@ -1263,26 +1368,44 @@ export const AssistantModal: React.FC<AssistantModalProps> = ({
                 label="Twilio Number"
                 inputProps={{
                   className: "bg-[#201C3F] shadow-md text-sm",
-                  ...register("TwilioNumber", { required: true }),
-                  placeholder: "Enter Twilio Number",
+                  ...register("TwilioNumber", {
+                    required: true,
+                    maxLength: 20,
+                  }),
+                  placeholder: "+12315154894",
                 }}
               />
+
               <LabelInput
-                label="Twilio SID"
+                label="Twilio Account SID"
                 inputProps={{
                   className: "bg-[#201C3F] shadow-md text-sm",
-                  ...register("TwilioSID", { required: true }),
-                  placeholder: "Enter Twilio SID",
+                  ...register("TwilioSID", { required: !isEdit }),
+                  placeholder: isEdit
+                    ? "(enter new to replace)"
+                    : "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
                 }}
               />
+
               <LabelInput
-                label="Twilio Token"
+                label="Twilio Auth Token"
                 inputProps={{
+                  type: "password",
                   className: "bg-[#201C3F] shadow-md text-sm",
-                  ...register("TwilioToken", { required: true }),
-                  placeholder: "Enter Twilio Token",
+                  ...register("TwilioToken", { required: !isEdit }),
+                  placeholder: isEdit
+                    ? "(enter new to replace)"
+                    : "Your auth token",
                 }}
               />
+
+              {isEdit && (
+                <small className="text-gray-400">
+                  SID/Token are already configured (hidden). Enter new values to
+                  replace them, or leave blank to just update the number.
+                </small>
+              )}
+
               <div className="flex justify-end gap-x-2 mt-4">
                 <button
                   type="button"
