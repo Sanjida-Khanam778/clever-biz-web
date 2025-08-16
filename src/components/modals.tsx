@@ -1327,6 +1327,7 @@ export const AssistantModal: React.FC<AssistantModalProps> = ({
           twilio_account_sid: sid,
           twilio_auth_token: token,
         });
+        console.log(res);
       } else {
         // nothing changed
         close();
