@@ -809,7 +809,11 @@ export const ModalSubscriberDetail: React.FC<ModalProps> = ({
 /* <<<<<<<<===================================================== User detail modal */
 
 /* Add Subscriber Modal ===========================================================>>>>> */
-export const ModalAddSubscriber: React.FC<ModalProps> = ({ isOpen, close }) => {
+export const ModalAddSubscriber: React.FC<ModalProps> = ({
+  isOpen,
+  close,
+  id,
+}) => {
   type Inputs = {
     customer_name: string;
     restaurant_name: string;
@@ -821,7 +825,24 @@ export const ModalAddSubscriber: React.FC<ModalProps> = ({ isOpen, close }) => {
     email: string;
     password: string;
   };
-  const { register, handleSubmit, watch, setValue } = useForm<Inputs>();
+  const [restaurantData, setRestaurantData] = useState<any>();
+  console.log(restaurantData, "restaurantData");
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await axiosInstance.get(`adminapi/restaurants/${id}/`);
+      const data = await response.data;
+      setRestaurantData(data);
+      reset({
+        restaurant_name: data.resturent_name ?? "",
+        location: data.location ?? "",
+        phone_number: data.phone_number ?? "",
+        package: data.package ?? "", // null -> ""
+        starting_date: (data.created_at || "").slice(0, 10), // "YYYY-MM-DD"
+      });
+    };
+    fetchData();
+  }, [isOpen]);
+  const { register, handleSubmit, watch, setValue, reset } = useForm<Inputs>();
   const onSubmit: SubmitHandler<Inputs> = (data) => {
     console.log(data);
   };
@@ -910,11 +931,11 @@ export const ModalAddSubscriber: React.FC<ModalProps> = ({ isOpen, close }) => {
                       ...register("password"),
                     }}
                   />
-                  <div className="text-center mt-14 mb-6">
+                  {/* <div className="text-center mt-14 mb-6">
                     <button type="submit" className="button-primary px-14">
                       Add Subscriber
                     </button>
-                  </div>
+                  </div> */}
                 </form>
               </div>
             </div>
@@ -1327,6 +1348,7 @@ export const AssistantModal: React.FC<AssistantModalProps> = ({
           twilio_account_sid: sid,
           twilio_auth_token: token,
         });
+        console.log(res);
       } else {
         // nothing changed
         close();

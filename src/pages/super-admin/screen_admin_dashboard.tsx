@@ -2,8 +2,20 @@ import { IconGrowth, IconSales, IconTeam } from "@/components/icons";
 import { DashboardCard } from "../../components/utilities";
 import { subscribers, TableSubscriberList } from "./screen_admin_management";
 import { MonthlyChart, YearlyChart } from "@/components/charts";
+import { useEffect, useState } from "react";
+import axiosInstance from "@/lib/axios";
 
 const ScreenAdminDashboard = () => {
+  const [restaurantData, setRestaurantData] = useState([]);
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await axiosInstance.get("adminapi/restaurants/");
+      const data = await res.data.results;
+      setRestaurantData(data);
+    };
+    fetchData();
+  }, []);
+
   return (
     <>
       <div className="flex flex-col">
@@ -41,7 +53,7 @@ const ScreenAdminDashboard = () => {
           />
         </div>
         {/* Dashboard Content */}
-        <div className="grid grid-cols-3 mt-4 z-10 gap-x-4">
+        <div className="w-full  mt-4 z-10 gap-x-4">
           <div className="col-span-2 bg-sidebar rounded-xl p-4">
             <YearlyChart
               title="Sales Report"
@@ -49,18 +61,18 @@ const ScreenAdminDashboard = () => {
               secondData={[56, 12, 89, 27, 33, 84, 3, 4, 55, 34, 34, 10]}
             />
           </div>
-          <div className="col-span-1 bg-sidebar rounded-xl p-4 flex justify-center items-center">
+          {/* <div className="col-span-1 bg-sidebar rounded-xl p-4 flex justify-center items-center">
             <MonthlyChart
               title="Subscriber Flow"
               firstData={[15, 30, 45, 60]}
               secondData={[152, 303, 451, 603]}
             />
-          </div>
+          </div> */}
           <div className="col-span-1"></div>
         </div>
         {/* List of content */}
         <div className="bg-sidebar p-4 rounded-lg mt-4">
-          <TableSubscriberList subscribers={subscribers} />
+          <TableSubscriberList subscribers={restaurantData} />
         </div>
       </div>
     </>
