@@ -4,9 +4,50 @@ import { subscribers, TableSubscriberList } from "./screen_admin_management";
 import { MonthlyChart, YearlyChart } from "@/components/charts";
 import { useEffect, useState } from "react";
 import axiosInstance from "@/lib/axios";
+import { ClockFading } from "lucide-react";
 
 const ScreenAdminDashboard = () => {
+  type DashboardStats = {
+    last_week_all_order_growth: number;
+    last_week_all_order_price: number;
+    total_active_restaurant: number;
+    total_all_restaurant_order_sells: number;
+    total_all_restaurant_order_sells_price: number;
+  };
+  type MonthlySale = {
+    month: string;
+    total_orders: number;
+    total_sales: number;
+  };
+
+  type SalesData = {
+    year: number;
+    monthly_sales: MonthlySale[];
+  };
+
   const [restaurantData, setRestaurantData] = useState([]);
+  const [state, setState] = useState<DashboardStats>({
+    last_week_all_order_growth: 0,
+    last_week_all_order_price: 0,
+    total_active_restaurant: 0,
+    total_all_restaurant_order_sells: 0,
+    total_all_restaurant_order_sells_price: 0,
+  });
+  const [salesData, setSalesData] = useState<SalesData>({
+    year: 2025,
+    monthly_sales: [
+      { month: "", total_orders: 0, total_sales: 0 },
+      { month: "", total_orders: 0, total_sales: 0 },
+    ],
+  });
+  const [lastSalesData, setLastSalesData] = useState<SalesData>({
+    year: 2025,
+    monthly_sales: [
+      { month: "", total_orders: 0, total_sales: 0 },
+      { month: "", total_orders: 0, total_sales: 0 },
+    ],
+  });
+
   useEffect(() => {
     const fetchData = async () => {
       const res = await axiosInstance.get("adminapi/restaurants/");
@@ -15,7 +56,40 @@ const ScreenAdminDashboard = () => {
     };
     fetchData();
   }, []);
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await axiosInstance.get(
+        "/adminapi/restaurants/more_summary/"
+      );
+      const data = await res.data;
+      setState(data);
+      // console.log(res.data, "res.data");
+    };
+    fetchData();
+  }, []);
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await axiosInstance.get(
+        "/adminapi/restaurants/yearly_sells_report/"
+      );
+      const data = await res.data;
 
+      setSalesData(data);
+    };
+    fetchData();
+  }, []);
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await axiosInstance.get(
+        "/adminapi/restaurants/last_yearly_sells_report/"
+      );
+      const data = await res.data;
+      setLastSalesData(data);
+      console.log(lastSalesData, "lastSalesData");
+    };
+    fetchData();
+  }, []);
+  // console.log(state);
   return (
     <>
       <div className="flex flex-col">
@@ -25,27 +99,27 @@ const ScreenAdminDashboard = () => {
           <DashboardCard
             icon={<IconSales />}
             label="Total Sells today"
-            data={"$100k"}
+            data={`${state.total_all_restaurant_order_sells_price.toString()}$`}
             accentColor="#31BB24"
             gradientStart="#48E03A"
             gradientEnd="#161F42"
-            tail="(45)"
+            tail={state.total_all_restaurant_order_sells.toString()}
           />
           {/* Card 2 */}
           <DashboardCard
             icon={<IconGrowth />}
             label="Weekly growth"
-            data={"$1230"}
+            data={`${state.last_week_all_order_price.toString()}$`}
             accentColor="#FFB056"
             gradientStart="#FFB056"
             gradientEnd="#161F42"
-            tail="19.91%"
+            tail={`${state.last_week_all_order_growth.toString()}%`}
           />
           {/* Card 3 */}
           <DashboardCard
             icon={<IconTeam />}
             label="Total Subscriber"
-            data={"12"}
+            data={`${state.total_active_restaurant.toString()}`}
             accentColor="#FF6561"
             gradientStart="#EB342E"
             gradientEnd="#161F42"
@@ -57,8 +131,13 @@ const ScreenAdminDashboard = () => {
           <div className="col-span-2 bg-sidebar rounded-xl p-4">
             <YearlyChart
               title="Sales Report"
-              firstData={[30, 50, 60, 20, 40, 60, 70, 20, 50, 4, 12, 200]}
-              secondData={[56, 12, 89, 27, 33, 84, 3, 4, 55, 34, 34, 10]}
+              firstData={salesData.monthly_sales.map(
+                (item) => item.total_orders
+              )} // 👈 orders
+              secondData={lastSalesData.monthly_sales.map(
+                (item) => item.total_orders
+              )} // 👈 orders
+              // secondData={[56, 12, 89, 27, 33, 84, 3, 4, 55, 34, 34, 10]}
             />
           </div>
           {/* <div className="col-span-1 bg-sidebar rounded-xl p-4 flex justify-center items-center">

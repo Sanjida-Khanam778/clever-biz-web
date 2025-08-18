@@ -831,6 +831,7 @@ export const ModalAddSubscriber: React.FC<ModalProps> = ({
     const fetchData = async () => {
       const response = await axiosInstance.get(`adminapi/restaurants/${id}/`);
       const data = await response.data;
+      console.log(data.created_at, "restaurant data");
       setRestaurantData(data);
       reset({
         restaurant_name: data.resturent_name ?? "",
@@ -865,14 +866,14 @@ export const ModalAddSubscriber: React.FC<ModalProps> = ({
                   Information
                 </h2>
                 <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-                  <LabelInput
+                  {/* <LabelInput
                     label="Customer Name"
                     inputProps={{
                       id: "customer_name",
                       placeholder: "Kawsar Hossain",
                       ...register("customer_name"),
                     }}
-                  />
+                  /> */}
                   <LabelInput
                     label="Restaurant Name"
                     inputProps={{
@@ -887,7 +888,7 @@ export const ModalAddSubscriber: React.FC<ModalProps> = ({
                       ...register("location"),
                     }}
                   />
-                  <DateInput
+                  <LabelInput
                     label="Starting Date"
                     inputProps={{
                       id: "starting_date",
@@ -908,7 +909,7 @@ export const ModalAddSubscriber: React.FC<ModalProps> = ({
                       ...register("package"),
                     }}
                   />
-                  <PickCompanyLogo
+                  {/* <PickCompanyLogo
                     file={logoFile}
                     label="Company Logo"
                     inputProps={{
@@ -916,21 +917,21 @@ export const ModalAddSubscriber: React.FC<ModalProps> = ({
                       ...register("company_logo"),
                     }}
                     removeFile={() => setValue("company_logo", undefined)}
-                  />
-                  <LabelInput
+                  /> */}
+                  {/* <LabelInput
                     label="Email"
                     inputProps={{
                       id: "email",
                       ...register("email"),
                     }}
-                  />
-                  <LabelInput
+                  /> */}
+                  {/* <LabelInput
                     label="Password"
                     inputProps={{
                       id: "password",
                       ...register("password"),
                     }}
-                  />
+                  /> */}
                   {/* <div className="text-center mt-14 mb-6">
                     <button type="submit" className="button-primary px-14">
                       Add Subscriber
