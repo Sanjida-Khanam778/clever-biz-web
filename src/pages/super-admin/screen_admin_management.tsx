@@ -195,7 +195,7 @@ export const TableSubscriberList: React.FC<TableSubscriberListProps> = ({
     const fetchDatas = async () => {
       const res = await axiosInstance.get("/adminapi/restaurants/summary/");
       const data = await res?.data;
-      console.log(data);
+      console.log(data, " summary data");
       setStats(data);
     };
     fetchDatas();
@@ -230,9 +230,11 @@ export const TableSubscriberList: React.FC<TableSubscriberListProps> = ({
               <td className="p-4 text-primary-text">{item?.resturent_name}</td>
               <td className="p-4 text-primary-text">{item?.id}</td>
               <td className="p-4 text-primary-text">{item?.phone_number}</td>
-              <td className="p-4 text-primary-text">{item?.created_at}</td>
               <td className="p-4 text-primary-text">
-                {item?.package || "loading"}
+                {item?.created_at.slice(0, 10)}
+              </td>
+              <td className="p-4 text-primary-text">
+                {item?.package || "N/A"}
               </td>
               <td className="h-20 p-4 flex gap-x-4 items-center">
                 <button
@@ -251,20 +253,15 @@ export const TableSubscriberList: React.FC<TableSubscriberListProps> = ({
                     "Pending",
                     "Delete Request",
                   ]}
-                  status={item?.status || "Active"}
+                  status={
+                    (item?.subscriptions?.length ?? 0) === 0
+                      ? "Hold"
+                      : item?.status ?? "Active"
+                  }
                   properties={{
-                    Active: {
-                      bg: "bg-green-800",
-                      text: "text-green-300",
-                    },
-                    Hold: {
-                      bg: "bg-red-800",
-                      text: "text-red-300",
-                    },
-                    Pending: {
-                      bg: "bg-yellow-800",
-                      text: "text-yellow-300",
-                    },
+                    Active: { bg: "bg-green-800", text: "text-green-300" },
+                    Hold: { bg: "bg-red-800", text: "text-red-300" },
+                    Pending: { bg: "bg-yellow-800", text: "text-yellow-300" },
                     "Delete Request": {
                       bg: "bg-red-900",
                       text: "text-red-300",
