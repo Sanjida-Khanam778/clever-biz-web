@@ -837,7 +837,7 @@ export const ModalAddSubscriber: React.FC<ModalProps> = ({
         restaurant_name: data.resturent_name ?? "",
         location: data.location ?? "",
         phone_number: data.phone_number ?? "",
-        package: data.package ?? "", // null -> ""
+        package: data.package ?? "N/A", // null -> ""
         starting_date: (data.created_at || "").slice(0, 10), // "YYYY-MM-DD"
       });
     };
@@ -902,6 +902,7 @@ export const ModalAddSubscriber: React.FC<ModalProps> = ({
                       ...register("phone_number"),
                     }}
                   />
+
                   <LabelInput
                     label="Package"
                     inputProps={{
@@ -909,6 +910,7 @@ export const ModalAddSubscriber: React.FC<ModalProps> = ({
                       ...register("package"),
                     }}
                   />
+
                   {/* <PickCompanyLogo
                     file={logoFile}
                     label="Company Logo"

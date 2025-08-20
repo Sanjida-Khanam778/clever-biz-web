@@ -414,69 +414,61 @@ export const OrderlistCard: React.FC<OrderlistCardProps> = ({
 
 /* Pagination ===========================================================>>>>> */
 type PaginationProps = {
-  page: number;
-  total: number;
-  onPageChange: (page: number) => void;
+  page?: number; // current page (1-based)
+  total?: number; // total items from API (e.g., DRF count)
+  pageSize?: number; // items per page (default 10)
+  onPageChange: (p: number) => void;
+  className?: string;
 };
 export const Pagination: React.FC<PaginationProps> = ({
   page = 1,
   total = 0,
+  pageSize = 10, // <-- no more hardcoded 10 in math
   onPageChange,
+  className = "",
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [value, setValue] = useState(page.toString());
-
-  const totalPages = Math.ceil(total / 10); // Assuming 10 items per page
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const canGoPrev = page > 1;
   const canGoNext = page < totalPages;
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+  const [isEditing, setIsEditing] = useState(false);
+  const [value, setValue] = useState(page.toString());
+
+  // keep input synced with external page
+  useEffect(() => setValue(page.toString()), [page]);
+
+  const commit = () => {
+    if (!value) {
+      setValue(page.toString());
       setIsEditing(false);
-      if (value === "") {
-        setValue(page.toString());
-        return;
-      }
-      const newPage = parseInt(value);
-      if (!isNaN(newPage) && newPage >= 1 && newPage <= totalPages) {
-        onPageChange(newPage);
-      } else {
-        setValue(page.toString());
-      }
+      return;
     }
+    const newPage = parseInt(value, 10);
+    if (!Number.isNaN(newPage) && newPage >= 1 && newPage <= totalPages) {
+      onPageChange(newPage);
+    } else {
+      setValue(page.toString());
+    }
+    setIsEditing(false);
   };
 
-  const handlePrev = () => {
-    if (canGoPrev) {
-      onPageChange(page - 1);
-    }
-  };
-
-  const handleNext = () => {
-    if (canGoNext) {
-      onPageChange(page + 1);
-    }
-  };
-
-  // Update value when page changes
-  useEffect(() => {
-    setValue(page.toString());
-  }, [page]);
+  // (optional) hide if no pagination needed
+  if (total <= pageSize) return null;
 
   return (
-    <div className="inline-flex gap-x-2 mt-2 xs:mt-0">
-      {/* Prev button */}
+    <div className={`inline-flex gap-x-2 mt-2 xs:mt-0 ${className}`}>
+      {/* Prev */}
       <button
         className={`flex items-center justify-center px-4 h-12 text-base font-medium text-primary-text bg-table-header rounded-md hover:bg-dashboard ${
           !canGoPrev ? "opacity-50 cursor-not-allowed" : ""
         }`}
-        onClick={handlePrev}
+        onClick={() => canGoPrev && onPageChange(page - 1)}
         disabled={!canGoPrev}
       >
         <GrFormPrevious className="fill-primary-text me-4" /> Prev
       </button>
 
-      {/* Editable box */}
+      {/* Page input / display */}
       <div
         className="flex items-center justify-center px-4 h-12 text-base font-medium text-primary-text bg-table-header rounded-md cursor-pointer hover:bg-dashboard"
         onClick={() => !isEditing && setIsEditing(true)}
@@ -485,35 +477,27 @@ export const Pagination: React.FC<PaginationProps> = ({
           <input
             autoFocus
             type="text"
+            inputMode="numeric"
             value={value}
-            onChange={(e) => {
-              const newValue = Number(e.target.value);
-              if (!isNaN(newValue)) {
-                if (newValue == 0) {
-                  setValue("");
-                  return;
-                }
-                setValue(newValue.toString());
-              }
-            }}
-            onKeyDown={handleKeyDown}
-            onBlur={() => {
-              setIsEditing(false);
-              setValue(page.toString());
-            }}
+            onChange={(e) => setValue(e.target.value.replace(/\D/g, ""))} // digits only
+            onKeyDown={(e) => e.key === "Enter" && commit()}
+            onBlur={commit}
             className="bg-transparent w-full outline-none text-primary-text text-center"
           />
         ) : (
-          <span>{value}</span>
+          <>
+            <span>{page}</span>
+            <span className="opacity-70">&nbsp;/ {totalPages}</span>
+          </>
         )}
       </div>
 
-      {/* Next button */}
+      {/* Next */}
       <button
         className={`flex items-center justify-center px-4 h-12 text-base font-medium text-primary-text bg-table-header rounded-md hover:bg-dashboard ${
           !canGoNext ? "opacity-50 cursor-not-allowed" : ""
         }`}
-        onClick={handleNext}
+        onClick={() => canGoNext && onPageChange(page + 1)}
         disabled={!canGoNext}
       >
         Next <GrFormNext className="fill-primary-text ms-4" />
