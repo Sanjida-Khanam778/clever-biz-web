@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axiosInstance from "@/lib/axios";
 import {
   createContext,
@@ -66,6 +67,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({
     setIsLoading(true);
     try {
       const response = await axiosInstance.get("/adminapi/policy/");
+      console.log(response, "response.data");
       setPrivacyPolicy(response.data.results);
     } catch (error: any) {
       console.error("Failed to load privacy policy", error);
@@ -124,6 +126,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({
             text: content,
           }
         );
+        console.log(response, "response.data");
         setTermsAndConditions(response.data);
         console.log(response.data);
         toast.success("Terms and conditions updated successfully!");

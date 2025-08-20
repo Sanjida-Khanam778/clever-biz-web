@@ -76,7 +76,14 @@ const ScreenAdminManagement = () => {
     total_active_restaurant: number;
   };
   const [allResutrentUser, setallResutrentUser] = useState<TSubscriber[]>([]);
-
+  const [search, setSearch] = useState("");
+  //
+  const PAGE_SIZE = 5;
+  const [page, setPage] = useState(1); // current page (1-based)
+  const [total, setTotal] = useState(0); // total items from API (DRF `count`)
+  const [loading, setLoading] = useState(false);
+  //
+  console.log(search, "search");
   const [stats, setStats] = useState<DashboardStats>({
     total_restaurant: 0,
     total_hold_restaurant: 0,
@@ -90,20 +97,45 @@ const ScreenAdminManagement = () => {
     };
     fetchDatas();
   }, []);
+  //
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
+  //
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get("/adminapi/restaurants/");
-        console.log(response.data.results);
-        const result = response.data.results;
-        setallResutrentUser(result);
-        console.log(subscribers);
+        setLoading(true);
+
+        const params: Record<string, any> = {
+          page, // ?page=1,2,3...
+          page_size: PAGE_SIZE, // ?page_size=5
+        };
+        if (search.trim()) params.restaurant_name = search.trim();
+
+        const response = await axiosInstance.get("/adminapi/restaurants/", {
+          params,
+        });
+
+        // DRF style: { count, results, next, previous }
+        const { count = 0, results = [] } = response.data ?? {};
+        setallResutrentUser(Array.isArray(results) ? results : []);
+        setTotal(count);
+
+        // clamp page if it went out of range (e.g., after narrowing search)
+        const totalPages = Math.max(1, Math.ceil(count / PAGE_SIZE));
+        if (page > totalPages) setPage(totalPages);
       } catch (error) {
         console.error("Error fetching subscribers", error);
+        setallResutrentUser([]);
+        setTotal(0);
+      } finally {
+        setLoading(false);
       }
     };
+
     fetchData();
-  }, []);
+  }, [search, page]);
 
   const dispatch = useAppDispatch();
 
@@ -152,14 +184,23 @@ const ScreenAdminManagement = () => {
               <IoMdAdd />
               <span>Add Subscriber</span>
             </button> */}
-            <TextSearchBox placeholder="Search subscriber" />
+            <TextSearchBox
+              placeholder="Search subscriber"
+              value={search}
+              onChange={setSearch}
+            />
           </div>
         </div>
         {/* List of content */}
         <div className="bg-sidebar p-4 rounded-lg">
-          <TableSubscriberList subscribers={allResutrentUser} />
+          <TableSubscriberList subscribers={allResutrentUser} query={search} />
           <div className="mt-4 flex justify-center">
-            <Pagination page={1} />
+            <Pagination
+              page={page}
+              total={total} // DRF `count`
+              pageSize={PAGE_SIZE} // make sure your Pagination uses this
+              onPageChange={setPage}
+            />
           </div>
         </div>
       </div>
@@ -168,9 +209,11 @@ const ScreenAdminManagement = () => {
 };
 interface TableSubscriberListProps {
   subscribers: TSubscriber[];
+  query?: string;
 }
 export const TableSubscriberList: React.FC<TableSubscriberListProps> = ({
   subscribers,
+  query = "",
 }) => {
   type DashboardStats = {
     total_restaurant: number;
@@ -215,7 +258,7 @@ export const TableSubscriberList: React.FC<TableSubscriberListProps> = ({
       <table className="w-full table-auto text-left clever-table">
         <thead className="table-header rounded-lg overflow-hidden text-primary-text text-sm font-normal">
           <tr>
-            <th>Subscriber Name</th>
+            <th>Resturant</th>
             <th>Customer ID</th>
             <th>Cell No.</th>
             <th>Starting Date</th>

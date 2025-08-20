@@ -99,7 +99,7 @@ const ScreenAdminDashboard = () => {
           <DashboardCard
             icon={<IconSales />}
             label="Total Sells today"
-            data={`${state.total_all_restaurant_order_sells_price.toString()}$`}
+            data={`$${state.total_all_restaurant_order_sells_price.toString()}`}
             accentColor="#31BB24"
             gradientStart="#48E03A"
             gradientEnd="#161F42"
@@ -109,7 +109,7 @@ const ScreenAdminDashboard = () => {
           <DashboardCard
             icon={<IconGrowth />}
             label="Weekly growth"
-            data={`${state.last_week_all_order_price.toString()}$`}
+            data={`$${state.last_week_all_order_price.toString()}`}
             accentColor="#FFB056"
             gradientStart="#FFB056"
             gradientEnd="#161F42"
@@ -137,7 +137,7 @@ const ScreenAdminDashboard = () => {
               secondData={lastSalesData.monthly_sales.map(
                 (item) => item.total_orders
               )} // 👈 orders
-              // secondData={[56, 12, 89, 27, 33, 84, 3, 4, 55, 34, 34, 10]}
+              currentYear={null} lastYear={null}              // secondData={[56, 12, 89, 27, 33, 84, 3, 4, 55, 34, 34, 10]}
             />
           </div>
           {/* <div className="col-span-1 bg-sidebar rounded-xl p-4 flex justify-center items-center">
