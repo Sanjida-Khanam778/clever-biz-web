@@ -878,6 +878,7 @@ export const ModalAddSubscriber: React.FC<ModalProps> = ({
                     label="Restaurant Name"
                     inputProps={{
                       id: "restaurant_name",
+                      readOnly: true,
                       ...register("restaurant_name"),
                     }}
                   />
@@ -885,6 +886,7 @@ export const ModalAddSubscriber: React.FC<ModalProps> = ({
                     label="Location"
                     inputProps={{
                       id: "location",
+                      readOnly: true,
                       ...register("location"),
                     }}
                   />
@@ -892,6 +894,7 @@ export const ModalAddSubscriber: React.FC<ModalProps> = ({
                     label="Starting Date"
                     inputProps={{
                       id: "starting_date",
+                      readOnly: true,
                       ...register("starting_date"),
                     }}
                   />
@@ -899,6 +902,7 @@ export const ModalAddSubscriber: React.FC<ModalProps> = ({
                     label="Phone Number"
                     inputProps={{
                       id: "phone_number",
+                      readOnly: true,
                       ...register("phone_number"),
                     }}
                   />
@@ -907,38 +911,10 @@ export const ModalAddSubscriber: React.FC<ModalProps> = ({
                     label="Package"
                     inputProps={{
                       id: "package",
+                      readOnly: true,
                       ...register("package"),
                     }}
                   />
-
-                  {/* <PickCompanyLogo
-                    file={logoFile}
-                    label="Company Logo"
-                    inputProps={{
-                      id: "company_logo",
-                      ...register("company_logo"),
-                    }}
-                    removeFile={() => setValue("company_logo", undefined)}
-                  /> */}
-                  {/* <LabelInput
-                    label="Email"
-                    inputProps={{
-                      id: "email",
-                      ...register("email"),
-                    }}
-                  /> */}
-                  {/* <LabelInput
-                    label="Password"
-                    inputProps={{
-                      id: "password",
-                      ...register("password"),
-                    }}
-                  /> */}
-                  {/* <div className="text-center mt-14 mb-6">
-                    <button type="submit" className="button-primary px-14">
-                      Add Subscriber
-                    </button>
-                  </div> */}
                 </form>
               </div>
             </div>

@@ -244,9 +244,23 @@ export const TableSubscriberList: React.FC<TableSubscriberListProps> = ({
     fetchDatas();
   }, []);
 
-  const showAddSubscriberModal = (id: string) => {
+  const updateSubscriberStatus = async (id: string, status: string) => {
+    try {
+      const { data } = await axiosInstance.patch(
+        `/adminapi/subscribers/${id}/`, // 👈 endpoint (adjust if different)
+        { status } // 👈 body to update
+      );
+      console.log("Updated subscriber:", data);
+      return data;
+    } catch (err) {
+      console.error("Failed to update subscriber status:", err);
+      throw err;
+    }
+  };
+  const showAddSubscriberModal = async (id: string) => {
     setResUserId(id);
     dispatch(showSubscriberDetail(undefined));
+    await updateSubscriberStatus(id, newStatus);
   };
 
   const hideAddSubscriberModal = () => {
@@ -289,28 +303,29 @@ export const TableSubscriberList: React.FC<TableSubscriberListProps> = ({
                 </button>
               </td>
               <td className="p-4">
-                <ButtonStatus
-                  availableStatuses={[
-                    "Active",
-                    "Hold",
-                    "Pending",
-                    "Delete Request",
-                  ]}
-                  status={
-                    (item?.subscriptions?.length ?? 0) === 0
-                      ? "Hold"
-                      : item?.status ?? "Active"
-                  }
-                  properties={{
-                    Active: { bg: "bg-green-800", text: "text-green-300" },
-                    Hold: { bg: "bg-red-800", text: "text-red-300" },
-                    Pending: { bg: "bg-yellow-800", text: "text-yellow-300" },
-                    "Delete Request": {
-                      bg: "bg-red-900",
-                      text: "text-red-300",
-                    },
-                  }}
-                />
+                {item.package ? (
+                  <ButtonStatus
+                    availableStatuses={["Active", "Hold"]}
+                    status={
+                      (item?.subscriptions?.length ?? 0) === 0
+                        ? "Hold"
+                        : item?.status ?? "Active"
+                    }
+                    properties={{
+                      Active: { bg: "bg-green-800", text: "text-green-300" },
+                      Hold: { bg: "bg-red-800", text: "text-red-300" },
+                      Pending: { bg: "bg-yellow-800", text: "text-yellow-300" },
+                      "Delete Request": {
+                        bg: "bg-red-900",
+                        text: "text-red-300",
+                      },
+                    }}
+                  />
+                ) : (
+                  <span className="px-3 py-1 text-sm rounded-full bg-gray-800 text-gray-300 border border-gray-700 shadow-sm">
+                    No subscription
+                  </span>
+                )}
               </td>
             </tr>
           ))}
