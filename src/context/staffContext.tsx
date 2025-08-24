@@ -156,7 +156,7 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({
   );
   const [ordersStats, setOrdersStats] = useState<OrdersStats | null>(null);
   const { userRole, isLoading } = useRole();
-  console.log(userRole, "user role in staff context");
+
   const fetchStatusSummary = useCallback(async () => {
     if (!userRole) return;
     let endpoint = "";
@@ -192,6 +192,7 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({
       }
       try {
         const response = await axiosInstance.get(endpoint);
+        console.log(response, "response from fetch food items");
         const { results, count } = response.data;
         console.log("Fetched food items:", response.data);
         const formattedItems = results.map((item: any) => ({
@@ -231,6 +232,7 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({
       const response = await axiosInstance.get(endpoint, {
         params: { page: page, search: search },
       });
+      console.log(response, "response from fetch orders");
       const { results, count } = response.data;
       console.log("Fetched orders:", response.data);
       setOrdersStats(results.stats);

@@ -86,7 +86,7 @@ const ScreenStaffReservations = () => {
     const dateString = date ? formatDateForAPI(date) : undefined;
     fetchReservations(1, reservationsSearchQuery, dateString);
   };
-
+  console.log(reservations, " reservationsSearchQuery, ");
   return (
     <>
       <div className="flex flex-col">
