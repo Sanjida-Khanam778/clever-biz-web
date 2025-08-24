@@ -900,6 +900,7 @@ interface ButtonStatusProps<StatusType extends string> {
   properties: Record<StatusType, { bg: string; text: string }>;
   availableStatuses?: StatusType[];
   onChange?: (newStatus: StatusType) => void;
+  disabled?: boolean;
 }
 
 export const ButtonStatus = <StatusType extends string>({
@@ -908,6 +909,7 @@ export const ButtonStatus = <StatusType extends string>({
   properties,
   availableStatuses = [],
   onChange,
+  disabled = false,
 }: ButtonStatusProps<StatusType>) => {
   const colors = properties[status] || {
     bg: "bg-gray-800",
@@ -933,6 +935,7 @@ export const ButtonStatus = <StatusType extends string>({
       <MenuButton
         className={cn(
           "inline-flex justify-center items-center gap-x-2 px-3 py-1 rounded-md text-sm font-medium cursor-pointer",
+          disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
           colors.bg,
           colors.text
         )}
@@ -947,7 +950,8 @@ export const ButtonStatus = <StatusType extends string>({
             <button
               onClick={() => onChange?.(value)}
               className={cn(
-                "w-full text-left px-6 py-2 text-sm text-primary-text hover:bg-sidebar"
+                "w-full text-left px-6 py-2 text-sm text-primary-text hover:bg-sidebar",
+                disabled ? "opacity-50 cursor-not-allowed" : "hover:bg-sidebar"
               )}
             >
               {value}
