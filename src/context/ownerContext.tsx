@@ -154,8 +154,10 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const { userRole, isLoading } = useRole();
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
+
   const [foodItemsCount, setFoodItemsCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
@@ -318,6 +320,7 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
         }
 
         const response = await axiosInstance.get(endpoint);
+        console.log(response, "response from fetch reservations");
         const { results, count } = response.data;
         const formattedReservations = results?.map((item: any) => ({
           id: item.id,

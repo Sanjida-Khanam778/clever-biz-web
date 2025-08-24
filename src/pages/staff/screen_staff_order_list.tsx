@@ -16,9 +16,8 @@ const ScreenStaffOrderList = () => {
     setOrdersCurrentPage,
     setOrdersSearchQuery,
   } = useStaff();
-
+  console.log(ordersCurrentPage, " ordersCurrentPage");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
-  console.log(ordersStats, "orders stats");
 
   // Debounced search effect
   useEffect(() => {
@@ -75,7 +74,6 @@ const ScreenStaffOrderList = () => {
           <h2 className="flex-1 text-2xl text-primary-text">List of items</h2>
 
           <div className="flex-1 flex gap-x-4 flex-row-reverse md:flex-row justify-end">
-            <button className="text-white"> add strinp account</button>
             {/* Search box by id */}
             <TextSearchBox
               placeholder="Search by Order ID"

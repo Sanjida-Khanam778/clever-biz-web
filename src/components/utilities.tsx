@@ -821,6 +821,7 @@ export const ChatSection = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { userInfo } = useRole();
   // Add a ref for the chat body
+  console.log(chatData, "chat data");
   const chatBodyRef = useRef<HTMLDivElement | null>(null);
   // React Hooks for Refs
   const localAudioRef = useRef<HTMLAudioElement>(null);
@@ -831,7 +832,7 @@ export const ChatSection = () => {
   const [callStatus, setCallStatus] = useState<
     "idle" | "calling" | "in_call" | "ended"
   >("idle");
-
+  console.log(selectedChat, "selected chat");
   // Fetch devices and set initial chat
   useEffect(() => {
     const fetchDevices = async () => {
@@ -886,13 +887,14 @@ export const ChatSection = () => {
       socket.current.close();
     }
     socket.current = new WebSocket(
-      `ws://10.10.13.26:9000/ws/chat/${selectedChat.id}/?token=${accessToken}`
+      `ws://10.10.13.26:8000/ws/chat/${selectedChat.id}/?token=${accessToken}`
     );
     socket.current.onopen = () => {
       setIsConnected(true);
     };
     socket.current.onmessage = (event) => {
       const data = JSON.parse(event.data);
+      console.log(data, "data in socket");
       setMessages((prevMessages) => [...prevMessages, data]);
       if (data.type === "answer") {
         setCallStatus("in_call");
@@ -931,7 +933,7 @@ export const ChatSection = () => {
     const accessToken = localStorage.getItem("accessToken");
     // Step 1: WebSocket Connect
     const socket = new WebSocket(
-      `ws://10.10.13.26:9000/ws/call/${device_id}/?token=${accessToken}`
+      `ws://10.10.13.26:8000/ws/call/${device_id}/?token=${accessToken}`
     );
 
     socket.onopen = async () => {

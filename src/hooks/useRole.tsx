@@ -11,9 +11,25 @@ interface UserInfo {
   // Add other user properties as needed
 }
 
+const isBrowser = typeof window !== "undefined";
+
+const safeParse = <T,>(raw: string | null, fallback: T): T => {
+  if (!raw) return fallback;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
+};
+
 export const useRole = () => {
-  const [userRole, setUserRole] = useState<UserRole>(null);
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const initialUser = isBrowser
+    ? safeParse<UserInfo | null>(localStorage.getItem("userInfo"), null)
+    : null;
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(() => initialUser);
+  const [userRole, setUserRole] = useState<UserRole>(
+    () => initialUser?.role ?? null
+  );
   const [isLoading, setIsLoading] = useState(true);
   // Get user role from localStorage
   const getUserRole = (): UserRole => {
@@ -72,10 +88,11 @@ export const useRole = () => {
     accessToken: string,
     refreshToken: string
   ) => {
+    console.log(user, "updating user data in useRole");
     localStorage.setItem("accessToken", accessToken);
     localStorage.setItem("refreshToken", refreshToken);
     localStorage.setItem("userInfo", JSON.stringify(user));
-    setUserRole(user.role);
+    setUserRole(user?.role);
     setUserInfo(user);
   };
 
@@ -87,7 +104,10 @@ export const useRole = () => {
     setUserInfo(user);
     setIsLoading(false);
   }, []);
-
+  
+  // console.log(getUserRole, "get user role function in useRole");
+  // console.log(userRole, "user role in useRole");
+  // console.log(hasRole, "has role function in useRole");
   return {
     userRole,
     userInfo,
