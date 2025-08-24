@@ -9,7 +9,7 @@ import {
   hideSubscriberDetail,
   showSubscriberDetail,
 } from "./redux-slices/slice_admin_management";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../store/store";
 import axiosInstance from "@/lib/axios";
 
@@ -215,57 +215,98 @@ export const TableSubscriberList: React.FC<TableSubscriberListProps> = ({
   subscribers,
   query = "",
 }) => {
+  console.log(subscribers, "subscribers");
   type DashboardStats = {
     total_restaurant: number;
     total_hold_restaurant: number;
     total_active_restaurant: number;
   };
+
+  const [rows, setRows] = useState(subscribers);
+  useEffect(() => setRows(subscribers), [subscribers]);
+
   const [resUserId, setResUserId] = useState<string | undefined>(undefined);
   const [stats, setStats] = useState<DashboardStats>({
     total_restaurant: 0,
     total_hold_restaurant: 0,
     total_active_restaurant: 0,
   });
-  console.log(stats, "states");
+  const [savingSet, setSavingSet] = useState<Set<string | number>>(new Set());
+
   const dispatch = useAppDispatch();
   const openShowDetailModal = useAppSelector(
     (state) => state.adminManagement.modals.showDetail
   );
-  const openAddSubscriberModal = useAppSelector(
-    (state) => state.adminManagement.modals.addSubscriber
-  );
-  useEffect(() => {
-    const fetchDatas = async () => {
-      const res = await axiosInstance.get("/adminapi/restaurants/summary/");
-      const data = await res?.data;
-      console.log(data, " summary data");
-      setStats(data);
-    };
-    fetchDatas();
-  }, []);
 
-  const updateSubscriberStatus = async (id: string, status: string) => {
+  const refreshSummary = useCallback(async () => {
     try {
-      const { data } = await axiosInstance.patch(
-        `/adminapi/subscribers/${id}/`, // 👈 endpoint (adjust if different)
-        { status } // 👈 body to update
+      const { data } = await axiosInstance.get(
+        "/adminapi/restaurants/summary/"
       );
-      console.log("Updated subscriber:", data);
-      return data;
-    } catch (err) {
-      console.error("Failed to update subscriber status:", err);
-      throw err;
+      setStats(data);
+    } catch (e) {
+      console.error("Failed to refresh summary:", e);
+    }
+  }, []);
+  useEffect(() => {
+    refreshSummary();
+  }, [refreshSummary]);
+
+  const getDisplayStatus = (item: any) =>
+    (item?.subscriptions?.length ?? 0) === 0
+      ? "Hold"
+      : item?.status ?? "Active";
+
+  // ✅ uses /adminapi/update-status/<int:restaurant_id>/ (PATCH)
+  const updateSubscriberStatus = async (
+    restaurantId: string | number,
+    status: string
+  ) => {
+    const { data } = await axiosInstance.patch(
+      `/adminapi/update-status/${restaurantId}/`,
+      { status } // use .toLowerCase() if your API expects lowercase
+    );
+    return data;
+  };
+
+  const handleStatusChange = async (item: any, next: string) => {
+    const prev = getDisplayStatus(item);
+    if (next === prev) return;
+
+    setSavingSet((s) => new Set(s).add(item.id));
+    setRows((list) =>
+      list.map((r) => (r.id === item.id ? { ...r, status: next } : r))
+    );
+
+    try {
+      const saved = await updateSubscriberStatus(item.id, next);
+      // If API returns canonical status, sync (optional)
+      if (saved?.status && saved.status !== next) {
+        setRows((list) =>
+          list.map((r) =>
+            r.id === item.id ? { ...r, status: saved.status } : r
+          )
+        );
+      }
+      await refreshSummary();
+    } catch (e) {
+      setRows((list) =>
+        list.map((r) => (r.id === item.id ? { ...r, status: prev } : r))
+      );
+    } finally {
+      setSavingSet((s) => {
+        const n = new Set(s);
+        n.delete(item.id);
+        return n;
+      });
     }
   };
-  const showAddSubscriberModal = async (id: string) => {
+
+  const showAddSubscriberModal = (id: string) => {
     setResUserId(id);
     dispatch(showSubscriberDetail(undefined));
-    await updateSubscriberStatus(id, newStatus);
   };
-
-  const hideAddSubscriberModal = () => {
-    dispatch(hideSubscriberDetail());
-  };
+  const hideAddSubscriberModal = () => dispatch(hideSubscriberDetail());
 
   return (
     <>
@@ -281,36 +322,35 @@ export const TableSubscriberList: React.FC<TableSubscriberListProps> = ({
             <th>Action</th>
           </tr>
         </thead>
+
         <tbody className="bg-sidebar text-sm">
-          {subscribers.map((item, index) => (
+          {rows.map((item, index) => (
             <tr key={index} className="border-b border-[#1C1E3C]">
               <td className="p-4 text-primary-text">{item?.resturent_name}</td>
               <td className="p-4 text-primary-text">{item?.id}</td>
               <td className="p-4 text-primary-text">{item?.phone_number}</td>
               <td className="p-4 text-primary-text">
-                {item?.created_at.slice(0, 10)}
+                {item?.created_at?.slice?.(0, 10)}
               </td>
               <td className="p-4 text-primary-text">
                 {item?.package || "N/A"}
               </td>
+
               <td className="h-20 p-4 flex gap-x-4 items-center">
                 <button
-                  onClick={() => showAddSubscriberModal(item?.id.toString())}
+                  onClick={() => showAddSubscriberModal(item?.id?.toString())}
                   className="text-blue-100 bg-table-header flex flex-row items-center gap-x-2 p-3"
                 >
                   <IconCustomerInfo />
                   <span>View</span>
                 </button>
               </td>
+
               <td className="p-4">
                 {item.package ? (
                   <ButtonStatus
                     availableStatuses={["Active", "Hold"]}
-                    status={
-                      (item?.subscriptions?.length ?? 0) === 0
-                        ? "Hold"
-                        : item?.status ?? "Active"
-                    }
+                    status={getDisplayStatus(item)}
                     properties={{
                       Active: { bg: "bg-green-800", text: "text-green-300" },
                       Hold: { bg: "bg-red-800", text: "text-red-300" },
@@ -320,6 +360,8 @@ export const TableSubscriberList: React.FC<TableSubscriberListProps> = ({
                         text: "text-red-300",
                       },
                     }}
+                    disabled={savingSet.has(item.id)}
+                    onChange={(next) => handleStatusChange(item, next)}
                   />
                 ) : (
                   <span className="px-3 py-1 text-sm rounded-full bg-gray-800 text-gray-300 border border-gray-700 shadow-sm">
@@ -331,6 +373,7 @@ export const TableSubscriberList: React.FC<TableSubscriberListProps> = ({
           ))}
         </tbody>
       </table>
+
       <ModalAddSubscriber
         id={resUserId ? Number(resUserId) : undefined}
         isOpen={openShowDetailModal}
@@ -339,5 +382,4 @@ export const TableSubscriberList: React.FC<TableSubscriberListProps> = ({
     </>
   );
 };
-
 export default ScreenAdminManagement;

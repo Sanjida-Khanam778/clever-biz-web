@@ -1,12 +1,18 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { IconGrowth, IconSales, IconTeam } from "@/components/icons";
-import { DashboardCard } from "../../components/utilities";
-import { subscribers, TableSubscriberList } from "./screen_admin_management";
+import { DashboardCard, Pagination } from "../../components/utilities";
+import {
+  subscribers,
+  TableSubscriberList,
+  TSubscriber,
+} from "./screen_admin_management";
 import { MonthlyChart, YearlyChart } from "@/components/charts";
 import { useEffect, useState } from "react";
 import axiosInstance from "@/lib/axios";
 import { ClockFading } from "lucide-react";
 
 const ScreenAdminDashboard = () => {
+  console.log(subscribers, "subscribers");
   type DashboardStats = {
     last_week_all_order_growth: number;
     last_week_all_order_price: number;
@@ -25,7 +31,12 @@ const ScreenAdminDashboard = () => {
     monthly_sales: MonthlySale[];
   };
 
-  const [restaurantData, setRestaurantData] = useState([]);
+  const PAGE_SIZE = 5;
+  const [page, setPage] = useState(1); // current page (1-based)
+  const [total, setTotal] = useState(0); // total items from API (DRF `count`)
+  const [loading, setLoading] = useState(false);
+  const [allResutrentUser, setallResutrentUser] = useState<TSubscriber[]>([]);
+  const [search, setSearch] = useState("");
   const [state, setState] = useState<DashboardStats>({
     last_week_all_order_growth: 0,
     last_week_all_order_price: 0,
@@ -47,15 +58,41 @@ const ScreenAdminDashboard = () => {
       { month: "", total_orders: 0, total_sales: 0 },
     ],
   });
-
   useEffect(() => {
     const fetchData = async () => {
-      const res = await axiosInstance.get("adminapi/restaurants/");
-      const data = await res.data.results;
-      setRestaurantData(data);
+      try {
+        setLoading(true);
+
+        const params: Record<string, any> = {
+          page, // ?page=1,2,3...
+          page_size: PAGE_SIZE, // ?page_size=5
+        };
+        if (search.trim()) params.restaurant_name = search.trim();
+
+        const response = await axiosInstance.get("/adminapi/restaurants/", {
+          params,
+        });
+
+        // DRF style: { count, results, next, previous }
+        const { count = 0, results = [] } = response.data ?? {};
+        setallResutrentUser(Array.isArray(results) ? results : []);
+        setTotal(count);
+
+        // clamp page if it went out of range (e.g., after narrowing search)
+        const totalPages = Math.max(1, Math.ceil(count / PAGE_SIZE));
+        if (page > totalPages) setPage(totalPages);
+      } catch (error) {
+        console.error("Error fetching subscribers", error);
+        setallResutrentUser([]);
+        setTotal(0);
+      } finally {
+        setLoading(false);
+      }
     };
+
     fetchData();
-  }, []);
+  }, [search, page]);
+
   useEffect(() => {
     const fetchData = async () => {
       const res = await axiosInstance.get(
@@ -89,7 +126,7 @@ const ScreenAdminDashboard = () => {
     };
     fetchData();
   }, []);
-  // console.log(state);
+
   return (
     <>
       <div className="flex flex-col">
@@ -137,21 +174,24 @@ const ScreenAdminDashboard = () => {
               secondData={lastSalesData.monthly_sales.map(
                 (item) => item.total_orders
               )} // 👈 orders
-              currentYear={null} lastYear={null}              // secondData={[56, 12, 89, 27, 33, 84, 3, 4, 55, 34, 34, 10]}
+              currentYear={null}
+              lastYear={null}
             />
           </div>
-          {/* <div className="col-span-1 bg-sidebar rounded-xl p-4 flex justify-center items-center">
-            <MonthlyChart
-              title="Subscriber Flow"
-              firstData={[15, 30, 45, 60]}
-              secondData={[152, 303, 451, 603]}
-            />
-          </div> */}
+
           <div className="col-span-1"></div>
         </div>
         {/* List of content */}
         <div className="bg-sidebar p-4 rounded-lg mt-4">
-          <TableSubscriberList subscribers={restaurantData} />
+          <TableSubscriberList subscribers={allResutrentUser} />
+          <div className="mt-4 flex justify-center">
+            <Pagination
+              page={page}
+              total={total} // DRF `count`
+              pageSize={PAGE_SIZE} // make sure your Pagination uses this
+              onPageChange={setPage}
+            />
+          </div>
         </div>
       </div>
     </>
