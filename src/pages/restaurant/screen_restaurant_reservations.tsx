@@ -1,12 +1,11 @@
+import { AssistantModal } from "@/components/modals";
 import { TableReservationList } from "@/components/tables";
+import { useOwner } from "@/context/ownerContext";
+import { AssistantCredentials } from "@/types";
+import { useEffect, useState } from "react";
+import { FiHeadphones } from "react-icons/fi";
 import { DateSearchBox, TextSearchBox } from "../../components/input";
 import { Pagination, StatCard } from "../../components/utilities";
-import { useEffect, useState } from "react";
-import { useOwner } from "@/context/ownerContext";
-import { AssistantModal } from "@/components/modals";
-import { AssistantCredentials } from "@/types";
-import { FiHeadphones } from "react-icons/fi";
-import { ImSpinner6 } from "react-icons/im";
 
 /* Screen to list of reservations on restaurant end */
 const ScreenRestaurantReservations = () => {
