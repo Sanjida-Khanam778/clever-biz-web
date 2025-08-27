@@ -20,6 +20,10 @@ const ScreenRestaurantReservations = () => {
     setReservationsCurrentPage,
     setReservationsSearchQuery,
   } = useOwner();
+    console.log(
+      "🚀 ~ ScreenRestaurantReservations ~ reservations:",
+      reservations
+    );
 
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
