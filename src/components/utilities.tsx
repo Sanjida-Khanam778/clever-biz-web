@@ -808,22 +808,37 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
 
 /* Chat Page Section ===========================================================>>>>> */
 
-export const ChatSection = () => {
+export interface ChatRoomItem {
+  id: string;
+  table_name: string;
+  user_id?: string;
+}
+
+export type MsgType = {
+  message?: string;
+  is_from_device?: boolean;
+  sender?: string;
+  timestamp?: string | number;
+  // other fields your backend sends...
+  [k: string]: any;
+};
+
+// ---- Component ----
+export const ChatSection: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedChat, setSelectedChat] = useState<ChatRoomItem | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isCallOpen, setIsCallOpen] = useState(false);
   const [chatData, setChatData] = useState<ChatRoomItem[]>([]);
   const [isConnected, setIsConnected] = useState(false);
-  const socket = useRef<WebSocket | null>(null);
+  const socket = useRef<WebSocket | null>(null); // active chat socket
   const [inputMessage, setInputMessage] = useState("");
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<MsgType[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const { userInfo } = useRole();
-  // Add a ref for the chat body
-  console.log(chatData, "chat data");
   const chatBodyRef = useRef<HTMLDivElement | null>(null);
-  // React Hooks for Refs
+
+  // call-related refs/state
   const localAudioRef = useRef<HTMLAudioElement>(null);
   const remoteAudioRef = useRef<HTMLAudioElement>(null);
   const socketRef = useRef<WebSocket | null>(null);
@@ -832,40 +847,64 @@ export const ChatSection = () => {
   const [callStatus, setCallStatus] = useState<
     "idle" | "calling" | "in_call" | "ended"
   >("idle");
-  console.log(selectedChat, "selected chat");
-  // Fetch devices and set initial chat
+
+  // 🔔 inbox meta: unread + hasNew + lastAt + lastPreview
+  const [inboxMap, setInboxMap] = useState<
+    Record<
+      string,
+      { unread: number; hasNew: boolean; lastAt: number; lastPreview: string }
+    >
+  >({});
+
+  // background sockets for non-active inboxes
+  const bgSocketsRef = useRef<Record<string, WebSocket>>({});
+
+  // Devices fetch
   useEffect(() => {
     const fetchDevices = async () => {
       try {
         const response = await axiosInstance.get(
           `/owners/devicesall/?search=${searchQuery}`
         );
-        const chatList = Array.isArray(response.data) ? response.data : [];
+        const chatList: ChatRoomItem[] = Array.isArray(response.data)
+          ? response.data
+          : [];
         setChatData(chatList);
-        if (chatList.length > 0 && !selectedChat) {
-          setSelectedChat(chatList[0]);
-        }
+        setInboxMap((prev) => {
+          const next = { ...prev };
+          for (const c of chatList) {
+            if (!next[c.id])
+              next[c.id] = {
+                unread: 0,
+                hasNew: false,
+                lastAt: 0,
+                lastPreview: "",
+              };
+          }
+          return next;
+        });
+        if (chatList.length > 0 && !selectedChat) setSelectedChat(chatList[0]);
       } catch (error) {
         toast.error("Failed to load devices.");
-        setChatData([]); // Ensure it's always an array even on error
+        setChatData([]);
       } finally {
         setLoading(false);
       }
     };
     fetchDevices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
 
   // Fetch previous messages when selectedChat changes
   useEffect(() => {
     if (!selectedChat) return;
     const device_id = selectedChat.id;
-    const restaurant_id = userInfo?.restaurants[0].id; // static for now
+    const restaurant_id = userInfo?.restaurants?.[0]?.id;
     const fetchMessages = async () => {
       try {
         const response = await axiosInstance.get(
           `/message/chat/?device_id=${device_id}&restaurant_id=${restaurant_id}`
         );
-        console.log(response.data, "response data in chat section");
         setMessages(response.data || []);
       } catch (error) {
         toast.error("Failed to load previous messages.");
@@ -873,9 +912,9 @@ export const ChatSection = () => {
       }
     };
     fetchMessages();
-  }, [selectedChat]);
+  }, [selectedChat, userInfo]);
 
-  // Handle WebSocket connection and messages when selectedChat changes
+  // Active chat WebSocket
   useEffect(() => {
     if (!selectedChat) return;
     const accessToken = localStorage.getItem("accessToken");
@@ -886,75 +925,139 @@ export const ChatSection = () => {
     if (socket.current) {
       socket.current.close();
     }
-    socket.current = new WebSocket(
+    const ws = new WebSocket(
       `ws://10.10.13.26:8000/ws/chat/${selectedChat.id}/?token=${accessToken}`
     );
-    socket.current.onopen = () => {
-      setIsConnected(true);
-    };
-    socket.current.onmessage = (event) => {
+    socket.current = ws;
+
+    ws.onopen = () => setIsConnected(true);
+    ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      console.log(data, "data in socket");
-      setMessages((prevMessages) => [...prevMessages, data]);
-      if (data.type === "answer") {
-        setCallStatus("in_call");
-      } else if (data.action === "call_ended") {
-        setCallStatus("ended");
-      }
+      setMessages((prev) => [...prev, data]);
+
+      // call events
+      if (data.type === "answer") setCallStatus("in_call");
+      else if (data.action === "call_ended") setCallStatus("ended");
+
+      // update active inbox meta (no unread/hasNew because you're inside)
+      setInboxMap((prev) => {
+        const cur = prev[selectedChat.id] ?? {
+          unread: 0,
+          hasNew: false,
+          lastAt: 0,
+          lastPreview: "",
+        };
+        return {
+          ...prev,
+          [selectedChat.id]: {
+            ...cur,
+            lastAt: Date.now(),
+            lastPreview: data?.message ?? cur.lastPreview,
+          },
+        };
+      });
     };
-    socket.current.onclose = () => {
-      console.log("WebSocket disconnected");
-      setIsConnected(false);
-    };
-    socket.current.onerror = (error) => {
-      console.error("WebSocket error:", error);
-      setIsConnected(false);
-    };
+    ws.onclose = () => setIsConnected(false);
+    ws.onerror = () => setIsConnected(false);
+
     return () => {
-      if (socket.current) {
-        socket.current.close();
-      }
+      ws.close();
     };
   }, [selectedChat]);
 
-  // Auto-scroll to bottom when messages or selectedChat changes
+  // Background sockets for other inboxes
+  useEffect(() => {
+    const accessToken = localStorage.getItem("accessToken");
+    if (!accessToken) return;
+    if (!chatData?.length) return;
+
+    chatData.forEach((c) => {
+      const id = c.id;
+      if (selectedChat?.id === id) return; // active has its own socket
+      if (bgSocketsRef.current[id]) return; // already open
+
+      const ws = new WebSocket(
+        `ws://10.10.13.26:8000/ws/chat/${id}/?token=${accessToken}`
+      );
+      bgSocketsRef.current[id] = ws;
+
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        setInboxMap((prev) => {
+          const cur = prev[id] ?? {
+            unread: 0,
+            hasNew: false,
+            lastAt: 0,
+            lastPreview: "",
+          };
+          return {
+            ...prev,
+            [id]: {
+              unread: cur.unread + 1,
+              hasNew: true,
+              lastAt: Date.now(),
+              lastPreview: data?.message ?? cur.lastPreview,
+            },
+          };
+        });
+      };
+
+      ws.onclose = () => {
+        delete bgSocketsRef.current[id];
+      };
+      ws.onerror = () => {
+        // optional: handle error/reconnect
+      };
+    });
+  }, [chatData, selectedChat]);
+
+  // open inbox => reset unread + hasNew
+  const openInbox = (chat: ChatRoomItem) => {
+    setSelectedChat(chat);
+    setInboxMap((prev) => {
+      const cur = prev[chat.id] ?? {
+        unread: 0,
+        hasNew: false,
+        lastAt: 0,
+        lastPreview: "",
+      };
+      return {
+        ...prev,
+        [chat.id]: { ...cur, unread: 0, hasNew: false },
+      };
+    });
+  };
+
+  // Auto-scroll to bottom when messages / selectedChat change
   useEffect(() => {
     if (chatBodyRef.current) {
       chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
     }
   }, [messages, selectedChat]);
 
-  console.log(selectedChat?.user_id);
+  // ---- Calling ----
   const startConnection = async () => {
     const device_id = selectedChat?.id;
-    const restaurant_id = userInfo?.restaurants[0].id;
     const user_id = selectedChat?.user_id;
     if (!selectedChat) return;
     const accessToken = localStorage.getItem("accessToken");
-    // Step 1: WebSocket Connect
     const socket = new WebSocket(
       `ws://10.10.13.26:8000/ws/call/${device_id}/?token=${accessToken}`
     );
 
     socket.onopen = async () => {
-      console.log("Socket connected");
-
-      // Step 2: Microphone Access
       const localStream = await navigator.mediaDevices.getUserMedia({
         audio: true,
       });
-      localAudioRef.current.srcObject = localStream;
+      if (localAudioRef.current) localAudioRef.current.srcObject = localStream;
 
-      // Step 3: Setup Peer Connection
       const peer = new RTCPeerConnection({
         iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
       });
+      localStream
+        .getTracks()
+        .forEach((track) => peer.addTrack(track, localStream));
 
-      localStream.getTracks().forEach((track) => {
-        peer.addTrack(track, localStream);
-      });
-
-      // Step 4: ICE Candidates Send to Socket
       peer.onicecandidate = (event) => {
         if (event.candidate) {
           socket.send(
@@ -963,43 +1066,39 @@ export const ChatSection = () => {
         }
       };
 
-      // Step 5: Remote Audio Stream
       peer.ontrack = (event) => {
-        remoteAudioRef.current.srcObject = event.streams[0];
+        if (remoteAudioRef.current)
+          remoteAudioRef.current.srcObject = event.streams[0];
       };
 
-      // Step 6: Create Offer & Send to Backend
       const offer = await peer.createOffer();
       await peer.setLocalDescription(offer);
 
       socket.send(
         JSON.stringify({
           action: "start_call",
-          receiver_id: user_id, // From React state
-          device_id: device_id,
+          receiver_id: user_id,
+          device_id,
           type: "offer",
           offer,
         })
       );
 
-      // Add this above startConnection or inside the function
-      let remoteCandidatesQueue = [];
+      let remoteCandidatesQueue: any[] = [];
 
-      // Inside socket.onmessage:
       socket.onmessage = async (event) => {
         const data = JSON.parse(event.data);
         if (data.type === "answer") {
           await peer.setRemoteDescription(
             new RTCSessionDescription(data.answer)
           );
-          // Add any queued candidates
-          remoteCandidatesQueue.forEach(async (candidate) => {
+          for (const candidate of remoteCandidatesQueue) {
             try {
               await peer.addIceCandidate(new RTCIceCandidate(candidate));
             } catch (e) {
               console.error("Error adding queued ICE candidate", e);
             }
-          });
+          }
           remoteCandidatesQueue = [];
           setCallStatus("in_call");
         } else if (data.type === "candidate") {
@@ -1013,15 +1112,13 @@ export const ChatSection = () => {
             remoteCandidatesQueue.push(data.candidate);
           }
         } else if (data.action === "call_ended") {
-          // Handle call end
           peer.close();
           socket.close();
-          console.log("Call ended");
           setCallStatus("ended");
         }
       };
 
-      // Save to Ref (for future)
+      // Save refs
       socketRef.current = socket;
       peerRef.current = peer;
       localStreamRef.current = localStream;
@@ -1039,16 +1136,14 @@ export const ChatSection = () => {
       socket.current.send(
         JSON.stringify({ type: "message", message: inputMessage })
       );
-      setInputMessage(""); // Clear textarea
+      setInputMessage("");
     } catch (error) {
       console.error("Failed to send message:", error);
       toast.error("Failed to send message");
     }
   };
 
-  const confirmToCall = () => {
-    setIsConfirmOpen(true);
-  };
+  const confirmToCall = () => setIsConfirmOpen(true);
 
   if (loading) {
     return (
@@ -1084,7 +1179,7 @@ export const ChatSection = () => {
               </span>
             </div>
             <button
-              onClick={() => confirmToCall()}
+              onClick={confirmToCall}
               className="button-primary bg-sidebar rounded-lg text-base flex items-center space-x-2"
               disabled={!selectedChat}
             >
@@ -1093,19 +1188,26 @@ export const ChatSection = () => {
             </button>
           </div>
         </div>
+
         <div className="flex-1 flex h-full text-white border-t-2 border-chat-sender/20 overflow-hidden">
           {/* Left Chat List */}
           <div className="w-92 bg-sidebar p-2 overflow-y-auto scrollbar-hide flex-shrink-0">
             <div className="divide-y divide-chat-sender/10">
               {Array.isArray(chatData) &&
-                chatData.map((chat) => (
-                  <ChatListItem
-                    key={chat.id}
-                    data={chat}
-                    isSelected={selectedChat?.id === chat.id}
-                    onClick={() => setSelectedChat(chat)}
-                  />
-                ))}
+                chatData.map((chat) => {
+                  const meta =
+                    inboxMap[chat.id] ?? ({ unread: 0, hasNew: false } as any);
+                  return (
+                    <ChatListItem
+                      key={chat.id}
+                      data={chat}
+                      isSelected={selectedChat?.id === chat.id}
+                      hasNew={meta.hasNew}
+                      unread={meta.unread}
+                      onClick={() => openInbox(chat)}
+                    />
+                  );
+                })}
             </div>
           </div>
 
@@ -1119,10 +1221,10 @@ export const ChatSection = () => {
               {selectedChat ? (
                 messages?.map((msg, index) => {
                   const isSameSenderAsPrev =
-                    index > 0 && messages[index - 1].sender === msg.sender;
+                    index > 0 && messages[index - 1]?.sender === msg.sender;
                   const isSameSenderAsNext =
                     index < messages.length - 1 &&
-                    messages[index + 1].sender === msg.sender;
+                    messages[index + 1]?.sender === msg.sender;
 
                   const isSingleMessage =
                     !isSameSenderAsPrev && !isSameSenderAsNext;
@@ -1133,7 +1235,7 @@ export const ChatSection = () => {
                   const isLastInGroup =
                     isSameSenderAsPrev && !isSameSenderAsNext;
 
-                  const isUser = msg.is_from_device === false; //todo: reverse in production
+                  const isUser = msg.is_from_device === false; // todo: reverse in production
 
                   return (
                     <div
@@ -1161,7 +1263,7 @@ export const ChatSection = () => {
                       >
                         <span>{msg.message}</span>
                         <span className="text-[10px] text-primary-text/40 self-end mt-1">
-                          {formatTimestamp(msg.timestamp)}
+                          {formatTimestamp(msg.timestamp ?? Date.now())}
                         </span>
                       </div>
                     </div>
@@ -1211,18 +1313,18 @@ export const ChatSection = () => {
           setIsCallOpen(true);
           startConnection();
         }}
-        close={() => {
-          setIsConfirmOpen(false);
-        }}
+        close={() => setIsConfirmOpen(false)}
       />
+
       <ModalCall
         socketRef={socketRef}
         peerRef={peerRef}
         localStreamRef={localStreamRef}
         isOpen={isCallOpen}
-        callStatus={callStatus} // <-- new prop
+        callStatus={callStatus}
         close={() => setIsCallOpen(false)}
       />
+
       {/* Audio elements for call */}
       <audio ref={localAudioRef} autoPlay muted style={{ display: "none" }} />
       <audio ref={remoteAudioRef} autoPlay style={{ display: "none" }} />
@@ -1234,32 +1336,49 @@ interface ChatListItemProps {
   data: ChatRoomItem;
   isSelected: boolean;
   onClick: () => void;
+  hasNew?: boolean;
+  unread?: number;
 }
-export const ChatListItem: React.FC<ChatListItemProps> = ({
+
+const ChatListItem: React.FC<ChatListItemProps> = ({
   isSelected,
   data,
   onClick,
+  hasNew = false,
+  unread = 0,
 }) => {
   return (
     <div
       className={cn(
         "px-3 py-2 cursor-pointer flex justify-between items-center rounded my-1",
-        {
-          "bg-chat-sender/20": isSelected,
-        },
-        {
-          "hover:bg-[#1B1A30]": !isSelected,
-        }
+        { "bg-chat-sender/20": isSelected },
+        { "hover:bg-[#1B1A30]": !isSelected }
       )}
-      onClick={() => onClick()}
+      onClick={onClick}
     >
-      <p className="h-10 w-10 bg-[#292758]/50 rounded-full flex justify-center items-center">
-        <span className="text-xl">{data.table_name}</span>
-      </p>
-      <div className="flex flex-col items-end gap-y-2">
-        {/* <p className="text-xs text-white/40 h-4 w-4 bg-chat-sender rounded-full flex justify-center items-center">
-          <span>2</span>
-        </p> */}
+      <div className="relative">
+        <p className="h-10 w-10 bg-[#292758]/50 rounded-full flex justify-center items-center">
+          <span className="text-xl">{data.table_name}</span>
+        </p>
+        {hasNew && (
+          <>
+            <span
+              className="absolute -right-0 -bottom-0 h-3 w-3 rounded-full bg-green-500 ring-2 ring-sidebar"
+              aria-label="New message"
+            />
+            <span className="absolute -right-0 -bottom-0 inline-flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
+            </span>
+          </>
+        )}
+      </div>
+
+      <div className="flex flex-col items-end gap-y-1">
+        {unread > 0 && (
+          <span className="text-xs bg-red-600 text-white rounded-full px-2 py-0.5">
+            {unread}
+          </span>
+        )}
       </div>
     </div>
   );
