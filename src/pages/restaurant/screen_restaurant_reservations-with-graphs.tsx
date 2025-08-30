@@ -1,5 +1,6 @@
 import { useOwner } from "@/context/ownerContext";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { ConnectDragSource, ConnectDropTarget } from "react-dnd";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
@@ -14,26 +15,37 @@ interface ReservationItem {
   customRequest: string;
 }
 
+interface DragItem extends ReservationItem {
+  isOnCanvas: boolean;
+  position: { x: number; y: number };
+}
+
 interface DraggableReservationProps {
   reservation: ReservationItem;
   isOnCanvas?: boolean;
   position?: { x: number; y: number };
-  onMove?: (id: number, x: number, y: number) => void;
+  isHighlighted?: boolean;
+  onClick?: () => void;
 }
 
 const DraggableReservation = ({ 
   reservation, 
   isOnCanvas = false, 
   position = { x: 0, y: 0 },
-  onMove 
+  isHighlighted = false,
+  onClick
 }: DraggableReservationProps) => {
+  const ref = useRef<HTMLDivElement>(null);
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'reservation',
-    item: { ...reservation, isOnCanvas, position },
+    item: { ...reservation, isOnCanvas, position } as DragItem,
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
   }));
+
+  // Connect the drag source to the ref
+  drag(ref);
 
   const formatTime = (isoString: string) => {
     const date = new Date(isoString);
@@ -57,10 +69,13 @@ const DraggableReservation = ({
   if (isOnCanvas) {
     return (
       <div
-        ref={drag}
-        className={`absolute cursor-move p-3 bg-white rounded-lg shadow-md border-2 ${
+        ref={ref}
+        onClick={onClick}
+        className={`absolute cursor-move p-3 bg-white rounded-lg shadow-md border-2 transition-all ${
           isDragging ? 'opacity-50' : 'opacity-100'
-        } min-w-[120px] max-w-[150px]`}
+        } ${
+          isHighlighted ? 'border-blue-500 shadow-lg ring-2 ring-blue-200' : 'border-gray-200'
+        } min-w-[120px] max-w-[150px] hover:shadow-lg`}
         style={{ 
           left: position.x, 
           top: position.y,
@@ -86,9 +101,11 @@ const DraggableReservation = ({
 
   return (
     <div
-      ref={drag}
-      className={`cursor-move p-4 bg-white rounded-lg shadow-sm border border-gray-200 mb-3 hover:shadow-md transition-shadow ${
+      ref={ref}
+      className={`cursor-move p-4 bg-white rounded-lg shadow-sm border mb-3 hover:shadow-md transition-all ${
         isDragging ? 'opacity-50' : 'opacity-100'
+      } ${
+        isHighlighted ? 'border-blue-500 bg-blue-50 shadow-md' : 'border-gray-200'
       }`}
     >
       <div className="flex items-center justify-between">
@@ -115,16 +132,19 @@ const DraggableReservation = ({
 };
 
 interface CanvasProps {
-  onDrop: (item: any, x: number, y: number) => void;
+  onDrop: (item: DragItem, x: number, y: number) => void;
   canvasReservations: Array<ReservationItem & { position: { x: number; y: number } }>;
+  selectedReservationId: number | null;
+  onReservationClick: (id: number) => void;
 }
 
-const Canvas = ({ onDrop, canvasReservations }: CanvasProps) => {
+const Canvas = ({ onDrop, canvasReservations, selectedReservationId, onReservationClick }: CanvasProps) => {
+  const dropRef = useRef<HTMLDivElement>(null);
   const [{ isOver }, drop] = useDrop(() => ({
     accept: 'reservation',
-    drop: (item: any, monitor) => {
+    drop: (item: DragItem, monitor) => {
       const offset = monitor.getClientOffset();
-      const canvasRect = document.getElementById('canvas')?.getBoundingClientRect();
+      const canvasRect = dropRef.current?.getBoundingClientRect();
       if (offset && canvasRect) {
         const x = offset.x - canvasRect.left;
         const y = offset.y - canvasRect.top;
@@ -136,10 +156,13 @@ const Canvas = ({ onDrop, canvasReservations }: CanvasProps) => {
     }),
   }));
 
+  // Connect the drop target to the ref
+  drop(dropRef);
+
   return (
     <div
       id="canvas"
-      ref={drop}
+      ref={dropRef}
       className={`relative w-full h-full bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg overflow-hidden ${
         isOver ? 'border-blue-400 bg-blue-50' : ''
       }`}
@@ -148,7 +171,7 @@ const Canvas = ({ onDrop, canvasReservations }: CanvasProps) => {
       <div className="absolute inset-0 flex items-center justify-center text-gray-400 pointer-events-none">
         <div className="text-center">
           <div className="text-lg font-medium">Restaurant Floor Plan</div>
-          <div className="text-sm">Drag reservations here to place them on tables</div>
+          <div className="text-sm">Drag reservations to arrange them on the floor plan</div>
         </div>
       </div>
       
@@ -158,6 +181,8 @@ const Canvas = ({ onDrop, canvasReservations }: CanvasProps) => {
           reservation={reservation}
           isOnCanvas={true}
           position={reservation.position}
+          isHighlighted={selectedReservationId === reservation.id}
+          onClick={() => onReservationClick(reservation.id)}
         />
       ))}
     </div>
@@ -167,51 +192,52 @@ const Canvas = ({ onDrop, canvasReservations }: CanvasProps) => {
 export const RestaurantReservationsWithGraphs = () => {
   const {
     reservations,
-    reservationsCount,
-    reservationsCurrentPage,
     reservationsSearchQuery,
     fetchReservations,
-    setReservationsCurrentPage,
     setReservationsSearchQuery,
   } = useOwner();
 
   const [canvasReservations, setCanvasReservations] = useState<
     Array<ReservationItem & { position: { x: number; y: number } }>
   >([]);
+  const [selectedReservationId, setSelectedReservationId] = useState<number | null>(null);
 
   // Load reservations on component mount
   useEffect(() => {
-    fetchReservations(reservationsCurrentPage, reservationsSearchQuery);
-  }, [reservationsCurrentPage, reservationsSearchQuery, fetchReservations]);
+    fetchReservations(1, reservationsSearchQuery);
+  }, [reservationsSearchQuery, fetchReservations]);
 
-  const handleDrop = (item: unknown, x: number, y: number) => {
-    if (!item.isOnCanvas) {
-      // Moving from list to canvas
-      const newCanvasReservation = {
-        ...item,
-        position: { x: Math.max(0, x - 60), y: Math.max(0, y - 40) }
-      };
-      setCanvasReservations(prev => [...prev, newCanvasReservation]);
-    } else {
-      // Moving within canvas
-      setCanvasReservations(prev =>
-        prev.map(res =>
-          res.id === item.id
-            ? { ...res, position: { x: Math.max(0, x - 60), y: Math.max(0, y - 40) } }
-            : res
-        )
-      );
+  // Initialize canvas reservations when reservations are loaded
+  useEffect(() => {
+    if (reservations.length > 0 && canvasReservations.length === 0) {
+      const initialCanvasReservations = reservations.map((reservation, index) => ({
+        ...reservation,
+        position: {
+          x: 100 + (index % 4) * 180, // Arrange in a grid
+          y: 100 + Math.floor(index / 4) * 120
+        }
+      }));
+      setCanvasReservations(initialCanvasReservations);
     }
+  }, [reservations, canvasReservations.length]);
+
+  const handleDrop = (item: DragItem, x: number, y: number) => {
+    // Always moving within canvas since all items are on canvas
+    setCanvasReservations(prev =>
+      prev.map(res =>
+        res.id === item.id
+          ? { ...res, position: { x: Math.max(0, x - 60), y: Math.max(0, y - 40) } }
+          : res
+      )
+    );
   };
 
-  const handleRemoveFromCanvas = (id: number) => {
-    setCanvasReservations(prev => prev.filter(res => res.id !== id));
+  const handleReservationClick = (id: number) => {
+    setSelectedReservationId(selectedReservationId === id ? null : id);
   };
 
-  // Filter out reservations that are already on canvas
-  const availableReservations = reservations.filter(
-    res => !canvasReservations.some(canvasRes => canvasRes.id === res.id)
-  );
+  // All reservations are available in the list
+  const availableReservations = reservations;
 
   const formatDate = (isoString: string) => {
     const date = new Date(isoString);
@@ -251,7 +277,12 @@ export const RestaurantReservationsWithGraphs = () => {
                 {canvasReservations.length} reservations placed
               </div>
             </div>
-            <Canvas onDrop={handleDrop} canvasReservations={canvasReservations} />
+            <Canvas 
+              onDrop={handleDrop} 
+              canvasReservations={canvasReservations}
+              selectedReservationId={selectedReservationId}
+              onReservationClick={handleReservationClick}
+            />
           </div>
         </div>
 
@@ -297,6 +328,7 @@ export const RestaurantReservationsWithGraphs = () => {
                     <DraggableReservation
                       key={reservation.id}
                       reservation={reservation}
+                      isHighlighted={selectedReservationId === reservation.id}
                     />
                   ))}
                 </div>
@@ -307,8 +339,8 @@ export const RestaurantReservationsWithGraphs = () => {
           {availableReservations.length === 0 && (
             <div className="text-center text-gray-500 mt-8">
               <div className="text-lg">📅</div>
-              <div className="mt-2">No reservations available</div>
-              <div className="text-sm">All reservations are placed on the floor plan</div>
+              <div className="mt-2">No reservations found</div>
+              <div className="text-sm">Try adjusting your search criteria</div>
             </div>
           )}
         </div>
