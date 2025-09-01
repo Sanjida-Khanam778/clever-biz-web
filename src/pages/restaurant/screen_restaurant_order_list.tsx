@@ -24,7 +24,7 @@ const ScreenRestaurantOrderList = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchQuery(ordersSearchQuery);
-    }, 500); // 500ms delay
+    }, 500); 
 
     return () => clearTimeout(timer);
   }, [ordersSearchQuery]);

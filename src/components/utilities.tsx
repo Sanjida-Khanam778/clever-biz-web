@@ -23,12 +23,13 @@ import { IoCall } from "react-icons/io5";
 import food from "../assets/food.webp";
 import { Progress } from "./ui/progress";
 import profile from "../assets/trailing-icon.png";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import toast from "react-hot-toast";
 import axiosInstance from "@/lib/axios";
 import { useOwner } from "@/context/ownerContext";
 import { useStaff } from "@/context/staffContext";
 import { useRole } from "@/hooks/useRole";
+import CallerModal from "@/pages/model/CallerModal";
 /* Logo Component */
 type LogoProps = {
   className?: string; // Optional className for styling wrapper div
@@ -1143,7 +1144,96 @@ export const ChatSection: React.FC = () => {
     }
   };
 
-  const confirmToCall = () => setIsConfirmOpen(true);
+  //////////////// Calling started ////////////////////////
+  const [newsocket, setNewSocket] = useState<WebSocket | null>(null);
+  const [response, setResponse] = useState<any>(null);
+  const jwt = localStorage.getItem("accessToken");
+  const [idCallingModal, setIsCallingModal] = useState(false);
+  // const navigate = useNavigate();
+  // const deviceI = device_id;
+  // const userId = user.id;
+  // const token = accessToken;
+
+
+  useEffect(() => {
+    if (selectedChat) {
+      localStorage.setItem("selectedChatInfo", JSON.stringify(selectedChat));
+    }
+  }, [selectedChat]);
+
+
+const singleuser = localStorage.getItem("selectedChatInfo");
+
+console.log(JSON.parse(singleuser)?.table_name)
+  useEffect(() => {
+    if (!jwt) {
+      return;
+    }
+    const newSoket = new WebSocket(
+      `ws://10.10.13.26:8000/ws/call/2/?token=${jwt}`
+    );
+    newSoket.onopen = () => {
+      console.log("Socket Opened");
+    };
+    newSoket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log(data);
+      setResponse(data);
+      if (data.action === "incoming_call") {
+        setIsCallingModal(true);
+      }
+      if (data.action === "call_accepted") {
+        window.location.href = `https://abdul-ai-audio-calling-app.vercel.app?device=${encodeURIComponent(
+          data?.device_id
+        )}&user=${encodeURIComponent(userInfo?.restaurants[0]?.resturent_name)}&deviceId=${
+          data.device_id
+        }&receiver=${encodeURIComponent(JSON.parse(singleuser)?.table_name)}&token=${encodeURIComponent(jwt)}`;
+      }
+    };
+ 
+    newSoket.onclose = () => {
+      console.log("Socket Closed");
+    };
+
+    newSoket.onerror = () => {
+      console.log("Socket Error");
+    };
+
+    setNewSocket(newSoket);
+
+    return () => {
+      newSoket.close();
+    };
+  }, [jwt]);
+
+  const handleEndCall = (callerId, deviceId) => {
+    const data = {
+      action: "end_call",
+      call_id: callerId,
+      device_id: deviceId,
+    };
+    newsocket.send(JSON.stringify(data));
+    setIsCallingModal(false);
+  };
+
+  const handleAnswerCall = (callerId, deviceId) => {
+    const data = {
+      action: "accept_call",
+      call_id: callerId,
+      device_id: deviceId,
+    };
+    newsocket.send(JSON.stringify(data));
+  };
+
+  const confirmToCall = (receiver_id) => {
+    console.log("userinfo", receiver_id);
+    const data = {
+      action: "start_call",
+      receiver_id: receiver_id,
+      device_id: 2,
+    };
+    newsocket.send(JSON.stringify(data));
+  };
 
   if (loading) {
     return (
@@ -1179,15 +1269,27 @@ export const ChatSection: React.FC = () => {
               </span>
             </div>
             <button
-              onClick={confirmToCall}
+              onClick={() => confirmToCall(userInfo.restaurants[0].id)}
               className="button-primary bg-sidebar rounded-lg text-base flex items-center space-x-2"
               disabled={!selectedChat}
             >
               <IoCall className="w-4 h-4" />
+
               <span>Call to customer</span>
             </button>
           </div>
         </div>
+
+        {/* caller modal  */}
+
+        {idCallingModal && (
+          <CallerModal
+            email={userInfo.username}
+            handleEndCall={handleEndCall}
+            handleAnswerCall={handleAnswerCall}
+            response={response}
+          />
+        )}
 
         <div className="flex-1 flex h-full text-white border-t-2 border-chat-sender/20 overflow-hidden">
           {/* Left Chat List */}
@@ -1394,6 +1496,7 @@ interface DashboardMostSellingItemsProps {
     percentage: number;
     totalSell: number;
   }[];
+
   containerProps?: React.HTMLAttributes<HTMLDivElement>;
 }
 export const DashboardMostSellingItems: React.FC<

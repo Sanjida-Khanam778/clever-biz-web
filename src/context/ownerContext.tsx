@@ -275,12 +275,17 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
 
   const fetchOrders = useCallback(async (page?: number, search?: string) => {
     try {
+      // const params: Record<string, any> = {
+      //   page, // ?page=1,2,3...
+      //   page_size: PAGE_SIZE, // ?page_size=5
+      // };
+      // if (search.trim()) params.restaurant_name = search.trim();
       const endpoint = `/owners/orders/`;
       const response = await axiosInstance.get(endpoint, {
         params: { page: page, search: search },
       });
       const { results, count } = response.data;
-      console.log("Fetched orders:", response.data);
+      console.log("Fetched orders:", { page, search });
       setOrdersStats(results.stats);
 
       // Handle both array and object with orders property
@@ -296,6 +301,37 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
       // Only show toast for non-auth errors since interceptor handles auth
     }
   }, []);
+  // const fetchOrders = useCallback(async (page?: number, search?: string) => {
+  //   try {
+  //     const endpoint = `/owners/orders/`;
+
+  //     const response = await axiosInstance.get(endpoint, {
+  //       params: {
+  //         page: page || 1,
+  //         ...(search?.trim() ? { restaurant_name: search.trim() } : {}), // ✅ only include if not empty
+  //       },
+  //     });
+
+  //     console.log("Fetching orders with:", { page, search });
+  //     console.log("API response:", response.data);
+
+  //     const { results, count } = response.data;
+
+  //     if (!Array.isArray(results) && results?.stats) {
+  //       setOrdersStats(results.stats);
+  //     }
+
+  //     const ordersData = Array.isArray(results)
+  //       ? results
+  //       : results?.orders || [];
+
+  //     setOrders(ordersData);
+  //     setOrdersCount(count || 0);
+  //     setOrdersCurrentPage(page || 1);
+  //   } catch (error: any) {
+  //     console.error("Failed to load orders", error);
+  //   }
+  // }, []);
 
   const fetchReservations = useCallback(
     async (
