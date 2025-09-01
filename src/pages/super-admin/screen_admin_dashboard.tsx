@@ -73,7 +73,7 @@ const ScreenAdminDashboard = () => {
           params,
         });
 
-        // DRF style: { count, results, next, previous }
+
         const { count = 0, results = [] } = response.data ?? {};
         setallResutrentUser(Array.isArray(results) ? results : []);
         setTotal(count);
