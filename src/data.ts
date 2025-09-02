@@ -1,3 +1,5 @@
+import { FoodItem, OrderItem } from "./types";
+
 export const foodItems: FoodItem[] = [];
 export const orderTableData: OrderItem[] = [];
 export const faqs = [

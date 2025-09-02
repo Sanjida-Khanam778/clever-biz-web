@@ -36,7 +36,7 @@ import { useOwner } from "@/context/ownerContext";
 import { useRole } from "@/hooks/useRole";
 import { FiX } from "react-icons/fi";
 import { useAdmin } from "@/context/adminContext";
-import { AssistantCredentials } from "@/types";
+import  AssistantCredentials  from "@/types";
 
 /* Edit food item dialog ===========================================================>>>>> */
 type ModalPropsCall = {

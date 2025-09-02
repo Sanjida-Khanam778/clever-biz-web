@@ -2,6 +2,7 @@ import { DateSearchBox, TextSearchBox } from "@/components/input";
 import { TableReviewList } from "@/components/tables";
 import { Pagination, StatCardAsteric } from "@/components/utilities";
 import axiosInstance from "@/lib/axios";
+import { ReviewItem } from "@/types";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
