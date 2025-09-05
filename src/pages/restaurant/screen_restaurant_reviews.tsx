@@ -2,6 +2,7 @@ import { DateSearchBox, TextSearchBox } from "@/components/input";
 import { TableReviewList } from "@/components/tables";
 import { Pagination, StatCardAsteric } from "@/components/utilities";
 import axiosInstance from "@/lib/axios";
+import { ReviewItem } from "@/types";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -62,7 +63,7 @@ const ScreenRestaurantReviews = () => {
     setSearchOrderId(value);
     setPage(1);
   };
-
+  console.log(reviews);
   return (
     <div className="flex flex-col">
       {/* Dashboard Cards */}

@@ -7,7 +7,7 @@ import StripeConnectModal from "../model/StripeConnectModal";
 
 const ScreenRestaurantOrderList = () => {
   const {
-    orders,
+    orders=[],
     ordersStats,
     ordersCount,
     ordersCurrentPage,
@@ -24,7 +24,7 @@ const ScreenRestaurantOrderList = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchQuery(ordersSearchQuery);
-    }, 500); 
+    }, 500);
 
     return () => clearTimeout(timer);
   }, [ordersSearchQuery]);

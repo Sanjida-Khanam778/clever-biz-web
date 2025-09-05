@@ -30,6 +30,7 @@ import { useOwner } from "@/context/ownerContext";
 import { useStaff } from "@/context/staffContext";
 import { useRole } from "@/hooks/useRole";
 import CallerModal from "@/pages/model/CallerModal";
+import { FoodItem } from "@/types";
 /* Logo Component */
 type LogoProps = {
   className?: string; // Optional className for styling wrapper div
@@ -181,7 +182,6 @@ const getFormattedCurrentDate = (): string => {
 
 export const Header = () => {
   const { userInfo } = useRole();
-  console.log(userInfo, "user info in header");
   return (
     <header className="bg-sidebar shadow-md p-8">
       <div className="flex items-center justify-between">
@@ -681,7 +681,6 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
   }
 
   function openEdit(id: number) {
-    console.log(id, "iddd");
     setSelectedItemId(id);
     setEditDialogOpen(true);
   }
@@ -927,7 +926,7 @@ export const ChatSection: React.FC = () => {
       socket.current.close();
     }
     const ws = new WebSocket(
-      `ws://10.10.13.26:8000/ws/chat/${selectedChat.id}/?token=${accessToken}`
+      `wss://abc.winaclaim.com/ws/chat/${selectedChat.id}/?token=${accessToken}`
     );
     socket.current = ws;
 
@@ -978,7 +977,7 @@ export const ChatSection: React.FC = () => {
       if (bgSocketsRef.current[id]) return; // already open
 
       const ws = new WebSocket(
-        `ws://10.10.13.26:8000/ws/chat/${id}/?token=${accessToken}`
+        `wss://abc.winaclaim.com/ws/chat/${id}/?token=${accessToken}`
       );
       bgSocketsRef.current[id] = ws;
 
@@ -1043,7 +1042,7 @@ export const ChatSection: React.FC = () => {
     if (!selectedChat) return;
     const accessToken = localStorage.getItem("accessToken");
     const socket = new WebSocket(
-      `ws://10.10.13.26:8000/ws/call/${device_id}/?token=${accessToken}`
+      `wss://abc.winaclaim.com/ws/call/${device_id}/?token=${accessToken}`
     );
 
     socket.onopen = async () => {
@@ -1154,43 +1153,43 @@ export const ChatSection: React.FC = () => {
   // const userId = user.id;
   // const token = accessToken;
 
-
   useEffect(() => {
     if (selectedChat) {
       localStorage.setItem("selectedChatInfo", JSON.stringify(selectedChat));
     }
   }, [selectedChat]);
 
+  const singleuser = localStorage.getItem("selectedChatInfo");
 
-const singleuser = localStorage.getItem("selectedChatInfo");
 
-console.log(JSON.parse(singleuser)?.table_name)
+  
   useEffect(() => {
     if (!jwt) {
       return;
     }
     const newSoket = new WebSocket(
-      `ws://10.10.13.26:8000/ws/call/2/?token=${jwt}`
+      `wss://abc.winaclaim.com/ws/call/${selectedChat?.id}/?token=${jwt}`
     );
     newSoket.onopen = () => {
       console.log("Socket Opened");
     };
     newSoket.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      console.log(data);
       setResponse(data);
       if (data.action === "incoming_call") {
         setIsCallingModal(true);
       }
       if (data.action === "call_accepted") {
-        window.location.href = `https://abdul-ai-audio-calling-app.vercel.app?device=${encodeURIComponent(
+        window.location.href = `https://clever-biz.vercel.app?device=${encodeURIComponent(
           data?.device_id
-        )}&user=${encodeURIComponent(userInfo?.restaurants[0]?.resturent_name)}&deviceId=${
-          data.device_id
-        }&receiver=${encodeURIComponent(JSON.parse(singleuser)?.table_name)}&token=${encodeURIComponent(jwt)}`;
+        )}&user=${encodeURIComponent(
+          userInfo?.restaurants[0]?.resturent_name
+        )}&deviceId=${data.device_id}&receiver=${encodeURIComponent(
+          JSON.parse(singleuser)?.table_name
+        )}&token=${encodeURIComponent(jwt)}`;
       }
     };
- 
+
     newSoket.onclose = () => {
       console.log("Socket Closed");
     };
@@ -1204,7 +1203,7 @@ console.log(JSON.parse(singleuser)?.table_name)
     return () => {
       newSoket.close();
     };
-  }, [jwt]);
+  }, [jwt, userInfo, selectedChat?.id, singleuser]);
 
   const handleEndCall = (callerId, deviceId) => {
     const data = {
@@ -1223,15 +1222,18 @@ console.log(JSON.parse(singleuser)?.table_name)
       device_id: deviceId,
     };
     newsocket.send(JSON.stringify(data));
+    setIsCallingModal(false);
   };
 
   const confirmToCall = (receiver_id) => {
-    console.log("userinfo", receiver_id);
     const data = {
       action: "start_call",
       receiver_id: receiver_id,
-      device_id: 2,
+      device_id: selectedChat?.id,
     };
+
+
+
     newsocket.send(JSON.stringify(data));
   };
 
@@ -1269,7 +1271,7 @@ console.log(JSON.parse(singleuser)?.table_name)
               </span>
             </div>
             <button
-              onClick={() => confirmToCall(userInfo.restaurants[0].id)}
+              onClick={() => confirmToCall(selectedChat?.user_id)}
               className="button-primary bg-sidebar rounded-lg text-base flex items-center space-x-2"
               disabled={!selectedChat}
             >
@@ -1365,7 +1367,9 @@ console.log(JSON.parse(singleuser)?.table_name)
                       >
                         <span>{msg.message}</span>
                         <span className="text-[10px] text-primary-text/40 self-end mt-1">
-                          {formatTimestamp(msg.timestamp ?? Date.now())}
+                          {formatTimestamp(
+                            (msg?.timestamp ?? Date.now()).toString()
+                          )}
                         </span>
                       </div>
                     </div>
@@ -1502,7 +1506,6 @@ interface DashboardMostSellingItemsProps {
 export const DashboardMostSellingItems: React.FC<
   DashboardMostSellingItemsProps
 > = ({ data, containerProps }) => {
-  console.log(data);
   const { className, ...rest } = containerProps ?? {};
   return (
     <div className={cn("flex flex-col gap-y-2", className)} {...rest}>

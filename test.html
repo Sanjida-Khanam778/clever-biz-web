@@ -46,7 +46,7 @@
       async function connectSocket() {
         const deviceId = document.getElementById("deviceId").value;
         socket = new WebSocket(
-          `ws://10.10.13.26:8000/ws/call/${deviceId}/?token=${jwt}`
+          `wss://abc.winaclaim.com/ws/call/${deviceId}/?token=${jwt}`
         );
 
         socket.onopen = async () => {
