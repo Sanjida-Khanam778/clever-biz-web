@@ -9,7 +9,7 @@ import { useStaff } from "@/context/staffContext";
 
 const ScreenChefDashboard = () => {
   const {
-    foodItems,
+    foodItems = [],
     foodItemsCount,
     currentPage,
     searchQuery,
