@@ -50,6 +50,14 @@ const ScreenRestaurantDashboard = () => {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  // const user = localStorage.getItem("userInfo");
+  // console.log(user, "user info in dashboard");
+  // useEffect(() => {
+  //   if (!user) {
+  //     window.location.reload();
+  //   }
+  // }, [user]);
+
   // Load food items on component mount and when page or debounced search changes
   useEffect(() => {
     fetchFoodItems(currentPage, debouncedSearchQuery);
@@ -178,7 +186,7 @@ const ScreenRestaurantDashboard = () => {
                   : Array(12).fill(0)
               }
               currentYear={currentYear}
-              lastYear = {lastYear}
+              lastYear={lastYear}
             />
           </div>
         </div>

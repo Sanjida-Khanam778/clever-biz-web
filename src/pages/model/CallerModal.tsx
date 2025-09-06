@@ -1,5 +1,6 @@
 import { Phone, PhoneOff } from "lucide-react";
-
+import calling from "../../assets/Audio/calling.mp3";
+import ringning from "../../assets/Audio/ringing.mp3";
 
 export default function CallerModal({
   handleAnswerCall,
@@ -37,6 +38,13 @@ export default function CallerModal({
             >
               <Phone className="w-6 h-6 text-white" />
             </button>
+          )}
+
+          {response.from === email && response.action === "incoming_call" && (
+            <audio src={ringning} autoPlay loop className="opacity-0"></audio>
+          )}
+          {response.action === "incoming_call" && (
+            <audio src={calling} autoPlay loop className="opacity-0"></audio>
           )}
 
           {/* End Call Button */}
