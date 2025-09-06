@@ -27,7 +27,7 @@ import {
   BtnUndo,
   BtnRedo,
 } from "react-simple-wysiwyg";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { set, SubmitHandler, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import axiosInstance from "@/lib/axios";
@@ -36,7 +36,7 @@ import { useOwner } from "@/context/ownerContext";
 import { useRole } from "@/hooks/useRole";
 import { FiX } from "react-icons/fi";
 import { useAdmin } from "@/context/adminContext";
-import  AssistantCredentials  from "@/types";
+import AssistantCredentials from "@/types";
 
 /* Edit food item dialog ===========================================================>>>>> */
 type ModalPropsCall = {
@@ -67,6 +67,12 @@ export const EditFoodItemModal: React.FC<ModalProps> = ({
     category: string;
     description: string;
   };
+  type TCategory = {
+    id: number;
+    Category_name: string;
+    slug: string;
+    image: string;
+  };
   const { categories, fetchCategories, updateFoodItem, createFoodItem } =
     useOwner();
   const { userRole, isLoading } = useRole();
@@ -76,8 +82,41 @@ export const EditFoodItemModal: React.FC<ModalProps> = ({
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [existingImage, setExistingImage] = useState<string | null>(null);
   const [existingVideo, setExistingVideo] = useState<string | null>(null);
-  console.log(categories);
+  const [allCate, setAllCate] = useState<TCategory[] | []>([]);
   // Load categories when userRole is available
+  const user = localStorage.getItem("userInfo");
+  const parseUser = JSON.parse(user || "{}");
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      if (!isLoading || !userRole) {
+        return;
+      }
+
+      try {
+        let endpoint;
+        if (parseUser?.role === "owner") {
+          endpoint = "/owners/categories/";
+        } else if (parseUser?.role === "staff") {
+          endpoint = "/staff/categories/";
+        } else if (parseUser?.role === "chef") {
+          endpoint = "/chef/categories/";
+        } else {
+          throw new Error("Invalid user role");
+        }
+
+        const res = await axiosInstance.get(endpoint);
+        console.log(res, "categories response");
+        setAllCate(res.data); // Make sure you're setting the correct response data
+      } catch (err) {
+        console.error("Failed to load categories.", err);
+      }
+    };
+
+    fetchCategories();
+  }, [allCate, parseUser?.role]);
+  console.log(allCate, "all categories");
+
   useEffect(() => {
     if (!isLoading && userRole) {
       fetchCategories();
@@ -85,6 +124,7 @@ export const EditFoodItemModal: React.FC<ModalProps> = ({
   }, [userRole, isLoading, fetchCategories]);
 
   // Load single food item data if in edit mode
+  console.log(userRole, "user role in edit modal");
   useEffect(() => {
     if (id) {
       const fetchItem = async () => {
@@ -225,7 +265,7 @@ export const EditFoodItemModal: React.FC<ModalProps> = ({
                     className="bg-[#201C3F] shadow-md text-sm w-full px-3 py-2 rounded-md text-white"
                   >
                     <option value="">Select category</option>
-                    {categories?.map((cat) => (
+                    {allCate?.map((cat) => (
                       <option key={cat.id} value={cat.id}>
                         {cat.Category_name}
                       </option>
@@ -959,6 +999,7 @@ export const EditCategoryModal: React.FC<ModalProps> = ({
       setImageFile(null);
       onSuccess();
       close();
+      window.location.reload();
     } catch (error) {
       console.error("Failed:", error);
       toast.error("An error occurred");
@@ -1110,10 +1151,12 @@ export const EditStaffModal: React.FC<ModalProps> = ({ isOpen, close }) => {
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     setLoading(true);
     try {
+      console.log(data, "data");
       const formData = new FormData();
       formData.append("email", data.email);
       formData.append("username", data.name);
       formData.append("role", data.role);
+      console.log(formData, "formdata");
       if (imageFile) formData.append("image", imageFile);
 
       const response = await axiosInstance.post(
@@ -1124,9 +1167,11 @@ export const EditStaffModal: React.FC<ModalProps> = ({ isOpen, close }) => {
         }
       );
 
-      console.log(response.data);
       toast.success(`${response.data?.role} Created successfully`);
       close();
+      if (response.status == 400 || response.status == 500) {
+        toast.error(response.data?.email || "An error occurred");
+      }
     } catch (error) {
       console.error("Failed:", error);
       toast.error(error.response?.data?.email || "An error occurred");
@@ -1175,14 +1220,28 @@ export const EditStaffModal: React.FC<ModalProps> = ({ isOpen, close }) => {
                   ...register("email"),
                 }}
               />
-              <LabelInput
+              {/* <LabelInput
                 label="Role"
                 labelProps={{ className: "text-sm" }}
                 inputProps={{
                   className: "bg-[#201C3F] shadow-md text-sm",
                   ...register("role"),
                 }}
-              />
+              /> */}
+              <label className="block text-sm font-medium text-gray-200">
+                Role
+                <select
+                  {...register("role")}
+                  className="mt-1 block w-full rounded-md bg-[#201C3F] text-white shadow-sm border border-gray-600 focus:border-indigo-500 focus:ring focus:ring-indigo-500 focus:ring-opacity-50 text-sm py-2 px-3"
+                  defaultValue=""
+                >
+                  <option value="" disabled>
+                    Select a role
+                  </option>
+                  <option value="staff">Staff</option>
+                  <option value="chef">Chef</option>
+                </select>
+              </label>
               <InputImageUploadBox file={imageFile} setFile={setImageFile} />
 
               <button

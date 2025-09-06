@@ -28,7 +28,7 @@ export const useRole = () => {
     : null;
   const [userInfo, setUserInfo] = useState<UserInfo | null>(() => initialUser);
   const [userRole, setUserRole] = useState<UserRole>(
-    () => initialUser?.role ?? null
+    () => initialUser?.role || null
   );
   const [isLoading, setIsLoading] = useState(true);
   // Get user role from localStorage
@@ -104,10 +104,11 @@ export const useRole = () => {
     setUserInfo(user);
     setIsLoading(false);
   }, []);
-  
+
   // console.log(getUserRole, "get user role function in useRole");
   // console.log(userRole, "user role in useRole");
   // console.log(hasRole, "has role function in useRole");
+  console.log(userRole, "user role in useRole");
   return {
     userRole,
     userInfo,
@@ -121,3 +122,85 @@ export const useRole = () => {
     updateUserData,
   };
 };
+
+// import { useState, useEffect } from "react";
+
+// export type UserRole = "chef" | "staff" | "owner" | "admin" | null;
+
+// interface UserInfo {
+//   id: number;
+//   email: string;
+//   role: UserRole;
+//   username?: string;
+//   restaurants?: any[];
+// }
+
+// const isBrowser = typeof window !== "undefined";
+
+// const safeParse = <T,>(raw: string | null, fallback: T): T => {
+//   if (!raw) return fallback;
+//   try {
+//     return JSON.parse(raw) as T;
+//   } catch {
+//     return fallback;
+//   }
+// };
+
+// export const useRole = () => {
+//   const initialUser: UserInfo | null = isBrowser
+//     ? safeParse<UserInfo | null>(localStorage.getItem("userInfo"), null)
+//     : null;
+
+//   const [userInfo, setUserInfo] = useState<UserInfo | null>(initialUser);
+//   const [userRole, setUserRole] = useState<UserRole>(initialUser?.role ?? null);
+//   const [isLoading, setIsLoading] = useState(false);
+
+//   // ✅ Update user data instantly
+//   const updateUserData = (
+//     user: UserInfo,
+//     accessToken: string,
+//     refreshToken: string
+//   ) => {
+//     localStorage.setItem("accessToken", accessToken);
+//     localStorage.setItem("refreshToken", refreshToken);
+//     localStorage.setItem("userInfo", JSON.stringify(user));
+
+//     // 🔥 Trigger state update immediately
+//     setUserInfo(user);
+//     setUserRole(user.role);
+//   };
+
+//   // ✅ Clear user data
+//   const clearUserData = () => {
+//     localStorage.removeItem("accessToken");
+//     localStorage.removeItem("refreshToken");
+//     localStorage.removeItem("userInfo");
+//     setUserRole(null);
+//     setUserInfo(null);
+//   };
+
+//   // ✅ Sync across tabs / reload-free updates
+//   useEffect(() => {
+//     const handleStorage = () => {
+//       const user = safeParse<UserInfo | null>(
+//         localStorage.getItem("userInfo"),
+//         null
+//       );
+//       setUserInfo(user);
+//       setUserRole(user?.role ?? null);
+//     };
+
+//     window.addEventListener("storage", handleStorage);
+//     return () => window.removeEventListener("storage", handleStorage);
+//   }, []);
+// console.log(userRole, "user role in useRole");
+//   return {
+//     userRole,
+//     userInfo,
+//     isLoading,
+//     updateUserData,
+//     clearUserData,
+//     isAuthenticated: () =>
+//       userRole !== null && !!localStorage.getItem("accessToken"),
+//   };
+// };

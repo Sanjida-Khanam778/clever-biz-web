@@ -182,6 +182,85 @@ const getFormattedCurrentDate = (): string => {
 
 export const Header = () => {
   const { userInfo } = useRole();
+  const [newsocket, setNewSocket] = useState<WebSocket | null>(null);
+  const [response, setResponse] = useState<any>(null);
+  const jwt = localStorage.getItem("accessToken");
+  const [idCallingModal, setIsCallingModal] = useState(false);
+  // const navigate = useNavigate();
+  // const deviceI = device_id;
+  // const userId = user.id;
+  // const token = accessToken;
+
+
+  const singleuser = localStorage.getItem("selectedChatInfo");
+
+console.log("singleuser", JSON.parse(singleuser));
+  
+  useEffect(() => {
+    if (!jwt) {
+      return;
+    }
+    const newSoket = new WebSocket(
+      `wss://abc.winaclaim.com/ws/call/${JSON.parse(singleuser).id}/?token=${jwt}`
+    );
+    newSoket.onopen = () => {
+      console.log("Socket Opened");
+    };
+    newSoket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      setResponse(data);
+      if (data.action === "incoming_call") {
+        setIsCallingModal(true);
+      }
+      if (data.action === "call_ended") {
+        setIsCallingModal(false);
+      }
+      if (data.action === "call_accepted") {
+        window.location.href = `https://clever-biz.vercel.app?device=${encodeURIComponent(
+          data?.device_id
+        )}&user=${encodeURIComponent(
+          userInfo?.restaurants[0]?.resturent_name
+        )}&deviceId=${data.device_id}&receiver=${encodeURIComponent(
+          JSON.parse(singleuser)?.table_name
+        )}&token=${encodeURIComponent(jwt)}`;
+      }
+    };
+
+    newSoket.onclose = () => {
+      console.log("Socket Closed");
+    };
+
+    newSoket.onerror = () => {
+      console.log("Socket Error");
+    };
+
+    setNewSocket(newSoket);
+
+    return () => {
+      newSoket.close();
+    };
+  }, [jwt, userInfo, singleuser]);
+
+
+  const handleEndCall = (callerId, deviceId) => {
+    const data = {
+      action: "end_call",
+      call_id: callerId,
+      device_id: deviceId,
+    };
+    newsocket.send(JSON.stringify(data));
+    setIsCallingModal(false);
+  };
+
+  const handleAnswerCall = (callerId, deviceId) => {
+    const data = {
+      action: "accept_call",
+      call_id: callerId,
+      device_id: deviceId,
+    };
+    newsocket.send(JSON.stringify(data));
+    setIsCallingModal(false);
+  };
   return (
     <header className="bg-sidebar shadow-md p-8">
       <div className="flex items-center justify-between">
@@ -198,6 +277,14 @@ export const Header = () => {
           <img src={profile} alt="Profile" className=" w-8 h-8" />
         </div>
       </div>
+      {idCallingModal && (
+          <CallerModal
+            email={userInfo.username}
+            handleEndCall={handleEndCall}
+            handleAnswerCall={handleAnswerCall}
+            response={response}
+          />
+        )}
     </header>
   );
 };
@@ -1179,6 +1266,9 @@ export const ChatSection: React.FC = () => {
       if (data.action === "incoming_call") {
         setIsCallingModal(true);
       }
+      if (data.action === "call_ended") {
+        setIsCallingModal(false);
+      }
       if (data.action === "call_accepted") {
         window.location.href = `https://clever-biz.vercel.app?device=${encodeURIComponent(
           data?.device_id
@@ -1284,14 +1374,7 @@ export const ChatSection: React.FC = () => {
 
         {/* caller modal  */}
 
-        {idCallingModal && (
-          <CallerModal
-            email={userInfo.username}
-            handleEndCall={handleEndCall}
-            handleAnswerCall={handleAnswerCall}
-            response={response}
-          />
-        )}
+        
 
         <div className="flex-1 flex h-full text-white border-t-2 border-chat-sender/20 overflow-hidden">
           {/* Left Chat List */}

@@ -13,7 +13,7 @@ import axiosInstance from "@/lib/axios";
 
 export const ScreenRestaurantDevices = () => {
   const {
-    allDevices,
+    allDevices=[],
     devicesCount,
     devicesCurrentPage,
     devicesSearchQuery,

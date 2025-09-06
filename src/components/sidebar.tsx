@@ -233,6 +233,9 @@ export const AdminSidebar: React.FC<SidebarProps> = ({
   ];
   const navigate = useNavigate();
   const signout = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("userInfo");
     navigate("/");
   };
 

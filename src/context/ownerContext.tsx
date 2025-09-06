@@ -181,6 +181,9 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
   const [membersSearchQuery, setMembersSearchQuery] = useState("");
 
   // Auto-fetch categories when userRole becomes available
+  console.log(userRole, isLoading, "user role and is loading in owner context");
+  console.log(localStorage.getItem("userInfo"), "user info in owner context");
+
   useEffect(() => {
     if (!isLoading && userRole) {
       // Fetch categories directly here to avoid dependency issues
@@ -198,6 +201,7 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
           }
 
           const res = await axiosInstance.get(endpoint);
+
           setCategories(res.data);
         } catch (err) {
           console.error("Failed to load categories.");
@@ -226,6 +230,7 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
       }
 
       const res = await axiosInstance.get(endpoint);
+
       setCategories(res.data);
     } catch (err) {
       console.error("Failed to load categories.");
