@@ -201,7 +201,7 @@ console.log("singleuser", JSON.parse(singleuser));
       return;
     }
     const newSoket = new WebSocket(
-      `wss://abc.winaclaim.com/ws/call/${JSON.parse(singleuser).id}/?token=${jwt}`
+      `wss://abc.winaclaim.com/ws/call/${JSON.parse(singleuser)?.id}/?token=${jwt}`
     );
     newSoket.onopen = () => {
       console.log("Socket Opened");
