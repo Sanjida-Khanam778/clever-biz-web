@@ -190,24 +190,44 @@ export const Header = () => {
   // const deviceI = device_id;
   // const userId = user.id;
   // const token = accessToken;
+  const socketsRef = useRef<Record<string, WebSocket>>({});
 
+const [chatData, setChatData] = useState<ChatRoomItem[]>([]);
 
-  const singleuser = localStorage.getItem("selectedChatInfo");
-
-console.log("singleuser", JSON.parse(singleuser));
+console.log("chatData", chatData);
   
   useEffect(() => {
-    if (!jwt) {
-      return;
+    if (!jwt) return;
+
+  const fetchDevices = async () => {
+    try {
+      const response = await axiosInstance.get(`/owners/devicesall/`);
+      const chatList: ChatRoomItem[] = Array.isArray(response.data) ? response.data : [];
+      setChatData(chatList);
+    } catch (error) {
+      toast.error("Failed to load devices.");
+      setChatData([]);
     }
-    const newSoket = new WebSocket(
-      `wss://abc.winaclaim.com/ws/call/${JSON.parse(singleuser)?.id}/?token=${jwt}`
-    );
-    newSoket.onopen = () => {
-      console.log("Socket Opened");
-    };
-    newSoket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
+  };
+    fetchDevices();
+  }, [jwt, userInfo]);
+
+
+
+    useEffect(() => {
+    // Loop over chatData and create a WebSocket for each chat
+    chatData.forEach((chat) => {
+      console.log("chat", chat);
+      if (!socketsRef.current[chat.id]) {
+        const ws = new WebSocket(`wss://abc.winaclaim.com/ws/call/${chat.id}/?token=${jwt}`);
+        setNewSocket(ws);
+        ws.onopen = () => {
+          console.log(`WebSocket connected for chat ${chat.id}`);
+        };
+
+        ws.onmessage = (event) => {
+          console.log(`Message from chat ${chat.id}:`, event.data);
+           const data = JSON.parse(event.data);
       setResponse(data);
       if (data.action === "incoming_call") {
         setIsCallingModal(true);
@@ -220,27 +240,34 @@ console.log("singleuser", JSON.parse(singleuser));
           data?.device_id
         )}&user=${encodeURIComponent(
           userInfo?.restaurants[0]?.resturent_name
-        )}&deviceId=${data.device_id}&receiver=${encodeURIComponent(
-          JSON.parse(singleuser)?.table_name
+        )}&deviceId=${data.device_id}&receiver=${encodeURIComponent(chat?.table_name
         )}&token=${encodeURIComponent(jwt)}`;
       }
-    };
+        };
 
-    newSoket.onclose = () => {
-      console.log("Socket Closed");
-    };
+        ws.onclose = () => {
+          console.log(`WebSocket closed for chat ${chat.id}`);
+        };
 
-    newSoket.onerror = () => {
-      console.log("Socket Error");
-    };
+        ws.onerror = (error) => {
+          console.error(`WebSocket error for chat ${chat.id}:`, error);
+        };
 
-    setNewSocket(newSoket);
+        socketsRef.current[chat.id] = ws;
+      }
+    });
 
+
+    // Cleanup on unmount or chatData change
     return () => {
-      newSoket.close();
+      Object.values(socketsRef.current).forEach((ws) => {
+        ws.close();
+      });
+      socketsRef.current = {};
     };
-  }, [jwt, userInfo, singleuser]);
+  }, [chatData, jwt, userInfo]);
 
+  
 
   const handleEndCall = (callerId, deviceId) => {
     const data = {
@@ -1373,7 +1400,14 @@ export const ChatSection: React.FC = () => {
         </div>
 
         {/* caller modal  */}
-
+         {idCallingModal && (
+          <CallerModal
+            email={userInfo.username}
+            handleEndCall={handleEndCall}
+            handleAnswerCall={handleAnswerCall}
+            response={response}
+          />
+        )}
         
 
         <div className="flex-1 flex h-full text-white border-t-2 border-chat-sender/20 overflow-hidden">

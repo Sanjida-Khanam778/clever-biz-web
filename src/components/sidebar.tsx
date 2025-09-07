@@ -38,9 +38,7 @@ export const StaffSidebar: React.FC<SidebarProps> = ({
   ];
   const navigate = useNavigate();
   const signout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("userInfo");
+  
     navigate("/");
   };
 
@@ -134,9 +132,6 @@ export const ChefSidebar: React.FC<SidebarProps> = ({
 
   const navigate = useNavigate();
   const signout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("userInfo");
     navigate("/");
   };
 
@@ -239,9 +234,6 @@ export const AdminSidebar: React.FC<SidebarProps> = ({
   ];
   const navigate = useNavigate();
   const signout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("userInfo");
     navigate("/");
   };
 
@@ -348,9 +340,7 @@ export const RestaurantSidebar: React.FC<SidebarProps> = ({
     { title: "Reviews", icon: <IconReviews />, path: "/restaurant/reviews" },
   ];
   const navigate = useNavigate();
-  localStorage.removeItem("accessToken");
-  localStorage.removeItem("refreshToken");
-  localStorage.removeItem("userInfo");
+
   const signout = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
