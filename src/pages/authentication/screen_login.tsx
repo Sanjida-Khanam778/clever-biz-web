@@ -30,17 +30,15 @@ const ScreenLogin = () => {
         password: data.password,
       });
 
-      console.log(response.data);
-
       const { access, refresh, user } = response.data;
 
       // Use the hook to update user data
       updateUserData(user, access, refresh);
-
       setLoading(false);
-
+      
       // Show success message with role info
       toast.success(`Welcome! You are logged in as ${user.role}`);
+     
 
       // Redirect based on role
       switch (user.role) {
@@ -60,6 +58,7 @@ const ScreenLogin = () => {
           navigate("/");
           break;
       }
+       window.location.reload();
     } catch (error: any) {
       setLoading(false);
       console.error("Login failed:", error);

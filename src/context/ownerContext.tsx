@@ -181,8 +181,7 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
   const [membersSearchQuery, setMembersSearchQuery] = useState("");
 
   // Auto-fetch categories when userRole becomes available
-  console.log(userRole, isLoading, "user role and is loading in owner context");
-  console.log(localStorage.getItem("userInfo"), "user info in owner context");
+ 
 
   useEffect(() => {
     if (!isLoading && userRole) {
@@ -446,6 +445,7 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
         setAllDevices(devices);
         setDevicesCount(response.data?.count || 0);
         setDevicesCurrentPage(page);
+  
       } catch (error) {
         console.error("Failed to load devices", error);
         toast.error("Failed to load devices.");
@@ -453,6 +453,7 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
     },
     [devicesCurrentPage, devicesSearchQuery, userRole, isLoading]
   );
+
 
   const fetchDeviceStats = useCallback(async () => {
     // Don't fetch if still loading or if userRole is null

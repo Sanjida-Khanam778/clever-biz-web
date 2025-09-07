@@ -115,7 +115,7 @@ export const EditFoodItemModal: React.FC<ModalProps> = ({
 
     fetchCategories();
   }, [allCate, parseUser?.role]);
-  console.log(allCate, "all categories");
+  
 
   useEffect(() => {
     if (!isLoading && userRole) {

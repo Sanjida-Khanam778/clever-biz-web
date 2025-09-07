@@ -13,7 +13,7 @@ import axiosInstance from "@/lib/axios";
 
 export const ScreenRestaurantDevices = () => {
   const {
-    allDevices=[],
+    allDevices,
     devicesCount,
     devicesCurrentPage,
     devicesSearchQuery,
@@ -66,6 +66,41 @@ export const ScreenRestaurantDevices = () => {
       </div>
     );
   }
+  const user = localStorage.getItem("userInfo");
+  const parseUser = user ? JSON.parse(user) : null;
+  console.log(parseUser, "user info in device page");
+  const userRole = parseUser?.role;
+
+  // useEffect(() => {
+  //   const fetchAllDevices = useCallback(
+  //     async (page: number = devicesCurrentPage, search?: string) => {
+  //       // Don't fetch if still loading or if userRole is null
+  //       if (isLoading || !userRole) {
+  //         return;
+  //       }
+
+  //       try {
+  //         const searchParam = search || devicesSearchQuery;
+  //         const endpoint =
+  //           userRole === "owner"
+  //             ? `/owners/devices/?page=${page}&search=${searchParam}`
+  //             : `/staff/devices/?page=${page}&search=${searchParam}`;
+
+  //         const response = await axiosInstance.get(endpoint);
+  //         console.log(response, "response");
+  //         const devices = Array.isArray(response.data?.results)
+  //           ? response.data?.results
+  //           : [];
+  //         setAllDevices(devices);
+  //       } catch (error) {
+  //         console.error("Failed to load devices", error);
+  //         toast.error("Failed to load devices.");
+  //       }
+  //     },
+  //     [devicesCurrentPage, devicesSearchQuery, userRole, isLoading]
+  //   );
+  //   fetchAllDevices();
+  // }, []);
 
   return (
     <>
