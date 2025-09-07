@@ -194,7 +194,7 @@ export const Header = () => {
 
 const [chatData, setChatData] = useState<ChatRoomItem[]>([]);
 
-console.log("chatData", chatData);
+
   
   useEffect(() => {
     if (!jwt) return;
@@ -217,7 +217,7 @@ console.log("chatData", chatData);
     useEffect(() => {
     // Loop over chatData and create a WebSocket for each chat
     chatData.forEach((chat) => {
-      console.log("chat", chat);
+ 
       if (!socketsRef.current[chat.id]) {
         const ws = new WebSocket(`wss://abc.winaclaim.com/ws/call/${chat.id}/?token=${jwt}`);
         setNewSocket(ws);

@@ -105,10 +105,7 @@ export const useRole = () => {
     setIsLoading(false);
   }, []);
 
-  // console.log(getUserRole, "get user role function in useRole");
-  // console.log(userRole, "user role in useRole");
-  // console.log(hasRole, "has role function in useRole");
-  console.log(userRole, "user role in useRole");
+
   return {
     userRole,
     userInfo,
