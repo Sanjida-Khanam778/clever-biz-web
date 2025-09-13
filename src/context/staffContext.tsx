@@ -1,4 +1,5 @@
 import { useRole } from "@/hooks/useRole";
+import { WebSocketContext } from "@/hooks/WebSocketProvider";
 import axiosInstance from "@/lib/axios";
 import {
   createContext,
@@ -6,6 +7,7 @@ import {
   useState,
   ReactNode,
   useCallback,
+  useEffect,
 } from "react";
 import toast from "react-hot-toast";
 
@@ -156,7 +158,7 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({
   );
   const [ordersStats, setOrdersStats] = useState<OrdersStats | null>(null);
   const { userRole, isLoading } = useRole();
-
+  const { response } = useContext(WebSocketContext);
   const fetchStatusSummary = useCallback(async () => {
     if (!userRole) return;
     let endpoint = "";
@@ -289,7 +291,20 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({
     },
     [setOrders]
   );
-
+  useEffect(() => {
+ if (
+      response.type === "order_created" ||
+      response.type === "order_updated"
+    ) {
+      fetchOrders(ordersCurrentPage, ordersSearchQuery);
+    } else if (
+      response.type === "device_created" ||
+      response.type === "device_updated" ||
+      response.type === "device_deleted"
+    ) {
+      // fetchAllDevices(devicesCurrentPage, devicesSearchQuery);
+    }
+  }, [response,ordersCurrentPage, ordersSearchQuery,fetchOrders]);
   const value: StaffContextType = {
     categories,
     foodItems,

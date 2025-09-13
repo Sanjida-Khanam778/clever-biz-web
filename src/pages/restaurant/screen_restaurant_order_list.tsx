@@ -18,7 +18,7 @@ const ScreenRestaurantOrderList = () => {
   } = useOwner();
 
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
-  console.log(ordersStats, "orders stats");
+
   const [openStripe, setOpenStripe] = useState(false);
   // Debounced search effect
   useEffect(() => {

@@ -3,6 +3,7 @@ import { TextSearchBox } from "../../components/input";
 import { OrderlistCard, Pagination } from "../../components/utilities";
 import { useStaff } from "@/context/staffContext";
 import { useEffect, useState } from "react";
+import axiosInstance from "@/lib/axios";
 
 const ScreenChefOrderList = () => {
   const {
@@ -17,7 +18,7 @@ const ScreenChefOrderList = () => {
     setOrdersSearchQuery,
   } = useStaff();
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
-  console.log(ordersStats, "orders stats");
+
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -70,7 +71,7 @@ const ScreenChefOrderList = () => {
 
           <div className="flex-1 flex gap-x-4 flex-row-reverse md:flex-row justify-end">
             {/* Search box by id */}
-           
+
             <TextSearchBox
               placeholder="Search by Order ID"
               value={ordersSearchQuery}

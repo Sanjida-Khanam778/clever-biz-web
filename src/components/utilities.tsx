@@ -192,34 +192,37 @@ export const Header = () => {
   // const token = accessToken;
   const socketsRef = useRef<Record<string, WebSocket>>({});
 
-const [chatData, setChatData] = useState<ChatRoomItem[]>([]);
+  const [chatData, setChatData] = useState<ChatRoomItem[]>([]);
 
-
-  
   useEffect(() => {
-    if (!jwt) return;
-
-  const fetchDevices = async () => {
-    try {
-      const response = await axiosInstance.get(`/owners/devicesall/`);
-      const chatList: ChatRoomItem[] = Array.isArray(response.data) ? response.data : [];
-      setChatData(chatList);
-    } catch (error) {
-      toast.error("Failed to load devices.");
-      setChatData([]);
+    if (!jwt && userInfo.role !== "owner") {
+      return;
     }
-  };
+
+    const fetchDevices = async () => {
+      try {
+        const response = await axiosInstance.get(`/owners/devicesall/`);
+        const chatList: ChatRoomItem[] = Array.isArray(response.data)
+          ? response.data
+          : [];
+        setChatData(chatList);
+      } catch (error) {
+        // toast.error("Failed to load devices.");
+        setChatData([]);
+      }
+    };
     fetchDevices();
   }, [jwt, userInfo]);
 
+  // console.log(newsocket, "new socket in header");
 
-
-    useEffect(() => {
+  useEffect(() => {
     // Loop over chatData and create a WebSocket for each chat
     chatData.forEach((chat) => {
- 
       if (!socketsRef.current[chat.id]) {
-        const ws = new WebSocket(`wss://abc.winaclaim.com/ws/call/${chat.id}/?token=${jwt}`);
+        const ws = new WebSocket(
+          `wss://abc.winaclaim.com/ws/call/${chat.id}/?token=${jwt}`
+        );
         setNewSocket(ws);
         ws.onopen = () => {
           console.log(`WebSocket connected for chat ${chat.id}`);
@@ -227,22 +230,33 @@ const [chatData, setChatData] = useState<ChatRoomItem[]>([]);
 
         ws.onmessage = (event) => {
           console.log(`Message from chat ${chat.id}:`, event.data);
-           const data = JSON.parse(event.data);
-      setResponse(data);
-      if (data.action === "incoming_call") {
-        setIsCallingModal(true);
-      }
-      if (data.action === "call_ended") {
-        setIsCallingModal(false);
-      }
-      if (data.action === "call_accepted") {
-        window.location.href = `https://clever-biz.vercel.app?device=${encodeURIComponent(
-          data?.device_id
-        )}&user=${encodeURIComponent(
-          userInfo?.restaurants[0]?.resturent_name
-        )}&deviceId=${data.device_id}&receiver=${encodeURIComponent(chat?.table_name
-        )}&token=${encodeURIComponent(jwt)}`;
-      }
+          const data = JSON.parse(event.data);
+          if (data.action === "incoming_call") {
+            setIsCallingModal(true);
+            setResponse(data);
+          }
+          if (data.action === "call_ended") {
+            setIsCallingModal(false);
+          }
+          if (data.action === "call_accepted") {
+            window.location.href = `https://clever-biz.vercel.app?device=${encodeURIComponent(
+              data?.device_id
+            )}&user=${encodeURIComponent(
+              userInfo?.restaurants[0]?.resturent_name
+            )}&deviceId=${data.device_id}&receiver=${encodeURIComponent(
+              chat?.table_name
+            )}&token=${encodeURIComponent(jwt)}`;
+          }
+          if (data.action === "call_accepted") {
+            setTimeout(() => {
+              const endCallPayload = {
+                action: "end_call",
+                call_id: data?.call_id,
+                device_id: data?.device_id,
+              };
+              ws.send(JSON.stringify(endCallPayload));
+            }, 5000);
+          }
         };
 
         ws.onclose = () => {
@@ -257,7 +271,6 @@ const [chatData, setChatData] = useState<ChatRoomItem[]>([]);
       }
     });
 
-
     // Cleanup on unmount or chatData change
     return () => {
       Object.values(socketsRef.current).forEach((ws) => {
@@ -267,15 +280,13 @@ const [chatData, setChatData] = useState<ChatRoomItem[]>([]);
     };
   }, [chatData, jwt, userInfo]);
 
-  
-
   const handleEndCall = (callerId, deviceId) => {
     const data = {
       action: "end_call",
       call_id: callerId,
       device_id: deviceId,
     };
-    newsocket.send(JSON.stringify(data));
+    socketsRef.current[deviceId].send(JSON.stringify(data));
     setIsCallingModal(false);
   };
 
@@ -285,7 +296,7 @@ const [chatData, setChatData] = useState<ChatRoomItem[]>([]);
       call_id: callerId,
       device_id: deviceId,
     };
-    newsocket.send(JSON.stringify(data));
+    socketsRef.current[deviceId].send(JSON.stringify(data));
     setIsCallingModal(false);
   };
   return (
@@ -304,14 +315,14 @@ const [chatData, setChatData] = useState<ChatRoomItem[]>([]);
           <img src={profile} alt="Profile" className=" w-8 h-8" />
         </div>
       </div>
-      {idCallingModal && (
-          <CallerModal
-            email={userInfo.username}
-            handleEndCall={handleEndCall}
-            handleAnswerCall={handleAnswerCall}
-            response={response}
-          />
-        )}
+      {idCallingModal && userInfo.role === "owner" && (
+        <CallerModal
+          email={userInfo.username}
+          handleEndCall={handleEndCall}
+          handleAnswerCall={handleAnswerCall}
+          response={response}
+        />
+      )}
     </header>
   );
 };
@@ -1275,10 +1286,8 @@ export const ChatSection: React.FC = () => {
 
   const singleuser = localStorage.getItem("selectedChatInfo");
 
-
-  
   useEffect(() => {
-    if (!jwt) {
+    if (!jwt && userInfo.role !== "owner") {
       return;
     }
     const newSoket = new WebSocket(
@@ -1304,6 +1313,16 @@ export const ChatSection: React.FC = () => {
         )}&deviceId=${data.device_id}&receiver=${encodeURIComponent(
           JSON.parse(singleuser)?.table_name
         )}&token=${encodeURIComponent(jwt)}`;
+      }
+      if (data.action === "call_accepted") {
+        setTimeout(() => {
+          const endCallPayload = {
+            action: "end_call",
+            call_id: data?.call_id,
+            device_id: data?.device_id,
+          };
+          newSoket.send(JSON.stringify(endCallPayload));
+        }, 5000);
       }
     };
 
@@ -1349,8 +1368,6 @@ export const ChatSection: React.FC = () => {
       device_id: selectedChat?.id,
     };
 
-
-
     newsocket.send(JSON.stringify(data));
   };
 
@@ -1387,20 +1404,22 @@ export const ChatSection: React.FC = () => {
                 {selectedChat?.table_name || "Select a table"}
               </span>
             </div>
-            <button
-              onClick={() => confirmToCall(selectedChat?.user_id)}
-              className="button-primary bg-sidebar rounded-lg text-base flex items-center space-x-2"
-              disabled={!selectedChat}
-            >
-              <IoCall className="w-4 h-4" />
+            {userInfo?.role === "owner" && (
+              <button
+                onClick={() => confirmToCall(selectedChat?.user_id)}
+                className="button-primary bg-sidebar rounded-lg text-base flex items-center space-x-2"
+                disabled={!selectedChat}
+              >
+                <IoCall className="w-4 h-4" />
 
-              <span>Call to customer</span>
-            </button>
+                <span>Call to customer</span>
+              </button>
+            )}
           </div>
         </div>
 
         {/* caller modal  */}
-         {idCallingModal && (
+        {idCallingModal && userInfo.role === "owner" && (
           <CallerModal
             email={userInfo.username}
             handleEndCall={handleEndCall}
@@ -1408,7 +1427,6 @@ export const ChatSection: React.FC = () => {
             response={response}
           />
         )}
-        
 
         <div className="flex-1 flex h-full text-white border-t-2 border-chat-sender/20 overflow-hidden">
           {/* Left Chat List */}
