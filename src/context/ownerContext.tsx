@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axiosInstance from "@/lib/axios";
 import {
   createContext,
@@ -10,6 +11,7 @@ import {
 import toast from "react-hot-toast";
 import { useRole } from "@/hooks/useRole";
 import { Member } from "@/types";
+import { WebSocketContext } from "@/hooks/WebSocketProvider";
 
 // Define the type of each category (adjust fields based on actual API)
 interface Category {
@@ -179,9 +181,9 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
   const [ordersStats, setOrdersStats] = useState<OrdersStats | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [membersSearchQuery, setMembersSearchQuery] = useState("");
+  const { response } = useContext(WebSocketContext);
 
   // Auto-fetch categories when userRole becomes available
- 
 
   useEffect(() => {
     if (!isLoading && userRole) {
@@ -445,7 +447,6 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
         setAllDevices(devices);
         setDevicesCount(response.data?.count || 0);
         setDevicesCurrentPage(page);
-  
       } catch (error) {
         console.error("Failed to load devices", error);
         toast.error("Failed to load devices.");
@@ -453,7 +454,6 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
     },
     [devicesCurrentPage, devicesSearchQuery, userRole, isLoading]
   );
-
 
   const fetchDeviceStats = useCallback(async () => {
     // Don't fetch if still loading or if userRole is null
@@ -693,7 +693,7 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
         const response = await axiosInstance.patch(endpoint, {
           status: status.toLowerCase(),
         });
-
+        console.log(response);
         toast.success("Order status updated successfully!");
 
         // Update local orders state immediately for instant feedback
@@ -788,6 +788,49 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
       isLoading,
     ]
   );
+
+  useEffect(() => {
+    console.log(response, ordersCurrentPage, ordersSearchQuery);
+    if (
+      response.type === "item_updated" ||
+      response.type === "item_created" ||
+      response.type === "item_deleted"
+    ) {
+      fetchFoodItems(currentPage, searchQuery);
+    } else if (
+      response.type === "order_created" ||
+      response.type === "order_updated"
+    ) {
+      fetchOrders(ordersCurrentPage, ordersSearchQuery);
+    } else if (
+      response.type === "reservation_created" ||
+      response.type === "reservation_updated"
+      // response.type === "device_updated" ||
+      // response.type === "device_deleted"
+    ) {
+      // fetchAllDevices(devicesCurrentPage, devicesSearchQuery);
+      fetchReservations(reservationsCurrentPage, reservationsSearchQuery);
+    } else if (
+      response.type === "device_updated" ||
+      response.type === "device_deleted"
+    ) {
+      fetchAllDevices(devicesCurrentPage, devicesSearchQuery);
+    }
+  }, [
+    response,
+    currentPage,
+    searchQuery,
+    fetchFoodItems,
+    ordersCurrentPage,
+    ordersSearchQuery,
+    fetchOrders,
+    reservationsCurrentPage,
+    reservationsSearchQuery,
+    fetchReservations,
+    devicesCurrentPage,
+    devicesSearchQuery,
+    fetchAllDevices,
+  ]);
 
   const value: OwnerContextType = {
     categories,

@@ -120,6 +120,7 @@ const ScreenRegister = () => {
 
         <LabelInput
           label="Phone Number"
+          inputType="number"
           inputProps={{
             id: "phone_number",
             ...register("phone_number"),
@@ -143,6 +144,7 @@ const ScreenRegister = () => {
         />
         <LabelInput
           label="Email"
+          inputType="email"
           inputProps={{
             id: "email",
             ...register("email"),
@@ -150,6 +152,7 @@ const ScreenRegister = () => {
         />
         <LabelInput
           label="Password"
+          inputType="password"
           inputProps={{
             id: "password",
             ...register("password"),

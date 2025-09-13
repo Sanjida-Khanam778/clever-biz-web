@@ -8,7 +8,7 @@ export default function CallerModal({
   response,
   email,
 }) {
-  console.log(email, response.from);
+console.log(response, "response in caller modal");
   return (
     <div className="fixed inset-0 bg-transparent flex items-center justify-center z-50">
       <div className="bg-slate-800 rounded-3xl p-8 w-80 text-center text-white shadow-2xl">

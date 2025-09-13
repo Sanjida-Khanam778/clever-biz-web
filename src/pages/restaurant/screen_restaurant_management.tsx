@@ -19,9 +19,10 @@ const ScreenRestaurantManagement = () => {
   const [modalOpen, setModalOpen] = useState(false);
 
   // Load members on component mount and when search query changes
+
   useEffect(() => {
     fetchMembers();
-  }, [fetchMembers]);
+  }, [fetchMembers, members]);
 
   const handleSearch = (query: string) => {
     setMembersSearchQuery(query);

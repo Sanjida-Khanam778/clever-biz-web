@@ -1,13 +1,16 @@
 import { DateSearchBox, TextSearchBox } from "@/components/input";
 import { TableReviewList } from "@/components/tables";
 import { Pagination, StatCardAsteric } from "@/components/utilities";
+import { WebSocketContext } from "@/hooks/WebSocketProvider";
 import axiosInstance from "@/lib/axios";
 import { ReviewItem } from "@/types";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 const ScreenRestaurantReviews = () => {
+  const { response } = useContext(WebSocketContext);
   const [reviews, setReviews] = useState<ReviewItem[]>([]);
+  const [cont, setCont] = useState();
   const [stats, setStats] = useState({
     overall_rating: 0,
     today_reviews_count: 0,
@@ -39,9 +42,12 @@ const ScreenRestaurantReviews = () => {
         toast.error("Failed to load reviews.");
       }
     };
+    if (response.type === "review_created") {
+      fetchReviews();
+    }
 
     fetchReviews();
-  }, [page, searchDate, searchOrderId]);
+  }, [page, searchDate, searchOrderId,response]);
 
   // Handler for date change (expects Date or null)
   const handleDateChange = (date: Date | null) => {

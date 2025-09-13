@@ -28,10 +28,11 @@ import { IoAdd, IoChevronDown } from "react-icons/io5";
 type LabelInputProps = {
   icon?: React.ReactNode;
   label?: string;
-  inputType?: "text" | "password";
+  inputType?: "text" | "password" | "email" | "number" | "tel" | "url" | "search";
   inputProps?: React.InputHTMLAttributes<HTMLInputElement>;
   labelProps?: React.LabelHTMLAttributes<HTMLLabelElement>;
   containerProps?: React.HTMLAttributes<HTMLDivElement>;
+  placeholder?: string | undefined | null | false | number;
 };
 
 export const LabelInput: React.FC<LabelInputProps> = ({
@@ -39,6 +40,7 @@ export const LabelInput: React.FC<LabelInputProps> = ({
   inputProps = {},
   labelProps = {},
   containerProps = {},
+  placeholder = "",
   icon,
   inputType = "text", // 👈 default type
 }: LabelInputProps) => {
