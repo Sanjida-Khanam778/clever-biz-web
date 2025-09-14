@@ -36,7 +36,7 @@ const ScreenRegister = () => {
       if (data.company_logo && data.company_logo[0]) {
         formData.append("image", data.company_logo[0]);
       }
-
+      console.log(formData)
       const res = await axiosInstance.post("/owners/register/", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
@@ -123,6 +123,8 @@ const ScreenRegister = () => {
           inputType="number"
           inputProps={{
             id: "phone_number",
+            className:
+              "[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]",
             ...register("phone_number"),
           }}
         />

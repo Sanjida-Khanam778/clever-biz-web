@@ -115,7 +115,6 @@ export const EditFoodItemModal: React.FC<ModalProps> = ({
 
     fetchCategories();
   }, [allCate, parseUser?.role]);
-  
 
   useEffect(() => {
     if (!isLoading && userRole) {
@@ -1379,6 +1378,10 @@ export const AssistantModal: React.FC<AssistantModalProps> = ({
           twilio_account_sid: sid,
           twilio_auth_token: token,
         });
+        console.log(res)
+        if(res.status === 201){
+          toast.success("Assistant created successfully")
+        }
       } else if (numberChanged) {
         // only number changed
         res = await axiosInstance.patch("/owners/update-assistant-number/", {
@@ -1425,9 +1428,11 @@ export const AssistantModal: React.FC<AssistantModalProps> = ({
               className="flex flex-col gap-y-4"
             >
               <LabelInput
+                inputType="number"
                 label="Twilio Number"
                 inputProps={{
-                  className: "bg-[#201C3F] shadow-md text-sm",
+                  className:
+                    "bg-[#201C3F] shadow-md text-sm appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]",
                   ...register("TwilioNumber", {
                     required: true,
                     maxLength: 20,

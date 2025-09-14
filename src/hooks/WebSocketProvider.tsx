@@ -29,7 +29,8 @@ const WebSocketProvider = ({ children }) => {
     };
 
     socket.onmessage = (event) => {
-      setResponse(JSON.parse(event.data)) // Log raw message
+      console.log(event);
+      setResponse(JSON.parse(event.data)); // Log raw message
       try {
         const parsedMessage = JSON.parse(event.data); // assuming it's JSON
         console.log("Parsed message:", parsedMessage); // Log parsed message
@@ -54,7 +55,7 @@ const WebSocketProvider = ({ children }) => {
       }
     };
   }, [wsUrl, id, accessToken, setResponse]);
-
+  console.log(response);
   return (
     <WebSocketContext.Provider value={{ ws, messages, response }}>
       {children}

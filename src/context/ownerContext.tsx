@@ -182,7 +182,7 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
   const [members, setMembers] = useState<Member[]>([]);
   const [membersSearchQuery, setMembersSearchQuery] = useState("");
   const { response } = useContext(WebSocketContext);
-
+  
   // Auto-fetch categories when userRole becomes available
 
   useEffect(() => {

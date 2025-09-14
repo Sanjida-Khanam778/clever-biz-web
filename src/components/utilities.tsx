@@ -1019,7 +1019,7 @@ export const ChatSection: React.FC = () => {
     fetchDevices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
-
+  console.log(selectedChat)
   // Fetch previous messages when selectedChat changes
   useEffect(() => {
     if (!selectedChat) return;
