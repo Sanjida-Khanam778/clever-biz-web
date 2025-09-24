@@ -22,7 +22,7 @@ const ScreenRestaurantManagement = () => {
 
   useEffect(() => {
     fetchMembers();
-  }, [fetchMembers, members]);
+  }, [fetchMembers,]);
 
   const handleSearch = (query: string) => {
     setMembersSearchQuery(query);

@@ -14,6 +14,8 @@ import {
 import { cn } from "clsx-for-tailwind";
 import { CgMenu } from "react-icons/cg";
 import { LogoDashboard } from "./utilities";
+import { useContext } from "react";
+import { WebSocketContext } from "@/hooks/WebSocketProvider";
 
 type SidebarProps = {
   onToggleSidebar: () => void;
@@ -38,7 +40,6 @@ export const StaffSidebar: React.FC<SidebarProps> = ({
   ];
   const navigate = useNavigate();
   const signout = () => {
-  
     navigate("/");
   };
 
@@ -124,6 +125,8 @@ export const ChefSidebar: React.FC<SidebarProps> = ({
   isOpen: isDrawerOpen,
   home,
 }) => {
+  const { response } = useContext(WebSocketContext);
+  console.log(response);
   const menuItems = [
     { title: "Dashboard", icon: <IconHome />, path: "/chef" },
     { title: "Order List", icon: <IconOrderList />, path: "/chef/orders" },

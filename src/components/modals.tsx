@@ -115,7 +115,6 @@ export const EditFoodItemModal: React.FC<ModalProps> = ({
 
     fetchCategories();
   }, [allCate, parseUser?.role]);
-  
 
   useEffect(() => {
     if (!isLoading && userRole) {
@@ -1012,7 +1011,7 @@ export const EditCategoryModal: React.FC<ModalProps> = ({
       className="relative z-10 focus:outline-none"
       onClose={close}
     >
-      <DialogBackdrop className="fixed inset-0 bg-black/30" />
+      <DialogBackdrop className="fixed inset-0 bg-black/90" />
       <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
         <div className="flex min-h-full items-center justify-center p-4">
           <DialogPanel
@@ -1151,7 +1150,7 @@ export const EditStaffModal: React.FC<ModalProps> = ({ isOpen, close }) => {
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     setLoading(true);
     try {
-      console.log(data, "data");
+    
       const formData = new FormData();
       formData.append("email", data.email);
       formData.append("username", data.name);
@@ -1378,7 +1377,11 @@ export const AssistantModal: React.FC<AssistantModalProps> = ({
           twilio_number: number,
           twilio_account_sid: sid,
           twilio_auth_token: token,
-        });
+        });r
+        console.log(res)
+        if(res.status === 201){
+          toast.success("Assistant created successfully")
+        }
       } else if (numberChanged) {
         // only number changed
         res = await axiosInstance.patch("/owners/update-assistant-number/", {
@@ -1425,9 +1428,11 @@ export const AssistantModal: React.FC<AssistantModalProps> = ({
               className="flex flex-col gap-y-4"
             >
               <LabelInput
+                inputType="number"
                 label="Twilio Number"
                 inputProps={{
-                  className: "bg-[#201C3F] shadow-md text-sm",
+                  className:
+                    "bg-[#201C3F] shadow-md text-sm appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]",
                   ...register("TwilioNumber", {
                     required: true,
                     maxLength: 20,

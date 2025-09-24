@@ -14,6 +14,14 @@ import { useStaff } from "@/context/staffContext";
 import axiosInstance from "@/lib/axios";
 import toast from "react-hot-toast";
 import { Member, ReservationItem, DeviceItem, ReviewItem } from "@/types";
+import { Pointer, Trash, Trash2 } from "lucide-react";
+import {
+  Dialog,
+  DialogBackdrop,
+  DialogPanel,
+  DialogTitle,
+} from "@headlessui/react";
+import { ImSpinner6 } from "react-icons/im";
 
 /* Reservation Table Data ===========================================================>>>>> */
 
@@ -239,7 +247,19 @@ export const TableTeamManagement: React.FC<TableTeamManagementProps> = ({
     Record<number, string>
   >({});
 
-  // Initialize local member status state when data changes
+  // const { response } = useContext(WebSocketContext);
+  const [isModalOpen, setIsModalOpen] = useState(false); // Modal open/close state
+  const [categoryToDelete, setCategoryToDelete] = useState(null); // Selected category to delete
+  const [isDeleting, setIsDeleting] = useState(false);
+  const openModal = (category) => {
+    setCategoryToDelete(category); // Set the selected category
+    setIsModalOpen(true); // Open the modal
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false); // Close the modal
+    setCategoryToDelete(null); // Clear the selected category
+  };
   useEffect(() => {
     const initialStatus: Record<number, string> = {};
     data?.forEach((item) => {
@@ -269,6 +289,14 @@ export const TableTeamManagement: React.FC<TableTeamManagementProps> = ({
         ...prev,
         [memberId]: previousStatus,
       }));
+    }
+  };
+  const handleDelete = async (id) => {
+    try {
+      const response = await axiosInstance.delete(`/owners/chef-staff/${id}}`);
+      console.log(response);
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -302,37 +330,143 @@ export const TableTeamManagement: React.FC<TableTeamManagementProps> = ({
               )}
             </td>
             <td className="p-4 text-primary-text">
-              <ButtonStatus
-                status={
-                  localMemberStatus[item.id] !== undefined
-                    ? localMemberStatus[item.id] === "active"
+              <div className="flex items-center gap-4:">
+                <ButtonStatus
+                  status={
+                    localMemberStatus[item.id] !== undefined
+                      ? localMemberStatus[item.id] === "active"
+                        ? "Active"
+                        : "Hold"
+                      : item.action === "active"
                       ? "Active"
                       : "Hold"
-                    : item.action === "active"
-                    ? "Active"
-                    : "Hold"
-                }
-                availableStatuses={["Active", "Hold"]}
-                properties={{
-                  Active: {
-                    bg: "bg-green-800",
-                    text: "text-green-300",
-                  },
-                  Hold: {
-                    bg: "bg-yellow-800",
-                    text: "text-yellow-300",
-                  },
-                }}
-                onChange={(newStatus) => handleStatusChange(item.id, newStatus)}
-              />
+                  }
+                  availableStatuses={["Active", "Hold"]}
+                  properties={{
+                    Active: {
+                      bg: "bg-green-800",
+                      text: "text-green-300",
+                    },
+                    Hold: {
+                      bg: "bg-yellow-800",
+                      text: "text-yellow-300",
+                    },
+                  }}
+                  onChange={(newStatus) =>
+                    handleStatusChange(item.id, newStatus)
+                  }
+                />
+                <button
+                  // Open modal with the selected item or trigger delete
+                  className="text-red-500 hover:text-red-700 transition-colors duration-200 ml-4"
+                  onClick={() => openModal(item)} // Define this function to handle delete logic
+                >
+                  <Trash size={20} />
+                </button>
+              </div>
             </td>
           </tr>
         ))}
       </tbody>
+      {isModalOpen && (
+        <DeleteFoodItemModal
+          isOpen={isModalOpen} // Open the modal
+          close={closeModal} // Function to close the modal
+          id={categoryToDelete?.id}
+          // setCategories={setCategories} // Pass the category ID to the modal
+        />
+      )}
     </table>
   );
 };
 /* <<<<<<<<===================================================== Team management table */
+
+const DeleteFoodItemModal = ({ isOpen, close, id }) => {
+  const parseUser = JSON.parse(localStorage.getItem("userInfo"));
+  const role = parseUser?.role;
+  console.log(role);
+  const [loading, setLoading] = useState(false);
+
+  const handleDelete = async () => {
+    if (!id) {
+      toast.error("No item selected for deletion.");
+      return;
+    }
+
+    setLoading(true);
+
+    // Log the constructed URL to ensure it's correct
+    const url = `/owners/chef-staff/${id}/`;
+    console.log("Delete URL:", url);
+
+    try {
+      const response = await axiosInstance.delete(url);
+      toast.success("Item deleted successfully!");
+      // setCategories((prevCategories) =>
+      //   prevCategories.filter((category) => category.id !== id)
+      // );
+      close();
+    } catch (err) {
+      console.error(
+        "Failed to delete item",
+        err.response ? err.response.data : err
+      );
+      toast.error("An error occurred while deleting the item.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog
+      open={isOpen}
+      as="div"
+      className="relative z-10 focus:outline-none"
+      onClose={close}
+    >
+      <DialogBackdrop className="fixed inset-0 bg-black/20" />
+      <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+        <div className="flex min-h-full items-center justify-center p-4">
+          <DialogPanel
+            transition
+            className="w-full max-w-md rounded-xl bg-sidebar/80 p-6 backdrop-blur-2xl duration-300 ease-out data-[closed]:transform-[scale(95%)] data-[closed]:opacity-0"
+          >
+            <DialogTitle as="h3" className="text-base/7 font-medium text-white">
+              Delete Member
+            </DialogTitle>
+            <p className="mt-2 text-sm/6 text-white/50">
+              Are you sure you want to delete this food member? This action
+              cannot be undone.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
+                onClick={close}
+                disabled={loading}
+              >
+                Cancel
+              </button>
+              <button
+                className="button-primary inline-flex items-center gap-2 rounded-md py-2 px-4 text-sm/6 font-semibold text-white shadow-inner shadow-white/5 focus:outline-none data-[hover]:bg-red-600 data-[focus]:outline-1 data-[focus]:outline-white data-[open]:bg-red-700 bg-red-500 hover:bg-red-600"
+                onClick={handleDelete}
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <ImSpinner6 className="animate-spin w-4 h-4" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete"
+                )}
+              </button>
+            </div>
+          </DialogPanel>
+        </div>
+      </div>
+    </Dialog>
+  );
+};
 
 /* Device List table ===========================================================>>>>> */
 interface TableDeviceListProps {
@@ -340,7 +474,18 @@ interface TableDeviceListProps {
 }
 export const TableDeviceList: React.FC<TableDeviceListProps> = ({ data }) => {
   const { updateDeviceStatus } = useOwner();
+  const [isModalOpen, setIsModalOpen] = useState(false); // Modal open/close state
+  const [categoryToDelete, setCategoryToDelete] = useState(null); // Selected category to delete
+  const [isDeleting, setIsDeleting] = useState(false);
+  const openModal = (category) => {
+    setCategoryToDelete(category); // Set the selected category
+    setIsModalOpen(true); // Open the modal
+  };
 
+  const closeModal = () => {
+    setIsModalOpen(false); // Close the modal
+    setCategoryToDelete(null); // Clear the selected category
+  };
   // Local state to track device status changes immediately
   const [localDeviceStatus, setLocalDeviceStatus] = useState<
     Record<number, string>
@@ -396,38 +541,140 @@ export const TableDeviceList: React.FC<TableDeviceListProps> = ({ data }) => {
             <td className="p-4 text-primary-text">{item.username}</td>
             <td className="p-4 text-primary-text">{item.table_name}</td>
             <td className="p-4 text-primary-text">
-              <ButtonStatus
-                status={
-                  localDeviceStatus[item.id] !== undefined
-                    ? localDeviceStatus[item.id] === "active"
+              <div className="flex items-center gap-3">
+                <ButtonStatus
+                  status={
+                    localDeviceStatus[item.id] !== undefined
+                      ? localDeviceStatus[item.id] === "active"
+                        ? "Active"
+                        : "Hold"
+                      : item.action === "active"
                       ? "Active"
                       : "Hold"
-                    : item.action === "active"
-                    ? "Active"
-                    : "Hold"
-                }
-                availableStatuses={["Active", "Hold"]}
-                properties={{
-                  Active: {
-                    bg: "bg-green-800",
-                    text: "text-green-300",
-                  },
-                  Hold: {
-                    bg: "bg-yellow-800",
-                    text: "text-yellow-300",
-                  },
-                }}
-                onChange={(newStatus) => handleStatusChange(item.id, newStatus)}
-              />
+                  }
+                  availableStatuses={["Active", "Hold"]}
+                  properties={{
+                    Active: {
+                      bg: "bg-green-800",
+                      text: "text-green-300",
+                    },
+                    Hold: {
+                      bg: "bg-yellow-800",
+                      text: "text-yellow-300",
+                    },
+                  }}
+                  onChange={(newStatus) =>
+                    handleStatusChange(item.id, newStatus)
+                  }
+                />
+                <div onClick={() => openModal(item)}>
+                  <Trash2 color="red" cursor={"pointer"} />
+                </div>
+              </div>
             </td>
           </tr>
         ))}
       </tbody>
+      {isModalOpen && (
+        <DeleteDevice
+          isOpen={isModalOpen} // Open the modal
+          close={closeModal} // Function to close the modal
+          id={categoryToDelete?.id}
+          // setCategories={setCategories} // Pass the category ID to the modal
+        />
+      )}
     </table>
   );
 };
 /* <<<<<<<<===================================================== Device List table */
+const DeleteDevice = ({ isOpen, close, id }) => {
+  const parseUser = JSON.parse(localStorage.getItem("userInfo"));
+  const role = parseUser?.role;
+  console.log(role);
+  const [loading, setLoading] = useState(false);
 
+  const handleDelete = async () => {
+    console.log(id);
+    if (!id) {
+      toast.error("No item selected for deletion.");
+      return;
+    }
+
+    setLoading(true);
+
+    // Log the constructed URL to ensure it's correct
+    const url = `/owners/devices/${id}/`;
+    console.log("Delete URL:", url);
+
+    try {
+      const response = await axiosInstance.delete(url);
+      toast.success("Device deleted successfully!");
+      console.log(response)
+      // setCategories((prevCategories) =>
+      //   prevCategories.filter((category) => category.id !== id)
+      // );
+      close();
+    } catch (err) {
+      console.error(
+        "Failed to delete item",
+        err.response ? err.response.data : err
+      );
+      toast.error("An error occurred while deleting the item.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog
+      open={isOpen}
+      as="div"
+      className="relative z-10 focus:outline-none"
+      onClose={close}
+    >
+      <DialogBackdrop className="fixed inset-0 bg-black/20" />
+      <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+        <div className="flex min-h-full items-center justify-center p-4">
+          <DialogPanel
+            transition
+            className="w-full max-w-md rounded-xl bg-sidebar/80 p-6 backdrop-blur-2xl duration-300 ease-out data-[closed]:transform-[scale(95%)] data-[closed]:opacity-0"
+          >
+            <DialogTitle as="h3" className="text-base/7 font-medium text-white">
+              Delete Device
+            </DialogTitle>
+            <p className="mt-2 text-sm/6 text-white/50">
+              Are you sure you want to delete this food Device? This action
+              cannot be undone.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
+                onClick={close}
+                disabled={loading}
+              >
+                Cancel
+              </button>
+              <button
+                className="button-primary inline-flex items-center gap-2 rounded-md py-2 px-4 text-sm/6 font-semibold text-white shadow-inner shadow-white/5 focus:outline-none data-[hover]:bg-red-600 data-[focus]:outline-1 data-[focus]:outline-white data-[open]:bg-red-700 bg-red-500 hover:bg-red-600"
+                onClick={handleDelete}
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <ImSpinner6 className="animate-spin w-4 h-4" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete"
+                )}
+              </button>
+            </div>
+          </DialogPanel>
+        </div>
+      </div>
+    </Dialog>
+  );
+};
 /* Review List table ===========================================================>>>>> */
 interface TableReviewListProps {
   data: ReviewItem[];
@@ -480,7 +727,7 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
 }) => {
   const { fetchOrders } = useStaff();
   const { fetchOrders: fetchOwnerOrders } = useOwner();
-  const statuses = ["Pending", "Preparing", "served", "Completed", "Cancelled"];
+  const statuses = ["Pending", "Preparing", "Served", "Completed", "Cancelled"];
   const { updateOrderStatus: contextUpdateOrderStatus } = useOwner();
 
   // Use prop if provided (for staff), otherwise use context (for owner)
@@ -500,69 +747,71 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
   };
 
   return (
-    <table className="w-full table-auto text-left clever-table">
-      <thead className="table-header">
-        <tr>
-          <th>Table Name</th>
-          <th>Ordered Items</th>
-          <th>Quantity</th>
-          <th>Price</th>
-          <th>Timer of order</th>
-          <th>Order Id</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody className="bg-sidebar text-sm">
-        {ordersData?.map((item, index) => (
-          <tr key={index} className="border-b border-[#1C1E3C]">
-            <td className="p-4 text-primary-text">{item.device_name}</td>
-            <td className="p-4 text-primary-text">
-              {item.order_items?.[0]?.item_name || "N/A"}
-            </td>
-            <td className="p-4 text-primary-text">
-              {item.order_items.length || "N/A"}
-            </td>
-            <td className="p-4 text-primary-text">
-              {item.total_price || "N/A"}
-            </td>
-            <td className="p-4 text-primary-text">
-              <span className="font-medium">
-                {formatDateTime(item.created_time)}
-              </span>
-            </td>
-            <td className="p-4 text-primary-text">{item.id}</td>
-            <td className="p-4 text-primary-text">
-              <ButtonStatus
-                status={item.status}
-                properties={{
-                  Preparing: {
-                    bg: "bg-blue-800",
-                    text: "text-blue-300",
-                  },
-                  Completed: {
-                    bg: "bg-green-800",
-                    text: "text-green-300",
-                  },
-                  Cancelled: {
-                    bg: "bg-red-800",
-                    text: "text-red-300",
-                  },
-                  Pending: {
-                    bg: "bg-yellow-800",
-                    text: "text-yellow-300",
-                  },
-                  served: {
-                    bg: "bg-orange-200",
-                    text: "text-orange-500",
-                  },
-                }}
-                availableStatuses={statuses}
-                onChange={(newStatus) => handleStatusChange(item.id, newStatus)}
-              />
-            </td>
+    <div className="overflow-x-auto">
+      <table className="w-full table-auto text-left clever-table">
+        <thead className="table-header">
+          <tr>
+            <th className="p-2 sm:p-4">Table Name</th>
+            <th className="p-2 sm:p-4">Ordered Items</th>
+            <th className="p-2 sm:p-4">Quantity</th>
+            <th className="p-2 sm:p-4">Price</th>
+            <th className="p-2 sm:p-4">Timer of Order</th>
+            <th className="p-2 sm:p-4">Order Id</th>
+            <th className="p-2 sm:p-4">Status</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody className="bg-sidebar text-sm">
+          {ordersData?.map((item, index) => (
+            <tr key={index} className="border-b border-[#1C1E3C]">
+              <td className="p-2 sm:p-4 text-primary-text">{item.device_name}</td>
+              <td className="p-2 sm:p-4 text-primary-text">
+                {item.order_items?.[0]?.item_name || "N/A"}
+              </td>
+              <td className="p-2 sm:p-4 text-primary-text">
+                {item.order_items.length || "N/A"}
+              </td>
+              <td className="p-2 sm:p-4 text-primary-text">
+                {item.total_price || "N/A"}
+              </td>
+              <td className="p-2 sm:p-4 text-primary-text">
+                <span className="font-medium">
+                  {formatDateTime(item.created_time)}
+                </span>
+              </td>
+              <td className="p-2 sm:p-4 text-primary-text">{item.id}</td>
+              <td className="p-2 sm:p-4 text-primary-text">
+                <ButtonStatus
+                  status={item.status}
+                  properties={{
+                    Preparing: {
+                      bg: "bg-blue-800",
+                      text: "text-blue-300",
+                    },
+                    Completed: {
+                      bg: "bg-green-800",
+                      text: "text-green-300",
+                    },
+                    Cancelled: {
+                      bg: "bg-red-800",
+                      text: "text-red-300",
+                    },
+                    Pending: {
+                      bg: "bg-yellow-800",
+                      text: "text-yellow-300",
+                    },
+                    Served: {
+                      bg: "bg-orange-200",
+                      text: "text-orange-500",
+                    },
+                  }}
+                  availableStatuses={statuses}
+                  onChange={(newStatus) => handleStatusChange(item.id, newStatus)}
+                />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 };

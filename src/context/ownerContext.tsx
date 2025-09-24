@@ -184,7 +184,7 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
   const { response } = useContext(WebSocketContext);
 
   // Auto-fetch categories when userRole becomes available
-
+  console.log(response);
   useEffect(() => {
     if (!isLoading && userRole) {
       // Fetch categories directly here to avoid dependency issues
@@ -493,7 +493,13 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
     },
     [userRole, isLoading, membersSearchQuery]
   );
-
+  useEffect(() => {
+    if (response.type == "chefstaff_created") {
+      fetchMembers();
+    } else if(response.type =="chefstaff_deleted"){
+      fetchMembers();
+    }
+  }, [response, fetchMembers]);
   const createMember = useCallback(
     async (formData: FormData) => {
       if (isLoading || !userRole) {
@@ -501,9 +507,10 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
       }
 
       try {
-        await axiosInstance.post("/owners/chef-staff/", formData, {
+        const res = await axiosInstance.post("/owners/chef-staff/", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
+        console.log(res);
         toast.success("Member created successfully!");
         // Refresh the members list
         await fetchMembers();

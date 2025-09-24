@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { MonthlyChart, YearlyChart } from "@/components/charts";
 import { ButtonAdd, TextSearchBox } from "../../components/input";
 import {
@@ -12,6 +13,7 @@ import { IconGrowth, IconSales, IconTeam } from "@/components/icons";
 import { useOwner } from "@/context/ownerContext";
 import axiosInstance from "@/lib/axios";
 import toast from "react-hot-toast";
+import CategoryTable from "@/components/ui/CategoryTable";
 
 const ScreenRestaurantDashboard = () => {
   const {
@@ -30,7 +32,7 @@ const ScreenRestaurantDashboard = () => {
   const [sellingItemData, setSellingItemData] = useState([]);
   const [currentYear, setCurrentYear] = useState(null);
   const [lastYear, setLastYear] = useState(null);
-
+  const [cate, setCate] = useState([]);
   // Analytics state
   const [analytics, setAnalytics] = useState<any>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(true);
@@ -73,6 +75,18 @@ const ScreenRestaurantDashboard = () => {
   };
 
   // Fetch most selling items
+  const fetchaAllcategories = async () => {
+    try {
+      const response = await axiosInstance.get("/owners/categories/");
+      setCate(response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    fetchaAllcategories();
+  }, []);
+  console.log(cate);
   const fetchMostSellingItems = useCallback(async () => {
     try {
       const response = await axiosInstance.get("/owners/most-selling-items/");
@@ -111,7 +125,7 @@ const ScreenRestaurantDashboard = () => {
 
   return (
     <>
-      <div className="flex flex-col">
+      <div className="flex flex-col ">
         {/* Dashboard Cards */}
         <div className="flex flex-col lg:flex-row gap-y-3 lg:gap-y-0 lg:gap-x-3">
           <DashboardCard
@@ -191,7 +205,7 @@ const ScreenRestaurantDashboard = () => {
           </div>
         </div>
         {/* Search + Add Buttons */}
-        <div className="grid grid-cols-3 grid-rows-[auto_1fr] gap-x-4 items-start mt-4">
+        <div className="grid lg:grid-cols-3 grid-rows-[auto_1fr] gap-x-4 items-start mt-4">
           <div className="col-span-2 flex items-center justify-end mb-4 gap-x-4">
             <TextSearchBox
               placeholder="Search by Name"
@@ -216,14 +230,34 @@ const ScreenRestaurantDashboard = () => {
           </div>
 
           {/* Most Selling Items */}
-          <div className="h-full col-span-1 row-span-2 col-start-3 col-end-4 row-start-1 row-end-3 bg-sidebar rounded-xl p-4 flex flex-col">
-            <h6 className="text-xl text-primary-text">Most Selling Items</h6>
-            <DashboardMostSellingItems
-              containerProps={{
-                className: "mt-8 gap-y-4",
+          <div className="grid md:grid-cols-1 xl:grid-cols-2 lg:block gap-6">
+            {/* First Card - Most Selling Items */}
+            <div
+              className="h-[300px] w-[400px] xl:w-full md:w-full max-h-[80vh]  bg-sidebar rounded-xl p-4 mt-5 xl:mt-0 flex flex-col scrollbar-custom"
+              style={{
+                scrollbarWidth: "thin",
+                scrollbarColor: "#141527 #141527",
               }}
-              data={sellingItemData}
-            />
+            >
+              <h6 className="text-xl text-primary-text">Most Selling Items</h6>
+              <DashboardMostSellingItems
+                containerProps={{
+                  className: "mt-8 gap-y-4",
+                }}
+                data={sellingItemData}
+              />
+            </div>
+
+            {/* Second Card - Category Table */}
+            <div
+              className="mt-10 h-[300px] max-h-[80vh] overflow-y-auto bg-sidebar rounded-xl p-4 flex flex-col w-[400px] xl:w-full"
+              style={{
+                scrollbarWidth: "thin",
+                scrollbarColor: "#141527 #141527",
+              }}
+            >
+              <CategoryTable categories={cate} setCategories={setCate} />
+            </div>
           </div>
         </div>
       </div>
