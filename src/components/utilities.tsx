@@ -855,66 +855,69 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
 
   return (
     <>
-      <table className="w-full table-auto text-left clever-table">
-        <thead className="table-header">
-          <tr>
-            <th>Image</th>
-            <th>Name of the food</th>
-            <th>Category</th>
-            <th>Price</th>
-            <th>Action</th>
-            <th>Availability</th>
-          </tr>
-        </thead>
-        <tbody className="bg-sidebar text-sm">
-          {data?.map((item, index) => (
-            <tr key={index} className="border-b border-[#1C1E3C]">
-              <td className="p-4">
-                <img
-                  src={item.image}
-                  alt="Food Item"
-                  className="bg-dashboard/50 w-12 h-12 rounded-md"
-                />
-              </td>
-              <td className="p-4 text-primary-text">{item.name}</td>
-              <td className="p-4 text-primary-text">{item.category}</td>
-              <td className="p-4 text-primary-text">{item.price}</td>
-              <td className="h-20 p-4 flex gap-x-4 items-center">
-                <button
-                  onClick={() => openEdit(item?.id)}
-                  className="text-blue-100 hover:text-blue-600"
-                >
-                  <IconEdit className="h-6 w-6" />
-                </button>
-                <button
-                  onClick={() => openDelete(item?.id)}
-                  className="text-red-400 hover:text-red-600"
-                >
-                  <IconDelete className="h-6 w-6" />
-                </button>
-              </td>
-              <td className="p-4">
-                <ButtonStatus
-                  status={
-                    localAvailability[item.id] !== undefined
-                      ? localAvailability[item.id]
+      <div className="overflow-x-auto">
+        <table className="w-full table-auto text-left clever-table">
+          <thead className="table-header">
+            <tr>
+              <th className="px-4 py-2">Image</th>
+              <th className="px-4 py-2">Name of the food</th>
+              <th className="px-4 py-2">Category</th>
+              <th className="px-4 py-2">Price</th>
+              <th className="px-4 py-2">Action</th>
+              <th className="px-4 py-2">Availability</th>
+            </tr>
+          </thead>
+          <tbody className="bg-sidebar text-sm">
+            {data?.map((item, index) => (
+              <tr key={index} className="border-b border-[#1C1E3C]">
+                <td className="p-4">
+                  <img
+                    src={item.image}
+                    alt="Food Item"
+                    className="bg-dashboard/50 w-12 h-12 rounded-md"
+                  />
+                </td>
+                <td className="p-4 text-primary-text">{item.name}</td>
+                <td className="p-4 text-primary-text">{item.category}</td>
+                <td className="p-4 text-primary-text">{item.price}</td>
+                <td className="h-20 p-4 flex gap-x-4 items-center">
+                  <button
+                    onClick={() => openEdit(item?.id)}
+                    className="text-blue-100 hover:text-blue-600"
+                  >
+                    <IconEdit className="h-6 w-6" />
+                  </button>
+                  <button
+                    onClick={() => openDelete(item?.id)}
+                    className="text-red-400 hover:text-red-600"
+                  >
+                    <IconDelete className="h-6 w-6" />
+                  </button>
+                </td>
+                <td className="p-4">
+                  <ButtonStatus
+                    status={
+                      localAvailability[item.id] !== undefined
+                        ? localAvailability[item.id]
+                          ? "Available"
+                          : "Unavailable"
+                        : item.available
                         ? "Available"
                         : "Unavailable"
-                      : item.available
-                      ? "Available"
-                      : "Unavailable"
-                  }
-                  properties={contextProperties}
-                  availableStatuses={contextStatuses}
-                  onChange={(newStatus) =>
-                    handleAvailabilityChange(item.id, newStatus)
-                  }
-                />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                    }
+                    properties={contextProperties}
+                    availableStatuses={contextStatuses}
+                    onChange={(newStatus) =>
+                      handleAvailabilityChange(item.id, newStatus)
+                    }
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
       <EditFoodItemModal
         isOpen={isEditDialogOpen}
         close={closeEdit}
@@ -1019,7 +1022,7 @@ export const ChatSection: React.FC = () => {
     fetchDevices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
-  console.log(selectedChat)
+  console.log(selectedChat);
   // Fetch previous messages when selectedChat changes
   useEffect(() => {
     if (!selectedChat) return;
@@ -1643,7 +1646,10 @@ export const DashboardMostSellingItems: React.FC<
 > = ({ data, containerProps }) => {
   const { className, ...rest } = containerProps ?? {};
   return (
-    <div className={cn("flex flex-col gap-y-2", className)} {...rest}>
+    <div
+      className={cn("flex flex-col gap-y-2 w-full overflow-y-auto", className)}
+      {...rest}
+    >
       {data?.map((item, idx) => (
         <div key={idx} className="flex flex-col gap-y-1">
           <div className="flex flex-row justify-between">

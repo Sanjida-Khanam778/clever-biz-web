@@ -727,7 +727,7 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
 }) => {
   const { fetchOrders } = useStaff();
   const { fetchOrders: fetchOwnerOrders } = useOwner();
-  const statuses = ["Pending", "Preparing", "served", "Completed", "Cancelled"];
+  const statuses = ["Pending", "Preparing", "Served", "Completed", "Cancelled"];
   const { updateOrderStatus: contextUpdateOrderStatus } = useOwner();
 
   // Use prop if provided (for staff), otherwise use context (for owner)
@@ -747,69 +747,71 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
   };
 
   return (
-    <table className="w-full table-auto text-left clever-table">
-      <thead className="table-header">
-        <tr>
-          <th>Table Name</th>
-          <th>Ordered Items</th>
-          <th>Quantity</th>
-          <th>Price</th>
-          <th>Timer of order</th>
-          <th>Order Id</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody className="bg-sidebar text-sm">
-        {ordersData?.map((item, index) => (
-          <tr key={index} className="border-b border-[#1C1E3C]">
-            <td className="p-4 text-primary-text">{item.device_name}</td>
-            <td className="p-4 text-primary-text">
-              {item.order_items?.[0]?.item_name || "N/A"}
-            </td>
-            <td className="p-4 text-primary-text">
-              {item.order_items.length || "N/A"}
-            </td>
-            <td className="p-4 text-primary-text">
-              {item.total_price || "N/A"}
-            </td>
-            <td className="p-4 text-primary-text">
-              <span className="font-medium">
-                {formatDateTime(item.created_time)}
-              </span>
-            </td>
-            <td className="p-4 text-primary-text">{item.id}</td>
-            <td className="p-4 text-primary-text">
-              <ButtonStatus
-                status={item.status}
-                properties={{
-                  Preparing: {
-                    bg: "bg-blue-800",
-                    text: "text-blue-300",
-                  },
-                  Completed: {
-                    bg: "bg-green-800",
-                    text: "text-green-300",
-                  },
-                  Cancelled: {
-                    bg: "bg-red-800",
-                    text: "text-red-300",
-                  },
-                  Pending: {
-                    bg: "bg-yellow-800",
-                    text: "text-yellow-300",
-                  },
-                  served: {
-                    bg: "bg-orange-200",
-                    text: "text-orange-500",
-                  },
-                }}
-                availableStatuses={statuses}
-                onChange={(newStatus) => handleStatusChange(item.id, newStatus)}
-              />
-            </td>
+    <div className="overflow-x-auto">
+      <table className="w-full table-auto text-left clever-table">
+        <thead className="table-header">
+          <tr>
+            <th className="p-2 sm:p-4">Table Name</th>
+            <th className="p-2 sm:p-4">Ordered Items</th>
+            <th className="p-2 sm:p-4">Quantity</th>
+            <th className="p-2 sm:p-4">Price</th>
+            <th className="p-2 sm:p-4">Timer of Order</th>
+            <th className="p-2 sm:p-4">Order Id</th>
+            <th className="p-2 sm:p-4">Status</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody className="bg-sidebar text-sm">
+          {ordersData?.map((item, index) => (
+            <tr key={index} className="border-b border-[#1C1E3C]">
+              <td className="p-2 sm:p-4 text-primary-text">{item.device_name}</td>
+              <td className="p-2 sm:p-4 text-primary-text">
+                {item.order_items?.[0]?.item_name || "N/A"}
+              </td>
+              <td className="p-2 sm:p-4 text-primary-text">
+                {item.order_items.length || "N/A"}
+              </td>
+              <td className="p-2 sm:p-4 text-primary-text">
+                {item.total_price || "N/A"}
+              </td>
+              <td className="p-2 sm:p-4 text-primary-text">
+                <span className="font-medium">
+                  {formatDateTime(item.created_time)}
+                </span>
+              </td>
+              <td className="p-2 sm:p-4 text-primary-text">{item.id}</td>
+              <td className="p-2 sm:p-4 text-primary-text">
+                <ButtonStatus
+                  status={item.status}
+                  properties={{
+                    Preparing: {
+                      bg: "bg-blue-800",
+                      text: "text-blue-300",
+                    },
+                    Completed: {
+                      bg: "bg-green-800",
+                      text: "text-green-300",
+                    },
+                    Cancelled: {
+                      bg: "bg-red-800",
+                      text: "text-red-300",
+                    },
+                    Pending: {
+                      bg: "bg-yellow-800",
+                      text: "text-yellow-300",
+                    },
+                    Served: {
+                      bg: "bg-orange-200",
+                      text: "text-orange-500",
+                    },
+                  }}
+                  availableStatuses={statuses}
+                  onChange={(newStatus) => handleStatusChange(item.id, newStatus)}
+                />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 };

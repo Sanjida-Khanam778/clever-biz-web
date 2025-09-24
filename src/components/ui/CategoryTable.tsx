@@ -31,7 +31,8 @@ const CategoriesTable = ({ categories, setCategories }) => {
 
   return (
     <div>
-      <div className="overflow-x-auto bg-[#1e2a3a] rounded-lg shadow-lg p-4">
+      <div className="overflow-x-auto bg-[#1e2a3a] h-full rounded-lg shadow-lg p-4 w-full">
+        <h3 className="text-2xl font-bold mb-4 text-white">All Category</h3>
         <table className="min-w-full text-white">
           <thead>
             <tr className="border-b border-gray-700">

@@ -36,7 +36,7 @@ const ScreenRegister = () => {
       if (data.company_logo && data.company_logo[0]) {
         formData.append("image", data.company_logo[0]);
       }
-      console.log(formData)
+      console.log(formData);
       const res = await axiosInstance.post("/owners/register/", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
@@ -78,7 +78,11 @@ const ScreenRegister = () => {
       setLoading(false);
       toast.success("Registration successful!");
     } catch (error) {
-      console.error("Registration failed:", error);
+      console.error("Registration failed:");
+      if (error.status === 400) {
+        console.log(error);
+        toast.error(error.response.data?.email[0]);
+      }
       toast.error(
         error.response.data.phone_number[0] ||
           error.response.data.email[0] ||

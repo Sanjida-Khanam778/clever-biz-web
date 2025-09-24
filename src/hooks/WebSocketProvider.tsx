@@ -48,14 +48,14 @@ const WebSocketProvider = ({ children }) => {
     socket.onclose = () => {
       console.log("WebSocket connection closed");
     };
-
+ 
     return () => {
       if (socket.readyState === WebSocket.OPEN) {
         socket.close();
       }
     };
   }, [wsUrl, id, accessToken, setResponse]);
-  console.log(response);
+ 
   return (
     <WebSocketContext.Provider value={{ ws, messages, response }}>
       {children}

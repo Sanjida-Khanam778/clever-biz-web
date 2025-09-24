@@ -125,7 +125,7 @@ const ScreenRestaurantDashboard = () => {
 
   return (
     <>
-      <div className="flex flex-col">
+      <div className="flex flex-col ">
         {/* Dashboard Cards */}
         <div className="flex flex-col lg:flex-row gap-y-3 lg:gap-y-0 lg:gap-x-3">
           <DashboardCard
@@ -205,7 +205,7 @@ const ScreenRestaurantDashboard = () => {
           </div>
         </div>
         {/* Search + Add Buttons */}
-        <div className="grid grid-cols-3 grid-rows-[auto_1fr] gap-x-4 items-start mt-4">
+        <div className="grid lg:grid-cols-3 grid-rows-[auto_1fr] gap-x-4 items-start mt-4">
           <div className="col-span-2 flex items-center justify-end mb-4 gap-x-4">
             <TextSearchBox
               placeholder="Search by Name"
@@ -230,9 +230,10 @@ const ScreenRestaurantDashboard = () => {
           </div>
 
           {/* Most Selling Items */}
-          <div>
+          <div className="grid md:grid-cols-1 xl:grid-cols-2 lg:block gap-6">
+            {/* First Card - Most Selling Items */}
             <div
-              className="h-[300px] max-h-[80vh] overflow-y-auto col-span-1 row-span-2 col-start-3 col-end-4 row-start-1 row-end-3 bg-sidebar rounded-xl p-4 flex flex-col scrollbar-custom"
+              className="h-[300px] w-[400px] xl:w-full md:w-full max-h-[80vh]  bg-sidebar rounded-xl p-4 mt-5 xl:mt-0 flex flex-col scrollbar-custom"
               style={{
                 scrollbarWidth: "thin",
                 scrollbarColor: "#141527 #141527",
@@ -246,8 +247,10 @@ const ScreenRestaurantDashboard = () => {
                 data={sellingItemData}
               />
             </div>
+
+            {/* Second Card - Category Table */}
             <div
-              className="mt-10 h-[300px] max-h-[80vh] overflow-y-auto col-span-1 row-span-2 col-start-3 col-end-4 row-start-1 row-end-3 bg-sidebar rounded-xl p-4 flex flex-col"
+              className="mt-10 h-[300px] max-h-[80vh] overflow-y-auto bg-sidebar rounded-xl p-4 flex flex-col w-[400px] xl:w-full"
               style={{
                 scrollbarWidth: "thin",
                 scrollbarColor: "#141527 #141527",
