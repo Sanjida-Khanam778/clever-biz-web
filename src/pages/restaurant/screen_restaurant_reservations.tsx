@@ -1,6 +1,9 @@
 import { AssistantModal } from "@/components/modals";
 import { TableReservationList } from "@/components/tables";
 import { useOwner } from "@/context/ownerContext";
+
+import { AssistantModal, NewAssistantModal } from "@/components/modals";
+
 import { AssistantCredentials } from "@/types";
 import { useEffect, useState } from "react";
 import { FiHeadphones } from "react-icons/fi";
@@ -30,6 +33,7 @@ const ScreenRestaurantReservations = () => {
   const [assistantModalOpen, setAssistantModalOpen] = useState(false);
   const [assistant, setAssistant] = useState<AssistantCredentials | null>(null);
   const [assistantLoading, setAssistantLoading] = useState(false);
+  const [modelOpen, setModelOpen] = useState(false);
 
   // Debounced search effect
   useEffect(() => {
@@ -139,7 +143,8 @@ const ScreenRestaurantReservations = () => {
             {/* Assistant button */}
             <button
               className="h-14 w-96 flex items-center justify-center bg-green-700 text-primary-text rounded-lg overflow-hidden shadow-md px-6 text-base font-medium transition-colors disabled:opacity-50"
-              onClick={handleAssistantButtonClick}
+              // onClick={handleAssistantButtonClick}
+              onClick={() => setModelOpen(true)}
               type="button"
               disabled={assistantLoading}
             >
@@ -167,6 +172,12 @@ const ScreenRestaurantReservations = () => {
         onSave={handleSaveAssistant}
         initialData={assistant}
       />
+      {modelOpen && (
+        <NewAssistantModal
+          isOpen={modelOpen}
+          close={() => setModelOpen(false)}
+        />
+      )}
     </>
   );
 };

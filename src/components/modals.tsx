@@ -28,7 +28,7 @@ import {
   BtnRedo,
 } from "react-simple-wysiwyg";
 import { useCallback, useEffect, useState } from "react";
-import { set, SubmitHandler, useForm } from "react-hook-form";
+import { set, SubmitHandler, useForm, Controller } from "react-hook-form";
 import toast from "react-hot-toast";
 import axiosInstance from "@/lib/axios";
 import { ImSpinner6 } from "react-icons/im";
@@ -37,7 +37,10 @@ import { useRole } from "@/hooks/useRole";
 import { FiX } from "react-icons/fi";
 import { useAdmin } from "@/context/adminContext";
 import AssistantCredentials from "@/types";
-
+import PhoneInput from "react-phone-number-input";
+import "react-phone-number-input/style.css";
+import "./intt.css";
+import axios from "axios";
 /* Edit food item dialog ===========================================================>>>>> */
 type ModalPropsCall = {
   socketRef?: React.RefObject<WebSocket>;
@@ -1150,7 +1153,6 @@ export const EditStaffModal: React.FC<ModalProps> = ({ isOpen, close }) => {
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     setLoading(true);
     try {
-    
       const formData = new FormData();
       formData.append("email", data.email);
       formData.append("username", data.name);
@@ -1318,7 +1320,7 @@ export const AssistantModal: React.FC<AssistantModalProps> = ({
         reset({ TwilioNumber: "", TwilioSID: "", TwilioToken: "" });
         return;
       }
-
+      console.log(res);
       const data = res.data as ExistingAssistance;
       setExisting(data);
       reset({
@@ -1377,10 +1379,10 @@ export const AssistantModal: React.FC<AssistantModalProps> = ({
           twilio_number: number,
           twilio_account_sid: sid,
           twilio_auth_token: token,
-        });r
-        console.log(res)
-        if(res.status === 201){
-          toast.success("Assistant created successfully")
+        });
+        console.log(res);
+        if (res.status === 201) {
+          toast.success("Assistant created successfully");
         }
       } else if (numberChanged) {
         // only number changed
@@ -1487,6 +1489,191 @@ export const AssistantModal: React.FC<AssistantModalProps> = ({
                 >
                   {loading ? "Saving..." : isEdit ? "Update" : "Add"}
                 </button>
+              </div>
+            </form>
+          </DialogPanel>
+        </div>
+      </div>
+    </Dialog>
+  );
+};
+
+// import {
+//   Dialog,
+//   DialogBackdrop,
+//   DialogPanel,
+//   DialogTitle,
+// } from "@headlessui/react";
+
+type TAssistantModalProps = {
+  isOpen: boolean;
+  close: () => void;
+};
+
+type AssistantFormData = {
+  TwilioNumber: number;
+  TwilioSID: string;
+  TwilioToken: string;
+};
+
+export const NewAssistantModal: React.FC<TAssistantModalProps> = ({
+  isOpen,
+  close,
+}) => {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    control,
+    formState: { isSubmitting },
+  } = useForm<AssistantFormData>({
+    defaultValues: {
+      TwilioNumber: 0,
+      TwilioSID: "",
+      TwilioToken: "",
+    },
+  });
+  const [hasData, setHasData] = useState(false);
+  const [inputdata, setInputdata] = useState();
+  useEffect(() => {
+    const fetchNumber = async () => {
+      try {
+        const res = await axiosInstance.get(
+          "/owners/get-restaurant-assistance/"
+        );
+        if (res.data) {
+          reset({
+            TwilioNumber: res.data.twilio_number || "",
+            TwilioSID: res.data.twilio_account_sid || "",
+            TwilioToken: res.data.twilio_auth_token || "",
+          });
+
+          setHasData(true); // data exists → show "Update"
+        } else {
+          setHasData(false); // no data → show "Add"
+        }
+      } catch (error: any) {
+        console.error(error);
+        setHasData(false);
+      }
+    };
+
+    fetchNumber();
+  }, [reset]);
+
+  const onSubmit = async (data: AssistantFormData) => {
+    try {
+      const res = await axiosInstance.post("/owners/create-assistant/", {
+        twilio_number: data.TwilioNumber,
+        twilio_account_sid: data.TwilioSID,
+        twilio_auth_token: data.TwilioToken,
+      });
+      if (res.status === 201) {
+        toast.success("Assistant created successfully");
+      } else {
+        toast.error("Error creating assistant");
+      }
+      setInputdata(res?.data);
+      reset();
+      close();
+    } catch (err: any) {
+      console.error("Error creating assistant:", err.response?.data || err);
+    }
+  };
+  const handleUpdate = async (data: AssistantFormData) => {
+    try {
+      const res = await axiosInstance.patch(
+        "/owners/update-assistant-number/",
+        {
+          twilio_number: data.TwilioNumber,
+          twilio_account_sid: data.TwilioSID,
+          twilio_auth_token: data.TwilioToken,
+        }
+      );
+      console.log();
+      if (res.status === 200) {
+        toast.success("Assistant updated successfully");
+        reset();
+        close();
+      } else {
+        toast.error("Error updating assistant");
+      }
+    } catch (err: any) {
+      console.error("Error updating assistant:", err.response?.data || err);
+      toast.error("Error updating assistant");
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} as="div" className="relative z-10" onClose={close}>
+      <DialogBackdrop className="fixed inset-0 bg-black/30" />
+      <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+        <div className="flex min-h-full items-center justify-center p-4">
+          <DialogPanel className="w-full max-w-md rounded-xl bg-sidebar/80 p-6 backdrop-blur-xl">
+            <DialogTitle className="text-base font-medium text-white mb-8">
+              Add Assistant
+            </DialogTitle>
+
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="flex flex-col gap-y-4"
+            >
+              {/* Twilio Number with Country Code */}
+              <div className="phone-input-container">
+                <Controller
+                  name="TwilioNumber"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <PhoneInput
+                      defaultCountry="US"
+                      value={field.value}
+                      onChange={field.onChange}
+                      className="w-full"
+                    />
+                  )}
+                />
+              </div>
+              {/* Twilio Account SID */}
+              <div className="flex flex-col gap-1">
+                <label className="text-sm text-white">Twilio Account SID</label>
+                <input
+                  type="text"
+                  placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                  className="bg-[#201C3F] shadow-md text-sm px-3 py-2 rounded-md text-white"
+                  {...register("TwilioSID", { required: true })}
+                />
+              </div>
+
+              {/* Twilio Auth Token */}
+              <div className="flex flex-col gap-1">
+                <label className="text-sm text-white">Twilio Auth Token</label>
+                <input
+                  type="password"
+                  placeholder="Your auth token"
+                  className="bg-[#201C3F] shadow-md text-sm px-3 py-2 rounded-md text-white"
+                  {...register("TwilioToken", { required: true })}
+                />
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-end gap-x-2 mt-4">
+                {hasData ? (
+                  <button
+                    type="button"
+                    onClick={handleSubmit(handleUpdate)} // custom update function
+                    className="button-primary px-8 py-2 text-primary-text"
+                  >
+                    {isSubmitting ? "Loading..." : "Update"}
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    className="button-primary px-8 py-2 text-primary-text"
+                  >
+                    {isSubmitting ? "Loading..." : "Add"}
+                  </button>
+                )}
               </div>
             </form>
           </DialogPanel>
