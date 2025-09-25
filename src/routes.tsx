@@ -1,48 +1,49 @@
-import { Route, Routes } from "react-router";
-import Layout from "./pages/authentication/layout";
-import ScreenPrivacy from "./pages/authentication/screen_privacy";
-import ScreenTermsCondition from "./pages/authentication/screen_terms";
-import ScreenEmailVerification from "./pages/authentication/screen_email_verification";
-import ScreenOtpVerification from "./pages/authentication/screen_otp_verification";
-import ScreenLanding from "./pages/authentication/screen_landing";
-import ScreenLogin from "./pages/authentication/screen_login";
-import StaffLayout from "./pages/staff/layout";
-import ScreenStaffDashboard from "./pages/staff/screen_staff_dashboard";
-import ScreenStaffReservations from "./pages/staff/screen_staff_reservations";
-import ScreenStaffOrderList from "./pages/staff/screen_staff_order_list";
-import ScreenStaffChat from "./pages/staff/screen_staff_chat";
-import ScreenRegister from "./pages/authentication/screen_register";
-import ScreenPassword from "./pages/authentication/screen_password";
-import ScreenChefDashboard from "./pages/chef/screen_chef_dashboard";
-import ScreenChefOrderList from "./pages/chef/screen_chef_order_list";
-import ScreenChefChat from "./pages/chef/screen_chef_chat";
-import ChefLayout from "./pages/chef/layout";
-import AdminLayout from "./pages/super-admin/layout";
-import ScreenAdminDashboard from "./pages/super-admin/screen_admin_dashboard";
-import ScreenAdminManagement from "./pages/super-admin/screen_admin_management";
-import ScreenAdminFaq from "./pages/super-admin/screen_admin_faq";
-import ScreenAdminTermsAndCondition from "./pages/super-admin/screen_admin_terms";
-import ScreenAdminPrivacy from "./pages/super-admin/screen_admin_privacy";
-import RestaurantLayout from "./pages/restaurant/layout";
-import ScreenRestaurantOrderList from "./pages/restaurant/screen_restaurant_order_list";
-import ScreenRestaurantReservations from "./pages/restaurant/screen_restaurant_reservations";
-import ScreenRestaurantDashboard from "./pages/restaurant/screen_restaurant_dashboard";
-import ScreenRestaurantManagement from "./pages/restaurant/screen_restaurant_management";
-import { ScreenRestaurantDevices } from "./pages/restaurant/screen_restaurant_devices";
-import ScreenRestaurantReviews from "./pages/restaurant/screen_restaurant_reviews";
-import ScreenRestaurantChat from "./pages/restaurant/screen_restaurant_chat";
 import {
-  Chart as ChartJS,
+  ArcElement,
   CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
+  Chart as ChartJS,
   Filler,
   Legend,
-  ArcElement,
+  LinearScale,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
 } from "chart.js";
+import { Route, Routes } from "react-router";
+import Layout from "./pages/authentication/layout";
+import ScreenEmailVerification from "./pages/authentication/screen_email_verification";
+import ScreenLanding from "./pages/authentication/screen_landing";
+import ScreenLogin from "./pages/authentication/screen_login";
+import ScreenOtpVerification from "./pages/authentication/screen_otp_verification";
+import ScreenPassword from "./pages/authentication/screen_password";
+import ScreenPrivacy from "./pages/authentication/screen_privacy";
+import ScreenRegister from "./pages/authentication/screen_register";
+import ScreenTermsCondition from "./pages/authentication/screen_terms";
+import ChefLayout from "./pages/chef/layout";
+import ScreenChefChat from "./pages/chef/screen_chef_chat";
+import ScreenChefDashboard from "./pages/chef/screen_chef_dashboard";
+import ScreenChefOrderList from "./pages/chef/screen_chef_order_list";
+import RestaurantLayout from "./pages/restaurant/layout";
+import ScreenRestaurantChat from "./pages/restaurant/screen_restaurant_chat";
+import ScreenRestaurantDashboard from "./pages/restaurant/screen_restaurant_dashboard";
+import { ScreenRestaurantDevices } from "./pages/restaurant/screen_restaurant_devices";
+import ScreenRestaurantManagement from "./pages/restaurant/screen_restaurant_management";
+import ScreenRestaurantOrderList from "./pages/restaurant/screen_restaurant_order_list";
+import ScreenRestaurantReservations from "./pages/restaurant/screen_restaurant_reservations";
+import { RestaurantReservationsWithGraphs } from "./pages/restaurant/screen_restaurant_reservations-with-graphs";
+import ScreenRestaurantReviews from "./pages/restaurant/screen_restaurant_reviews";
+import StaffLayout from "./pages/staff/layout";
+import ScreenStaffChat from "./pages/staff/screen_staff_chat";
+import ScreenStaffDashboard from "./pages/staff/screen_staff_dashboard";
+import ScreenStaffOrderList from "./pages/staff/screen_staff_order_list";
+import ScreenStaffReservations from "./pages/staff/screen_staff_reservations";
+import AdminLayout from "./pages/super-admin/layout";
+import ScreenAdminDashboard from "./pages/super-admin/screen_admin_dashboard";
+import ScreenAdminFaq from "./pages/super-admin/screen_admin_faq";
+import ScreenAdminManagement from "./pages/super-admin/screen_admin_management";
+import ScreenAdminPrivacy from "./pages/super-admin/screen_admin_privacy";
+import ScreenAdminTermsAndCondition from "./pages/super-admin/screen_admin_terms";
 
 ChartJS.register(
   CategoryScale,
@@ -86,7 +87,11 @@ function App() {
       <Route path="/restaurant" element={<RestaurantLayout />}>
         <Route index={true} element={<ScreenRestaurantDashboard />} />
         <Route path="orders" element={<ScreenRestaurantOrderList />} />
-        <Route path="reservations" element={<ScreenRestaurantReservations />} />
+        {/* <Route path="reservations" element={<ScreenRestaurantReservations />} /> */}
+        <Route
+          path="reservations"
+          element={<RestaurantReservationsWithGraphs />}
+        />
         <Route path="management" element={<ScreenRestaurantManagement />} />
         <Route path="devices" element={<ScreenRestaurantDevices />} />
         <Route path="reviews" element={<ScreenRestaurantReviews />} />
