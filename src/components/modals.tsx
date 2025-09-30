@@ -1627,7 +1627,7 @@ export const NewAssistantModal: React.FC<TAssistantModalProps> = ({
                   render={({ field }) => (
                     <PhoneInput
                       defaultCountry="US"
-                      value={field.value}
+                      value={field.value ? String(field.value) : ""}
                       onChange={field.onChange}
                       className="w-full"
                     />

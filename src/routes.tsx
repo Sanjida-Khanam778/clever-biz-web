@@ -31,7 +31,7 @@ import { ScreenRestaurantDevices } from "./pages/restaurant/screen_restaurant_de
 import ScreenRestaurantManagement from "./pages/restaurant/screen_restaurant_management";
 import ScreenRestaurantOrderList from "./pages/restaurant/screen_restaurant_order_list";
 import ScreenRestaurantReservations from "./pages/restaurant/screen_restaurant_reservations";
-import { RestaurantReservationsWithGraphs } from "./pages/restaurant/screen_restaurant_reservations-with-graphs";
+// import { RestaurantReservationsWithGraphs } from "./pages/restaurant/screen_restaurant_reservations-with-graphs";
 import ScreenRestaurantReviews from "./pages/restaurant/screen_restaurant_reviews";
 import StaffLayout from "./pages/staff/layout";
 import ScreenStaffChat from "./pages/staff/screen_staff_chat";
@@ -90,7 +90,7 @@ function App() {
         {/* <Route path="reservations" element={<ScreenRestaurantReservations />} /> */}
         <Route
           path="reservations"
-          element={<RestaurantReservationsWithGraphs />}
+          element={<ScreenRestaurantReservations />}
         />
         <Route path="management" element={<ScreenRestaurantManagement />} />
         <Route path="devices" element={<ScreenRestaurantDevices />} />

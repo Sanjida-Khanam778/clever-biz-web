@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,7 +8,7 @@ import {
 import { IconCheckmark, IconClose, IconHold } from "./icons";
 import { TooltipTop } from "./utilities";
 import { BiMailSend } from "react-icons/bi";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useContext, useCallback } from "react";
 import { useOwner } from "@/context/ownerContext";
 import { formatDateTime, formatDate, formatTime } from "@/lib/utils";
 import { useStaff } from "@/context/staffContext";
@@ -22,6 +23,8 @@ import {
   DialogTitle,
 } from "@headlessui/react";
 import { ImSpinner6 } from "react-icons/im";
+import { WebSocketContext } from "@/hooks/WebSocketProvider";
+import { userInfo } from "os";
 
 /* Reservation Table Data ===========================================================>>>>> */
 
@@ -609,7 +612,7 @@ const DeleteDevice = ({ isOpen, close, id }) => {
     try {
       const response = await axiosInstance.delete(url);
       toast.success("Device deleted successfully!");
-      console.log(response)
+      console.log(response);
       // setCategories((prevCategories) =>
       //   prevCategories.filter((category) => category.id !== id)
       // );
@@ -725,27 +728,35 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
   data,
   updateOrderStatus: propUpdateOrderStatus,
 }) => {
+  const { response } = useContext(WebSocketContext);
   const { fetchOrders } = useStaff();
   const { fetchOrders: fetchOwnerOrders } = useOwner();
   const statuses = ["Pending", "Preparing", "Served", "Completed", "Cancelled"];
   const { updateOrderStatus: contextUpdateOrderStatus } = useOwner();
 
-  // Use prop if provided (for staff), otherwise use context (for owner)
   const updateOrderStatus = propUpdateOrderStatus || contextUpdateOrderStatus;
 
-  // Handle different data structures
   const ordersData = Array.isArray(data) ? data : data?.orders || [];
-  console.log(ordersData, "orders data");
-  const handleStatusChange = async (orderId: number, newStatus: string) => {
-    try {
-      await updateOrderStatus(orderId, newStatus);
+
+  const handleStatusChange = useCallback(
+    async (orderId: number, newStatus: string) => {
+      try {
+        await updateOrderStatus(orderId, newStatus);
+        fetchOrders();
+        fetchOwnerOrders();
+      } catch (error) {
+        console.error("Failed to update order status:", error);
+      }
+    },
+    [updateOrderStatus, fetchOrders, fetchOwnerOrders]
+  );
+
+  useEffect(() => {
+    if (response?.type === "order_paid") {
       fetchOrders();
       fetchOwnerOrders();
-    } catch (error) {
-      console.error("Failed to update order status:", error);
     }
-  };
-
+  }, [response, fetchOrders, fetchOwnerOrders]);
   return (
     <div className="overflow-x-auto">
       <table className="w-full table-auto text-left clever-table">
@@ -763,7 +774,9 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
         <tbody className="bg-sidebar text-sm">
           {ordersData?.map((item, index) => (
             <tr key={index} className="border-b border-[#1C1E3C]">
-              <td className="p-2 sm:p-4 text-primary-text">{item.device_name}</td>
+              <td className="p-2 sm:p-4 text-primary-text">
+                {item.device_name}
+              </td>
               <td className="p-2 sm:p-4 text-primary-text">
                 {item.order_items?.[0]?.item_name || "N/A"}
               </td>
@@ -780,33 +793,51 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
               </td>
               <td className="p-2 sm:p-4 text-primary-text">{item.id}</td>
               <td className="p-2 sm:p-4 text-primary-text">
-                <ButtonStatus
-                  status={item.status}
-                  properties={{
-                    Preparing: {
-                      bg: "bg-blue-800",
-                      text: "text-blue-300",
-                    },
-                    Completed: {
-                      bg: "bg-green-800",
-                      text: "text-green-300",
-                    },
-                    Cancelled: {
-                      bg: "bg-red-800",
-                      text: "text-red-300",
-                    },
-                    Pending: {
-                      bg: "bg-yellow-800",
-                      text: "text-yellow-300",
-                    },
-                    Served: {
-                      bg: "bg-orange-200",
-                      text: "text-orange-500",
-                    },
-                  }}
-                  availableStatuses={statuses}
-                  onChange={(newStatus) => handleStatusChange(item.id, newStatus)}
-                />
+                {item.status.toLowerCase() === "paid" ? (
+                  <ButtonStatus
+                    status={item.status}
+                    properties={{
+                      Completed: {
+                        bg: "bg-green-800",
+                        text: "text-green-300",
+                      },
+                    }}
+                    availableStatuses={["Completed"]} // only allow Completed for paid
+                    onChange={(newStatus) =>
+                      handleStatusChange(item.id, newStatus)
+                    }
+                  />
+                ) : (
+                  <ButtonStatus
+                    status={item.status}
+                    properties={{
+                      Preparing: {
+                        bg: "bg-blue-800",
+                        text: "text-blue-300",
+                      },
+                      Completed: {
+                        bg: "bg-green-800",
+                        text: "text-green-300",
+                      },
+                      Cancelled: {
+                        bg: "bg-red-800",
+                        text: "text-red-300",
+                      },
+                      Pending: {
+                        bg: "bg-yellow-800",
+                        text: "text-yellow-300",
+                      },
+                      Served: {
+                        bg: "bg-orange-200",
+                        text: "text-orange-500",
+                      },
+                    }}
+                    availableStatuses={statuses}
+                    onChange={(newStatus) =>
+                      handleStatusChange(item.id, newStatus)
+                    }
+                  />
+                )}
               </td>
             </tr>
           ))}

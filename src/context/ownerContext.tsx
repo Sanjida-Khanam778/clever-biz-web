@@ -182,9 +182,6 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
   const [members, setMembers] = useState<Member[]>([]);
   const [membersSearchQuery, setMembersSearchQuery] = useState("");
   const { response } = useContext(WebSocketContext);
-
-  // Auto-fetch categories when userRole becomes available
-  console.log(response);
   useEffect(() => {
     if (!isLoading && userRole) {
       // Fetch categories directly here to avoid dependency issues
@@ -291,7 +288,7 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
         params: { page: page, search: search },
       });
       const { results, count } = response.data;
-      console.log("Fetched orders:", { page, search });
+
       setOrdersStats(results.stats);
 
       // Handle both array and object with orders property
@@ -496,7 +493,7 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
   useEffect(() => {
     if (response.type == "chefstaff_created") {
       fetchMembers();
-    } else if(response.type =="chefstaff_deleted"){
+    } else if (response.type == "chefstaff_deleted") {
       fetchMembers();
     }
   }, [response, fetchMembers]);
@@ -700,7 +697,6 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
         const response = await axiosInstance.patch(endpoint, {
           status: status.toLowerCase(),
         });
-        console.log(response);
         toast.success("Order status updated successfully!");
 
         // Update local orders state immediately for instant feedback
@@ -714,6 +710,7 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
         // await fetchOrders(ordersCurrentPage, ordersSearchQuery);
       } catch (err) {
         console.error("Failed to update order status", err);
+
         toast.error("Failed to update order status.");
         throw err;
       }
@@ -797,7 +794,6 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
   );
 
   useEffect(() => {
-    console.log(response, ordersCurrentPage, ordersSearchQuery);
     if (
       response.type === "item_updated" ||
       response.type === "item_created" ||
@@ -822,6 +818,8 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
       response.type === "device_deleted"
     ) {
       fetchAllDevices(devicesCurrentPage, devicesSearchQuery);
+    } else if (response.type === "paid_order") {
+      fetchOrders(ordersCurrentPage, ordersSearchQuery);
     }
   }, [
     response,

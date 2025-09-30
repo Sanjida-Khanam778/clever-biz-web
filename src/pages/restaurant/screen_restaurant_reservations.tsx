@@ -1,4 +1,4 @@
-import { AssistantModal } from "@/components/modals";
+// import { AssistantModal } from "@/components/modals";
 import { TableReservationList } from "@/components/tables";
 import { useOwner } from "@/context/ownerContext";
 
