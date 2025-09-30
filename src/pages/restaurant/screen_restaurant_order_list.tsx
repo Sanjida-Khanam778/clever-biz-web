@@ -7,7 +7,7 @@ import StripeConnectModal from "../model/StripeConnectModal";
 
 const ScreenRestaurantOrderList = () => {
   const {
-    orders=[],
+    orders = [],
     ordersStats,
     ordersCount,
     ordersCurrentPage,
@@ -16,7 +16,7 @@ const ScreenRestaurantOrderList = () => {
     setOrdersCurrentPage,
     setOrdersSearchQuery,
   } = useOwner();
-
+  
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
 
   const [openStripe, setOpenStripe] = useState(false);
