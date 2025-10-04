@@ -205,7 +205,7 @@ const ScreenRestaurantDashboard = () => {
           </div>
         </div>
         {/* Search + Add Buttons */}
-        <div className="grid lg:grid-cols-3 grid-rows-[auto_1fr] gap-x-4 items-start mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 grid-rows-[auto_1fr] gap-x-4 items-start mt-4">
           <div className="col-span-2 flex items-center justify-end mb-4 gap-x-4">
             <TextSearchBox
               placeholder="Search by Name"
@@ -218,6 +218,7 @@ const ScreenRestaurantDashboard = () => {
           </div>
 
           {/* Table */}
+          
           <div className="col-span-2 bg-sidebar p-4 rounded-lg">
             <TableFoodList data={foodItems} />
             <div className="mt-4 flex justify-center">
@@ -250,7 +251,7 @@ const ScreenRestaurantDashboard = () => {
 
             {/* Second Card - Category Table */}
             <div
-              className="mt-10 h-[300px] max-h-[80vh] overflow-y-auto bg-sidebar rounded-xl p-4 flex flex-col w-[400px] xl:w-full"
+              className="mt-10  max-h-[80vh]  overflow-y-auto bg-sidebar rounded-xl p-4 flex flex-col  xl:w-full"
               style={{
                 scrollbarWidth: "thin",
                 scrollbarColor: "#141527 #141527",
