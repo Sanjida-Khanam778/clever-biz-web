@@ -234,7 +234,7 @@ const ScreenRestaurantDashboard = () => {
           <div className="grid md:grid-cols-1 xl:grid-cols-2 lg:block gap-6">
             {/* First Card - Most Selling Items */}
             <div
-              className="h-[300px] w-[400px] xl:w-full md:w-full max-h-[80vh]  bg-sidebar rounded-xl p-4 mt-5 xl:mt-0 flex flex-col scrollbar-custom"
+              className="h-[300px] w-[500px] xl:w-full md:w-full max-h-[80vh]  bg-sidebar rounded-xl p-4 mt-5 xl:mt-0 flex flex-col scrollbar-custom"
               style={{
                 scrollbarWidth: "thin",
                 scrollbarColor: "#141527 #141527",
