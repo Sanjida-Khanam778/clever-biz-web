@@ -1547,7 +1547,7 @@ export const NewAssistantModal: React.FC<TAssistantModalProps> = ({
             TwilioSID: res.data.twilio_account_sid || "",
             TwilioToken: res.data.twilio_auth_token || "",
           });
-
+          console.log();
           setHasData(true); // data exists → show "Update"
         } else {
           setHasData(false); // no data → show "Add"
@@ -1563,6 +1563,7 @@ export const NewAssistantModal: React.FC<TAssistantModalProps> = ({
 
   const onSubmit = async (data: AssistantFormData) => {
     try {
+      console.log(data);
       const res = await axiosInstance.post("/owners/create-assistant/", {
         twilio_number: data.TwilioNumber,
         twilio_account_sid: data.TwilioSID,
@@ -1573,11 +1574,15 @@ export const NewAssistantModal: React.FC<TAssistantModalProps> = ({
       } else {
         toast.error("Error creating assistant");
       }
+      console.log(res);
       setInputdata(res?.data);
       reset();
       close();
     } catch (err: any) {
-      console.error("Error creating assistant:", err.response?.data || err);
+      console.log(err)
+      toast.error(err.response?.data.error)
+      toast.error(err.response?.data?.non_field_errors[0]);
+      console.error("Error creating assistant:", err?.response?.data || err);
     }
   };
   const handleUpdate = async (data: AssistantFormData) => {

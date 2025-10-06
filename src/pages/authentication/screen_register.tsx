@@ -81,12 +81,13 @@ const ScreenRegister = () => {
       console.error("Registration failed:");
       if (error.status === 400) {
         console.log(error);
-        toast.error(error.response.data?.email[0]);
+        toast.error(error?.response?.data?.email[0]);
       }
+      setLoading(false);
       toast.error(
-        error.response.data.phone_number[0] ||
-          error.response.data.email[0] ||
-          "Registration failed. Please try again."
+        error.response?.data?.phone_number[0] ||
+          error.response?.data?.email[0] ||
+          "Registration failed. Please try again.",
       );
       setLoading(false);
     }

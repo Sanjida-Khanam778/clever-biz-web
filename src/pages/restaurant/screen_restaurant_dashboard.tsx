@@ -14,6 +14,7 @@ import { useOwner } from "@/context/ownerContext";
 import axiosInstance from "@/lib/axios";
 import toast from "react-hot-toast";
 import CategoryTable from "@/components/ui/CategoryTable";
+import { DailyReportChart } from "@/components/ui/MonthlyChartx";
 
 const ScreenRestaurantDashboard = () => {
   const {
@@ -33,6 +34,10 @@ const ScreenRestaurantDashboard = () => {
   const [currentYear, setCurrentYear] = useState(null);
   const [lastYear, setLastYear] = useState(null);
   const [cate, setCate] = useState([]);
+  const [productsSold, setProductsSold] = useState<number[]>([]);
+  const [salesAmount, setSalesAmount] = useState<number[]>([]);
+  const [month, setMonth] = useState<number>(new Date().getMonth() + 1);
+  const [year, setYear] = useState<number>(new Date().getFullYear());
   // Analytics state
   const [analytics, setAnalytics] = useState<any>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(true);
@@ -86,7 +91,7 @@ const ScreenRestaurantDashboard = () => {
   useEffect(() => {
     fetchaAllcategories();
   }, []);
-  console.log(cate);
+
   const fetchMostSellingItems = useCallback(async () => {
     try {
       const response = await axiosInstance.get("/owners/most-selling-items/");
@@ -108,6 +113,7 @@ const ScreenRestaurantDashboard = () => {
     setAnalyticsError(null);
     try {
       const response = await axiosInstance.get("/owners/orders/analytics/");
+
       setCurrentYear(response.data?.status?.current_year);
       setLastYear(response.data?.status?.last_year);
       setAnalytics(response.data);
@@ -122,7 +128,37 @@ const ScreenRestaurantDashboard = () => {
   useEffect(() => {
     fetchAnalytics();
   }, [fetchAnalytics]);
+  const fetchMonthlyReport = async () => {
+    try {
+      const response = await axiosInstance.get("/owners/sales-report/monthly/");
+      const data = response.data;
+      console.log(response.data.month);
+      // Extract month + year
+      const [monthName, yearStr] = data.month.split(" "); // "October 2025"
+      const yearNum = parseInt(yearStr, 10);
 
+      // Convert month name → number
+      const monthNum = response.data.month; // October → 10
+
+      // Convert objects (day1, day2, ...) → arrays
+      const productsArray = Object.values(
+        data.sales_report_count_completed_order
+      );
+      const salesArray = Object.values(data.sales_report_price);
+
+      setMonth(monthNum);
+      setYear(yearNum);
+      setProductsSold(productsArray as number[]);
+      setSalesAmount(salesArray as number[]);
+    } catch (error) {
+      console.log("Fetch error:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchMonthlyReport();
+  }, []);
+  console.log(month);
   return (
     <>
       <div className="flex flex-col ">
@@ -218,7 +254,7 @@ const ScreenRestaurantDashboard = () => {
           </div>
 
           {/* Table */}
-          
+
           <div className="col-span-2 bg-sidebar p-4 rounded-lg">
             <TableFoodList data={foodItems} />
             <div className="mt-4 flex justify-center">
@@ -233,34 +269,46 @@ const ScreenRestaurantDashboard = () => {
           {/* Most Selling Items */}
           <div className="grid md:grid-cols-1 xl:grid-cols-2 lg:block gap-6">
             {/* First Card - Most Selling Items */}
-            <div
-              className="h-[300px] w-[500px] xl:w-full md:w-full max-h-[80vh]  bg-sidebar rounded-xl p-4 mt-5 xl:mt-0 flex flex-col scrollbar-custom"
-              style={{
-                scrollbarWidth: "thin",
-                scrollbarColor: "#141527 #141527",
-              }}
-            >
-              <h6 className="text-xl text-primary-text">Most Selling Items</h6>
-              <DashboardMostSellingItems
-                containerProps={{
-                  className: "mt-8 gap-y-4",
+            {sellingItemData && sellingItemData.length > 0 && (
+              <div
+                className="h-[300px] w-[500px] xl:w-full md:w-full max-h-[80vh]  bg-sidebar rounded-xl p-4 mt-5 xl:mt-0 flex flex-col scrollbar-custom"
+                style={{
+                  scrollbarWidth: "thin",
+                  scrollbarColor: "#141527 #141527",
                 }}
-                data={sellingItemData}
-              />
-            </div>
+              >
+                <h6 className="text-xl text-primary-text">
+                  Most Selling Items
+                </h6>
+                <DashboardMostSellingItems
+                  containerProps={{
+                    className: "mt-8 gap-y-4",
+                  }}
+                  data={sellingItemData}
+                />
+              </div>
+            )}
 
             {/* Second Card - Category Table */}
-            <div
-              className="mt-10  max-h-[80vh]  overflow-y-auto bg-sidebar rounded-xl p-4 flex flex-col  xl:w-full"
-              style={{
-                scrollbarWidth: "thin",
-                scrollbarColor: "#141527 #141527",
-              }}
-            >
-              <CategoryTable categories={cate} setCategories={setCate} />
-            </div>
+            {cate && cate.length > 0 && (
+              <div
+                className="mt-10  max-h-[80vh]  overflow-y-auto bg-sidebar rounded-xl p-4 flex flex-col  xl:w-full"
+                style={{
+                  scrollbarWidth: "thin",
+                  scrollbarColor: "#141527 #141527",
+                }}
+              >
+                <CategoryTable categories={cate} setCategories={setCate} />
+              </div>
+            )}
           </div>
         </div>
+        <DailyReportChart
+          month={month.toString()}
+          year={year}
+          productsSold={productsSold}
+          salesAmount={salesAmount}
+        />
       </div>
 
       {/* Modals */}
