@@ -2,6 +2,7 @@
 import axiosInstance from "@/lib/axios";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import toast from "react-hot-toast";
 
 type Props = {
   open: boolean;
@@ -23,7 +24,8 @@ export default function StripeConnectModal({
   const [isUpdate, setIsUpdate] = useState(false);
   const [serverMsg, setServerMsg] = useState<string | null>(null);
   const [recordId, setRecordId] = useState<string | null>(null);
-
+  const [secretkey, setSecretkey] = useState("");
+  const [publisher, setPublisher] = useState("");
   const { register, handleSubmit, reset } = useForm<FormShape>({
     defaultValues: {
       stripe_secret_key: "",
@@ -39,11 +41,13 @@ export default function StripeConnectModal({
       try {
         const { data } = await axiosInstance.get("/owners/stripe/");
         const rec = data?.id ? data : data?.results?.[0];
-
+        console.log(rec.stripe_secret_key);
         if (rec) {
           setIsUpdate(true);
           setRecordId(rec?.id ?? null);
-          reset({ stripe_secret_key: "", stripe_publishable_key: "" }); // always blank fields
+          setSecretkey(rec?.stripe_secret_key ?? "");
+          setPublisher(rec?.stripe_publishable_key ?? "");
+          reset({ stripe_secret_key: "", stripe_publishable_key: "" });
         } else {
           setIsUpdate(false);
           setRecordId(null);
@@ -77,12 +81,19 @@ export default function StripeConnectModal({
 
       let resp;
       if (recordId) {
+        console.log(payload);
         resp = await axiosInstance.patch(
           `/owners/stripe/${recordId}/`,
           payload
         );
+        if (resp.status === 200) {
+          toast.success("Stripe keys updated successfully");
+        }
       } else {
         resp = await axiosInstance.post(`/owners/stripe/`, payload);
+        if(resp.status === 201) {
+          toast.success("Stripe added successfully");
+        }
       }
 
       onSuccess?.(resp.data);
@@ -118,6 +129,7 @@ export default function StripeConnectModal({
               <input
                 type="text" // visible when typing
                 placeholder="sk_test_..."
+                // value={secretkey}
                 {...register("stripe_secret_key")}
                 disabled={loading}
                 className="w-full rounded-lg bg-[#201C3F] text-white px-3 py-2.5 outline-none"
@@ -129,8 +141,9 @@ export default function StripeConnectModal({
                 Stripe Publishable Key
               </label>
               <input
-                type="text" // visible when typing
+                type="text"
                 placeholder="pk_test_..."
+                // value={publisher||""}
                 {...register("stripe_publishable_key")}
                 disabled={loading}
                 className="w-full rounded-lg bg-[#201C3F] text-white px-3 py-2.5 outline-none"
