@@ -359,7 +359,7 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
         }
 
         const response = await axiosInstance.get(endpoint);
-        console.log(response, "response from fetch reservations");
+        
         const { results, count } = response.data;
         const formattedReservations = results?.map((item: any) => ({
           id: item.id,
@@ -382,6 +382,11 @@ export const OwnerProvider: React.FC<{ children: ReactNode }> = ({
     },
     [reservationsCurrentPage, userRole, isLoading]
   );
+  useEffect(() => {
+    if (response.type == "reservation_created") {
+      fetchReservations();
+    }
+  }, [fetchReservations, response]);
 
   const fetchReservationStatusReport = useCallback(async () => {
     // Don't fetch if still loading or if userRole is null
