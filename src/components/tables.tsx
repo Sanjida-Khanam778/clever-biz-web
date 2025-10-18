@@ -757,6 +757,7 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
       fetchOwnerOrders();
     }
   }, [response, fetchOrders, fetchOwnerOrders]);
+  console.log(ordersData);
   return (
     <div className="overflow-x-auto">
       <table className="w-full table-auto text-left clever-table">
@@ -769,6 +770,7 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
             <th className="p-2 sm:p-4">Timer of Order</th>
             <th className="p-2 sm:p-4">Order Id</th>
             <th className="p-2 sm:p-4">Status</th>
+            <th className="p-2 sm:p-4">Payment Status</th>
           </tr>
         </thead>
         <tbody className="bg-sidebar text-sm">
@@ -838,6 +840,13 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
                     }
                   />
                 )}
+              </td>
+              <td className="p-2 sm:p-4 text-primary-text">
+                <span className="font-medium">
+                  {item.status == "completed"
+                    ? "paid"
+                    : `${item?.payment_status}`}
+                </span>
               </td>
             </tr>
           ))}
