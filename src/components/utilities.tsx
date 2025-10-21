@@ -859,27 +859,27 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
         <table className="w-full table-auto text-left clever-table">
           <thead className="table-header">
             <tr>
-              <th className="px-4 py-2">Image</th>
-              <th className="px-4 py-2">Name of the food</th>
-              <th className="px-4 py-2">Category</th>
-              <th className="px-4 py-2">Price</th>
-              <th className="px-4 py-2">Action</th>
-              <th className="px-4 py-2">Availability</th>
+              <th className="px-4 py-2 text-start">Image</th>
+              <th className="px-4 py-2 text-start">Name of the food</th>
+              <th className="px-4 py-2 text-center">Category</th>
+              <th className="px-4 py-2 text-center">Price</th>
+              <th className="px-4 py-2 text-start">Action</th>
+              <th className="px-4 py-2 text-start">Availability</th>
             </tr>
           </thead>
           <tbody className="bg-sidebar text-sm">
             {data?.map((item, index) => (
-              <tr key={index} className="border-b border-[#1C1E3C]">
-                <td className="p-4">
+              <tr key={index} className="border-b  border-[#1C1E3C]">
+                <td className="p-4 items-center">
                   <img
                     src={item.image}
                     alt="Food Item"
                     className="bg-dashboard/50 w-12 h-12 rounded-md"
                   />
                 </td>
-                <td className="p-4 text-primary-text">{item.name}</td>
-                <td className="p-4 text-primary-text">{item.category}</td>
-                <td className="p-4 text-primary-text">{item.price}</td>
+                <td className="p-4 text-primary-text truncate text-start">{item.name.substring(0,30) + '...'}</td>
+                <td className="p-4 text-primary-text text-center">{item.category}</td>
+                <td className="p-4 text-primary-text text-center">{item.price}</td>
                 <td className="h-20 p-4 flex gap-x-4 items-center">
                   <button
                     onClick={() => openEdit(item?.id)}
@@ -894,7 +894,7 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
                     <IconDelete className="h-6 w-6" />
                   </button>
                 </td>
-                <td className="p-4">
+                <td className="p-4 text-start" >
                   <ButtonStatus
                     status={
                       localAvailability[item.id] !== undefined

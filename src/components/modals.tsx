@@ -1687,3 +1687,6 @@ export const NewAssistantModal: React.FC<TAssistantModalProps> = ({
     </Dialog>
   );
 };
+
+
+

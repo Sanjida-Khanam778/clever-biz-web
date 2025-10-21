@@ -15,7 +15,7 @@ import { useStaff } from "@/context/staffContext";
 import axiosInstance from "@/lib/axios";
 import toast from "react-hot-toast";
 import { Member, ReservationItem, DeviceItem, ReviewItem } from "@/types";
-import { Pointer, Trash, Trash2 } from "lucide-react";
+import { Eye, Pointer, Trash, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogBackdrop,
@@ -25,6 +25,7 @@ import {
 import { ImSpinner6 } from "react-icons/im";
 import { WebSocketContext } from "@/hooks/WebSocketProvider";
 import { userInfo } from "os";
+import OrderDetailsModal from "./ui/order-datials-modal";
 
 /* Reservation Table Data ===========================================================>>>>> */
 
@@ -84,12 +85,12 @@ export const TableReservationList: React.FC<TableReservationListProps> = ({
         <tr>
           <th className="p-4 rounded-l-md">Reservation ID</th>
           <th className="p-4">Customer Name</th>
-          <th className="p-4">Table Name</th>
-          <th className="p-4">Guest No.</th>
+          <th className="p-4 text-center">Table Name</th>
+          <th className="p-4 text-center">Guest No.</th>
           <th className="p-4">Cell number</th>
-          <th className="p-4">Email</th>
-          <th className="p-4">Reservation time</th>
-          <th className="p-4 rounded-r-md">Custom Request</th>
+          <th className="p-4 text-center">Email</th>
+          <th className="p-4 text-center">Reservation time</th>
+          <th className="p-4 rounded-r-md text-center">Custom Request</th>
         </tr>
       </thead>
       <tbody className="bg-sidebar text-sm">
@@ -97,20 +98,24 @@ export const TableReservationList: React.FC<TableReservationListProps> = ({
           const statusDisplay = getStatusDisplay(item.customRequest);
           return (
             <tr key={index} className="border-b border-[#1C1E3C]">
-              <td className="p-4 text-primary-text">{item.id}</td>
+              <td className="p-4 text-primary-text ">{item.id}</td>
               <td className="p-4 text-primary-text">{item.customerName}</td>
-              <td className="p-4 text-primary-text">{item.tableNo}</td>
-              <td className="p-4 text-primary-text">{item.guestNo}</td>
+              <td className="p-4 text-primary-text text-center">
+                {item.tableNo}
+              </td>
+              <td className="p-4 text-primary-text text-center">
+                {item.guestNo}
+              </td>
               <td className="p-4 text-primary-text">{item.cellNumber}</td>
-              <td className="p-4 text-primary-text/60">
+              <td className="p-4 text-primary-text/60 text-center">
                 {item.email ? item.email : "N/A"}
               </td>
-              <td className="p-4 text-primary-text">
+              <td className="p-4 text-primary-text text-center">
                 <span className="font-medium">
                   {formatDateTime(item.reservationTime)}
                 </span>
               </td>
-              <td className="p-4 text-primary-text">
+              <td className="p-4 text-primary-text flex flex-col items-center">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     {statusDisplay.icon}
@@ -308,19 +313,19 @@ export const TableTeamManagement: React.FC<TableTeamManagementProps> = ({
       <thead className="table-header">
         <tr>
           <th className="p-4 rounded-l-md">ID</th>
-          <th className="p-4">Name</th>
-          <th className="p-4">Role</th>
-          <th className="p-4">Email</th>
-          <th className="p-4 rounded-r-md">Action</th>
+          <th className="p-4 text-center">Name</th>
+          <th className="p-4 text-center">Role</th>
+          <th className="p-4 text-center">Email</th>
+          <th className="p-4 rounded-r-md text-center">Action</th>
         </tr>
       </thead>
       <tbody className="bg-sidebar text-sm">
         {data.map((item, index) => (
           <tr key={index} className="border-b border-[#1C1E3C]">
             <td className="p-4 text-primary-text">{item.id}</td>
-            <td className="p-4 text-primary-text">{item.username}</td>
-            <td className="p-4 text-primary-text">{item.role}</td>
-            <td className="p-4 text-primary-text/60 flex items-center gap-x-1">
+            <td className="p-4 text-primary-text text-center">{item.username}</td>
+            <td className="p-4 text-primary-text text-center">{item.role}</td>
+            <td className="p-4 text-primary-text/60 flex items-center justify-center gap-x-1">
               {item.email}
               {item.email ? (
                 <TooltipTop tip="Send password via mail">
@@ -332,8 +337,8 @@ export const TableTeamManagement: React.FC<TableTeamManagementProps> = ({
                 "N/A"
               )}
             </td>
-            <td className="p-4 text-primary-text">
-              <div className="flex items-center gap-4:">
+            <td className="p-4 text-primary-text ">
+              <div className="flex items-center gap-4: justify-center">
                 <ButtonStatus
                   status={
                     localMemberStatus[item.id] !== undefined
@@ -532,19 +537,21 @@ export const TableDeviceList: React.FC<TableDeviceListProps> = ({ data }) => {
       <thead className="table-header">
         <tr>
           <th>ID</th>
-          <th>Username</th>
-          <th>Table Name</th>
-          <th>Action</th>
+          <th className="text-center">Username</th>
+          <th className="text-center">Table Name</th>
+          <th className="text-center">Action</th>
         </tr>
       </thead>
       <tbody className="bg-sidebar text-sm">
         {data.map((item, index) => (
           <tr key={index} className="border-b border-[#1C1E3C]">
             <td className="p-4 text-primary-text">{item.id}</td>
-            <td className="p-4 text-primary-text">{item.username}</td>
-            <td className="p-4 text-primary-text">{item.table_name}</td>
-            <td className="p-4 text-primary-text">
-              <div className="flex items-center gap-3">
+            <td className="p-4 text-primary-text text-center">{item.username}</td>
+            <td className="p-4 text-primary-text text-center ">
+              {item.table_name}
+            </td>
+            <td className="p-4 text-primary-text flex flex-col items-center">
+              <div className="flex  items-center gap-3">
                 <ButtonStatus
                   status={
                     localDeviceStatus[item.id] !== undefined
@@ -688,29 +695,29 @@ export const TableReviewList: React.FC<TableReviewListProps> = ({ data }) => {
       <thead className="table-header">
         <tr>
           <th>Customer Name</th>
-          <th>Date</th>
-          <th>Time of Order</th>
-          <th>Guest No.</th>
-          <th>Table Name</th>
-          <th>Order ID</th>
-          <th>Review</th>
+          <th className="text-center">Date</th>
+          <th className="text-center">Time of Order</th>
+          <th className="text-center">Guest No.</th>
+          <th className="text-center">Table Name</th>
+          <th className="text-center">Order ID</th>
+          <th className="text-center">Review</th>
         </tr>
       </thead>
       <tbody className="bg-sidebar text-sm">
         {data.map((item, index) => (
           <tr key={index} className="border-b border-[#1C1E3C]">
             <td className="p-4 text-primary-text">{item.name}</td>
-            <td className="p-4 text-primary-text">
+            <td className="p-4 text-primary-text  text-center">
               {" "}
               {formatDate(item.created_time)}
             </td>
-            <td className="p-4 text-primary-text">
+            <td className="p-4 text-primary-text text-center">
               {formatTime(item.created_time)}
             </td>
-            <td className="p-4 text-primary-text">{item.guest_no}</td>
-            <td className="p-4 text-primary-text">{item.device_table}</td>
-            <td className="p-4 text-primary-text">{item.order_id}</td>
-            <td className="p-4 text-primary-text">{item.rating}</td>
+            <td className="p-4 text-primary-text text-center">{item.guest_no}</td>
+            <td className="p-4 text-primary-text text-center">{item.device_table}</td>
+            <td className="p-4 text-primary-text text-center">{item.order_id}</td>
+            <td className="p-4 text-primary-text text-center">{item.rating}</td>
           </tr>
         ))}
       </tbody>
@@ -733,9 +740,9 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
   const { fetchOrders: fetchOwnerOrders } = useOwner();
   const statuses = ["Pending", "Preparing", "Served", "Completed", "Cancelled"];
   const { updateOrderStatus: contextUpdateOrderStatus } = useOwner();
-
+  const [oderViewData, setOderViewData] = useState(null);
   const updateOrderStatus = propUpdateOrderStatus || contextUpdateOrderStatus;
-
+  const [viewOpen, setViewOpen] = useState(false);
   const ordersData = Array.isArray(data) ? data : data?.orders || [];
 
   const handleStatusChange = useCallback(
@@ -757,44 +764,70 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
       fetchOwnerOrders();
     }
   }, [response, fetchOrders, fetchOwnerOrders]);
-  console.log(ordersData);
+  const handleViewOrders = async (orderId) => {
+    try {
+      const userInfo = localStorage.getItem("userInfo");
+      const { role } = JSON.parse(userInfo);
+      let endpoint = "";
+
+      if (role === "staff" || role === "chef") {
+        endpoint = `/chef/orders/${orderId}/`;
+      } else if (role === "owner") {
+        endpoint = `/owners/orders/${orderId}/`;
+      } else {
+        toast.error("Invalid user role");
+        return;
+      }
+      const res = await axiosInstance.get(endpoint);
+      console.log(res);
+      setOderViewData(res?.data);
+      setViewOpen(true);
+    } catch (err) {
+      console.error("Error fetching order:", err);
+    }
+  };
+
+  console.log("ordersData", ordersData);
   return (
     <div className="overflow-x-auto">
       <table className="w-full table-auto text-left clever-table">
         <thead className="table-header">
           <tr>
-            <th className="p-2 sm:p-4">Table Name</th>
-            <th className="p-2 sm:p-4">Ordered Items</th>
-            <th className="p-2 sm:p-4">Quantity</th>
-            <th className="p-2 sm:p-4">Price</th>
-            <th className="p-2 sm:p-4">Timer of Order</th>
-            <th className="p-2 sm:p-4">Order Id</th>
-            <th className="p-2 sm:p-4">Status</th>
-            <th className="p-2 sm:p-4">Payment Status</th>
+            <th className="p-2 sm:p-4 text-center ">Table Name</th>
+            <th className="p-2 sm:p-4 text-center">Ordered Items</th>
+            <th className="p-2 sm:p-4 text-center">Quantity</th>
+            <th className="p-2 sm:p-4 text-center">Price</th>
+            <th className="p-2 sm:p-4 text-center">Timer of Order</th>
+            <th className="p-2 sm:p-4 text-center">Order Id</th>
+            <th className="p-2 sm:p-4 text-center">Status</th>
+            <th className="p-2 sm:p-4 text-center">Payment Status</th>
+            <th className="p-2 sm:p-4 text-start">view</th>
           </tr>
         </thead>
         <tbody className="bg-sidebar text-sm">
           {ordersData?.map((item, index) => (
             <tr key={index} className="border-b border-[#1C1E3C]">
-              <td className="p-2 sm:p-4 text-primary-text">
-                {item.device_name}
+              <td className="p-2 sm:p-4 text-primary-text truncate text-center">
+                {item.device_name.substring(0, 20)}
               </td>
-              <td className="p-2 sm:p-4 text-primary-text">
-                {item.order_items?.[0]?.item_name || "N/A"}
+              <td className="p-2 sm:p-4 text-primary-text truncate text-center">
+                {item.order_items?.[0]?.item_name.substring(0, 20) || "N/A"}
               </td>
-              <td className="p-2 sm:p-4 text-primary-text">
+              <td className="p-2 sm:p-4 text-primary-text text-center ">
                 {item.order_items.length || "N/A"}
               </td>
-              <td className="p-2 sm:p-4 text-primary-text">
+              <td className="p-2 sm:p-4 text-primary-text text-center">
                 {item.total_price || "N/A"}
               </td>
-              <td className="p-2 sm:p-4 text-primary-text">
+              <td className="p-2 sm:p-4 text-primary-text text-center">
                 <span className="font-medium">
                   {formatDateTime(item.created_time)}
                 </span>
               </td>
-              <td className="p-2 sm:p-4 text-primary-text">{item.id}</td>
-              <td className="p-2 sm:p-4 text-primary-text">
+              <td className="p-2 sm:p-4 text-primary-text text-center">
+                {item.id}
+              </td>
+              <td className="p-2 sm:p-4 text-primary-text text-center">
                 {item.status.toLowerCase() === "paid" ? (
                   <ButtonStatus
                     status={item.status}
@@ -841,13 +874,28 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
                   />
                 )}
               </td>
-              <td className="p-2 sm:p-4 text-primary-text">
+              <td className="p-2 sm:p-4 text-primary-text text-center">
                 <span className="font-medium">
                   {item.status == "completed"
                     ? "paid"
                     : `${item?.payment_status}`}
                 </span>
               </td>
+              <td className="p-2 sm:p-4 text-primary-text text-center">
+                <span
+                  className="font-medium text-center"
+                  onClick={() => handleViewOrders(item.id)}
+                >
+                  <Eye />
+                </span>
+              </td>
+              {viewOpen && (
+                <OrderDetailsModal
+                  isOpen={viewOpen}
+                  order={oderViewData}
+                  onClose={() => setViewOpen(false)}
+                />
+              )}
             </tr>
           ))}
         </tbody>
