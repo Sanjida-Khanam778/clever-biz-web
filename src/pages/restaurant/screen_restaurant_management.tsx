@@ -1,9 +1,9 @@
+import { EditStaffModal } from "@/components/modals";
 import { TableTeamManagement } from "@/components/tables";
+import { useOwner } from "@/context/ownerContext";
+import { useEffect, useState } from "react";
 import { TextSearchBox } from "../../components/input";
 import { Pagination } from "../../components/utilities";
-import { useEffect, useState } from "react";
-import { useOwner } from "@/context/ownerContext";
-import { EditStaffModal } from "@/components/modals";
 
 /* Screen to list of team management on restaurant end */
 const ScreenRestaurantManagement = () => {
@@ -22,7 +22,7 @@ const ScreenRestaurantManagement = () => {
 
   useEffect(() => {
     fetchMembers();
-  }, [fetchMembers,]);
+  }, [fetchMembers]);
 
   const handleSearch = (query: string) => {
     setMembersSearchQuery(query);
