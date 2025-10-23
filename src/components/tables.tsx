@@ -78,7 +78,7 @@ export const TableReservationList: React.FC<TableReservationListProps> = ({
         };
     }
   };
-
+ console.log(data)
   return (
     <table className="w-full table-auto text-left clever-table">
       <thead className="table-header">

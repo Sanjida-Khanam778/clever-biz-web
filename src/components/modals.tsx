@@ -1580,8 +1580,8 @@ export const NewAssistantModal: React.FC<TAssistantModalProps> = ({
       close();
     } catch (err: any) {
       console.log(err)
-      toast.error(err.response?.data.error)
-      toast.error(err.response?.data?.non_field_errors[0]);
+      toast.error(err?.response?.data.error)
+      toast.error(err?.response?.data?.non_field_errors[0]);
       console.error("Error creating assistant:", err?.response?.data || err);
     }
   };

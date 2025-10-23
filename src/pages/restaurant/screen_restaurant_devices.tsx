@@ -1,15 +1,12 @@
+import { EditDeviceModal } from "@/components/modals";
+import { TableDeviceList } from "@/components/tables";
+import { useOwner } from "@/context/ownerContext";
+import { useEffect, useState } from "react";
 import { ButtonAdd, TextSearchBox } from "../../components/input";
 import {
-  DeviceDashboardCard,
-  Pagination,
   DashboardCard,
+  Pagination
 } from "../../components/utilities";
-import { TableDeviceList } from "@/components/tables";
-import { IconDeviceActive, IconDeviceHold } from "@/components/icons";
-import { EditDeviceModal } from "@/components/modals";
-import { useState, useEffect, useCallback } from "react";
-import { useOwner } from "@/context/ownerContext";
-import axiosInstance from "@/lib/axios";
 
 export const ScreenRestaurantDevices = () => {
   const {
