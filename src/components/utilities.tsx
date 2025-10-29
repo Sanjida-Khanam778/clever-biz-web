@@ -877,9 +877,15 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
                     className="bg-dashboard/50 w-12 h-12 rounded-md"
                   />
                 </td>
-                <td className="p-4 text-primary-text truncate text-start">{item.name.substring(0,30) + '...'}</td>
-                <td className="p-4 text-primary-text text-center">{item.category}</td>
-                <td className="p-4 text-primary-text text-center">{item.price}</td>
+                <td className="p-4 text-primary-text truncate text-start">
+                  {item.name.substring(0, 30) + "..."}
+                </td>
+                <td className="p-4 text-primary-text text-center">
+                  {item.category}
+                </td>
+                <td className="p-4 text-primary-text text-center">
+                  {item.price}
+                </td>
                 <td className="h-20 p-4 flex gap-x-4 items-center">
                   <button
                     onClick={() => openEdit(item?.id)}
@@ -894,7 +900,7 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
                     <IconDelete className="h-6 w-6" />
                   </button>
                 </td>
-                <td className="p-4 text-start" >
+                <td className="p-4 text-start">
                   <ButtonStatus
                     status={
                       localAvailability[item.id] !== undefined
@@ -1400,10 +1406,10 @@ export const ChatSection: React.FC = () => {
           {/* Header */}
           <div className="flex-1 flex items-center justify-between p-4 border-[#2B2A40] text-primary-text">
             <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 rounded-full bg-[#292758] flex items-center justify-center">
-                <span>{selectedChat?.id || "N/A"}</span>
+              <div className="">
+                {/* <span>{selectedChat?.id || "N/A"}</span> */}
               </div>
-              <span className="font-medium">
+              <span className="font-medium ">
                 {selectedChat?.table_name || "Select a table"}
               </span>
             </div>
@@ -1601,9 +1607,12 @@ const ChatListItem: React.FC<ChatListItemProps> = ({
       onClick={onClick}
     >
       <div className="relative">
-        <p className="h-10 w-10 bg-[#292758]/50 rounded-full flex justify-center items-center">
-          <span className="text-xl">{data.table_name}</span>
+        <p className="h-12 w-12 bg-[#292758]/50 rounded-full flex justify-center items-center text-white font-semibold">
+          <span className="text-[clamp(10px,2vw,14px)] uppercase truncate">
+            {`${data.table_name}`}
+          </span>
         </p>
+
         {hasNew && (
           <>
             <span
