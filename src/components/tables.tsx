@@ -78,7 +78,7 @@ export const TableReservationList: React.FC<TableReservationListProps> = ({
         };
     }
   };
- console.log(data)
+  console.log(data);
   return (
     <table className="w-full table-auto text-left clever-table">
       <thead className="table-header">
@@ -174,12 +174,27 @@ export const ButtonStatus: React.FC<ButtonStatusProps> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState(status);
+  const [openAbove, setOpenAbove] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   // Update selected state when status prop changes
   useEffect(() => {
     setSelected(status);
   }, [status]);
+
+  // Calculate position when dropdown opens
+  useEffect(() => {
+    if (open && buttonRef.current) {
+      const buttonRect = buttonRef.current.getBoundingClientRect();
+      const dropdownHeight = availableStatuses.length * 40; // estimate dropdown height
+      const spaceBelow = window.innerHeight - buttonRect.bottom;
+      const spaceAbove = buttonRect.top;
+
+      // Open above if not enough space below
+      setOpenAbove(spaceBelow < dropdownHeight && spaceAbove > spaceBelow);
+    }
+  }, [open, availableStatuses.length]);
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -204,7 +219,7 @@ export const ButtonStatus: React.FC<ButtonStatusProps> = ({
   const handleSelect = (newStatus: string) => {
     setSelected(newStatus);
     setOpen(false);
-    onChange?.(newStatus); // call parent function
+    onChange?.(newStatus);
   };
 
   // Get the current properties with fallback
@@ -216,13 +231,18 @@ export const ButtonStatus: React.FC<ButtonStatusProps> = ({
   return (
     <div className="relative" ref={dropdownRef}>
       <button
+        ref={buttonRef}
         className={`px-3 py-1 text-sm rounded ${currentProperties.bg} ${currentProperties.text}`}
         onClick={() => setOpen(!open)}
       >
         {selected}
       </button>
       {open && (
-        <div className="absolute top-full left-0 bg-sidebar text-white mt-1 rounded shadow-lg z-10">
+        <div
+          className={`absolute left-1/2 -translate-x-1/2 bg-sidebar text-white rounded shadow-lg z-50 min-w-[120px] ${
+            openAbove ? "bottom-full mb-1" : "top-full mt-1"
+          }`}
+        >
           {availableStatuses.map((s) => {
             const statusProperties = properties[s] || {
               bg: "bg-gray-800",
@@ -323,7 +343,9 @@ export const TableTeamManagement: React.FC<TableTeamManagementProps> = ({
         {data.map((item, index) => (
           <tr key={index} className="border-b border-[#1C1E3C]">
             <td className="p-4 text-primary-text">{item.id}</td>
-            <td className="p-4 text-primary-text text-center">{item.username}</td>
+            <td className="p-4 text-primary-text text-center">
+              {item.username}
+            </td>
             <td className="p-4 text-primary-text text-center">{item.role}</td>
             <td className="p-4 text-primary-text/60 flex items-center justify-center gap-x-1">
               {item.email}
@@ -546,7 +568,9 @@ export const TableDeviceList: React.FC<TableDeviceListProps> = ({ data }) => {
         {data.map((item, index) => (
           <tr key={index} className="border-b border-[#1C1E3C]">
             <td className="p-4 text-primary-text">{item.id}</td>
-            <td className="p-4 text-primary-text text-center">{item.username}</td>
+            <td className="p-4 text-primary-text text-center">
+              {item.username}
+            </td>
             <td className="p-4 text-primary-text text-center ">
               {item.table_name}
             </td>
@@ -714,9 +738,15 @@ export const TableReviewList: React.FC<TableReviewListProps> = ({ data }) => {
             <td className="p-4 text-primary-text text-center">
               {formatTime(item.created_time)}
             </td>
-            <td className="p-4 text-primary-text text-center">{item.guest_no}</td>
-            <td className="p-4 text-primary-text text-center">{item.device_table}</td>
-            <td className="p-4 text-primary-text text-center">{item.order_id}</td>
+            <td className="p-4 text-primary-text text-center">
+              {item.guest_no}
+            </td>
+            <td className="p-4 text-primary-text text-center">
+              {item.device_table}
+            </td>
+            <td className="p-4 text-primary-text text-center">
+              {item.order_id}
+            </td>
             <td className="p-4 text-primary-text text-center">{item.rating}</td>
           </tr>
         ))}
@@ -790,7 +820,7 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
   console.log("ordersData", ordersData);
   return (
     <div className="overflow-x-auto">
-      <table className="w-full table-auto text-left clever-table">
+      <table className="w-full table-auto text-left clever-table overflow-visible">
         <thead className="table-header">
           <tr>
             <th className="p-2 sm:p-4 text-center ">Table Name</th>
@@ -827,7 +857,7 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
               <td className="p-2 sm:p-4 text-primary-text text-center">
                 {item.id}
               </td>
-              <td className="p-2 sm:p-4 text-primary-text text-center">
+              <td className="p-2 sm:p-4 text-primary-text text-center z-20">
                 {item.status.toLowerCase() === "paid" ? (
                   <ButtonStatus
                     status={item.status}
