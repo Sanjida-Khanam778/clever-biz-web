@@ -279,7 +279,7 @@ export const ChatSection: React.FC = () => {
   const globalWsRef = useReconnectingWebSocket(
     () => {
       if (!accessToken) return null;
-      return `wss://abc.winaclaim.com/ws/notify/?token=${accessToken}`; // <-- UPDATE if your backend uses a different global WS path
+      return `wss://api.cleverbiz.ai/ws/notify/?token=${accessToken}`; // <-- UPDATE if your backend uses a different global WS path
     },
     {
       onMessage: (event) => {
@@ -326,7 +326,7 @@ export const ChatSection: React.FC = () => {
     if (!selectedChat) return;
     const device_id = selectedChat.id;
     const user_id = selectedChat.user_id;
-    const ws = new WebSocket(`wss://abc.winaclaim.com/ws/call/${device_id}/?token=${accessToken}`);
+    const ws = new WebSocket(`wss://api.cleverbiz.ai/ws/call/${device_id}/?token=${accessToken}`);
 
     ws.onopen = async () => {
       const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
