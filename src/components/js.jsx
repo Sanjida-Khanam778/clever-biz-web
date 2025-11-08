@@ -257,7 +257,7 @@ export const ChatSection: React.FC = () => {
   const roomWsRef = useReconnectingWebSocket(
     () => {
       if (!selectedChat || !accessToken) return null;
-      return `wss://abc.winaclaim.com/ws/chat/${selectedChat.id}/?token=${accessToken}`; // adjust path if needed
+      return `wss://api.cleverbiz.ai/ws/chat/${selectedChat.id}/?token=${accessToken}`; // adjust path if needed
     },
     {
       onOpen: () => {},

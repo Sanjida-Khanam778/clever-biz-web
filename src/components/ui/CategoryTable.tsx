@@ -77,7 +77,7 @@ const CategoriesTable = ({ categories, setCategories }) => {
 
 export default CategoriesTable;
 
- const DeleteFoodItemModal = ({ isOpen, close, id, setCategories }) => {
+const DeleteFoodItemModal = ({ isOpen, close, id, setCategories }) => {
   const { response } = useContext(WebSocketContext);
   const parseUser = JSON.parse(localStorage.getItem("userInfo"));
   const role = parseUser?.role;

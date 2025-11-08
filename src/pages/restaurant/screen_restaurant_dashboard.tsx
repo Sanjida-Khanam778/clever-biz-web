@@ -1,5 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { MonthlyChart, YearlyChart } from "@/components/charts";
+import { YearlyChart } from "@/components/charts";
+import { IconGrowth, IconSales, IconTeam } from "@/components/icons";
+import { EditCategoryModal, EditFoodItemModal } from "@/components/modals";
+import CategoryTable from "@/components/ui/CategoryTable";
+import { DailyReportChart } from "@/components/ui/MonthlyChartx";
+import { useOwner } from "@/context/ownerContext";
+import axiosInstance from "@/lib/axios";
+import { useCallback, useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { ButtonAdd, TextSearchBox } from "../../components/input";
 import {
   DashboardCard,
@@ -7,14 +15,6 @@ import {
   Pagination,
   TableFoodList,
 } from "../../components/utilities";
-import { useEffect, useState, useCallback } from "react";
-import { EditCategoryModal, EditFoodItemModal } from "@/components/modals";
-import { IconGrowth, IconSales, IconTeam } from "@/components/icons";
-import { useOwner } from "@/context/ownerContext";
-import axiosInstance from "@/lib/axios";
-import toast from "react-hot-toast";
-import CategoryTable from "@/components/ui/CategoryTable";
-import { DailyReportChart } from "@/components/ui/MonthlyChartx";
 
 const ScreenRestaurantDashboard = () => {
   const {
@@ -24,6 +24,7 @@ const ScreenRestaurantDashboard = () => {
     searchQuery,
     fetchFoodItems,
     setCurrentPage,
+    fetchCategories,
     setSearchQuery,
   } = useOwner();
 
@@ -43,7 +44,10 @@ const ScreenRestaurantDashboard = () => {
   const [analyticsLoading, setAnalyticsLoading] = useState(true);
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
 
-  const showFoodItemAddModal = () => setShowFoodItemModal(true);
+  const showFoodItemAddModal = () => {
+    setShowFoodItemModal(true);
+    fetchCategories();
+  };
   const showCategoryAddModal = () => setShowCategoryModal(true);
   const closeFoodItemModal = () => setShowFoodItemModal(false);
   const closeCaegoryModal = () => setShowCategoryModal(false);
@@ -171,8 +175,8 @@ const ScreenRestaurantDashboard = () => {
               analyticsLoading
                 ? "..."
                 : analytics?.status?.today_total_completed_order_price
-                ? `$${analytics.status.today_total_completed_order_price}`
-                : "$0"
+                ? `AED ${analytics.status.today_total_completed_order_price}`
+                : "AED 0"
             }
             accentColor="#31BB24"
             gradientStart="#48E03A"
@@ -186,8 +190,8 @@ const ScreenRestaurantDashboard = () => {
               analyticsLoading
                 ? "..."
                 : analytics?.status?.weekly_growth !== undefined
-                ? `$${analytics.status.weekly_growth}`
-                : "$0"
+                ? `AED ${analytics.status.weekly_growth}`
+                : "AED 0"
             }
             accentColor="#FFB056"
             gradientStart="#FFB056"

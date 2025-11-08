@@ -27,7 +27,7 @@ import {
   BtnUndo,
   BtnRedo,
 } from "react-simple-wysiwyg";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { set, SubmitHandler, useForm, Controller } from "react-hook-form";
 import toast from "react-hot-toast";
 import axiosInstance from "@/lib/axios";
@@ -41,6 +41,7 @@ import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import "./intt.css";
 import axios from "axios";
+import { WebSocketContext } from "@/hooks/WebSocketProvider";
 /* Edit food item dialog ===========================================================>>>>> */
 type ModalPropsCall = {
   socketRef?: React.RefObject<WebSocket>;
@@ -86,16 +87,14 @@ export const EditFoodItemModal: React.FC<ModalProps> = ({
   const [existingImage, setExistingImage] = useState<string | null>(null);
   const [existingVideo, setExistingVideo] = useState<string | null>(null);
   const [allCate, setAllCate] = useState<TCategory[] | []>([]);
+  const { response } = useContext(WebSocketContext);
   // Load categories when userRole is available
   const user = localStorage.getItem("userInfo");
   const parseUser = JSON.parse(user || "{}");
 
+
   useEffect(() => {
     const fetchCategories = async () => {
-      if (!isLoading || !userRole) {
-        return;
-      }
-
       try {
         let endpoint;
         if (parseUser?.role === "owner") {
@@ -109,23 +108,27 @@ export const EditFoodItemModal: React.FC<ModalProps> = ({
         }
 
         const res = await axiosInstance.get(endpoint);
-        console.log(res, "categories response");
-        setAllCate(res.data); // Make sure you're setting the correct response data
+        setAllCate(res.data);
       } catch (err) {
         console.error("Failed to load categories.", err);
       }
     };
 
-    fetchCategories();
-  }, [allCate, parseUser?.role]);
-
-  useEffect(() => {
-    if (!isLoading && userRole) {
+    if (parseUser?.role) {
       fetchCategories();
     }
-  }, [userRole, isLoading, fetchCategories]);
+  }, [parseUser?.role]);
 
-  // Load single food item data if in edit mode
+  useEffect(() => {
+    if (
+      response?.type === "category_deleted" ||
+      response?.type === "category_created"
+    ) {
+      fetchCategories();
+      console.log("clicked");
+    }
+  }, [response, fetchCategories, allCate, parseUser?.role]);
+
   console.log(userRole, "user role in edit modal");
   useEffect(() => {
     if (id) {
@@ -214,7 +217,7 @@ export const EditFoodItemModal: React.FC<ModalProps> = ({
       setVideoFile(null);
       setExistingImage(null);
       setExistingVideo(null);
-
+      window.location.reload();
       // Close modal
       close();
     } catch (err) {
@@ -224,6 +227,12 @@ export const EditFoodItemModal: React.FC<ModalProps> = ({
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (response.type === "category_created" || response.type === "category_deleted") {
+      fetchCategories();
+    }
+  }, [response, fetchCategories, allCate]);
 
   return (
     <Dialog open={isOpen} as="div" className="relative z-10" onClose={close}>
@@ -267,7 +276,7 @@ export const EditFoodItemModal: React.FC<ModalProps> = ({
                     className="bg-[#201C3F] shadow-md text-sm w-full px-3 py-2 rounded-md text-white"
                   >
                     <option value="">Select category</option>
-                    {allCate?.map((cat) => (
+                    {categories?.map((cat) => (
                       <option key={cat.id} value={cat.id}>
                         {cat.Category_name}
                       </option>
@@ -981,6 +990,7 @@ export const EditCategoryModal: React.FC<ModalProps> = ({
   const { fetchCategories } = useOwner();
   const { handleSubmit, register, reset } = useForm<CategoryInputs>();
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const { response } = useContext(WebSocketContext);
   const onSubmit: SubmitHandler<CategoryInputs> = async (data) => {
     try {
       const formData = new FormData();
@@ -1001,12 +1011,17 @@ export const EditCategoryModal: React.FC<ModalProps> = ({
       setImageFile(null);
       onSuccess();
       close();
-      window.location.reload();
+      // window.location.reload();
     } catch (error) {
       console.error("Failed:", error);
       toast.error("An error occurred");
     }
   };
+  useEffect(() => {
+    if (response.type == "category_created") {
+      fetchCategories();
+    }
+  }, [response, fetchCategories]);
   return (
     <Dialog
       open={isOpen}
@@ -1579,8 +1594,8 @@ export const NewAssistantModal: React.FC<TAssistantModalProps> = ({
       reset();
       close();
     } catch (err: any) {
-      console.log(err)
-      toast.error(err?.response?.data.error)
+      console.log(err);
+      toast.error(err?.response?.data.error);
       toast.error(err?.response?.data?.non_field_errors[0]);
       console.error("Error creating assistant:", err?.response?.data || err);
     }
@@ -1687,6 +1702,3 @@ export const NewAssistantModal: React.FC<TAssistantModalProps> = ({
     </Dialog>
   );
 };
-
-
-

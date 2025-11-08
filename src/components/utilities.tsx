@@ -31,6 +31,7 @@ import { useStaff } from "@/context/staffContext";
 import { useRole } from "@/hooks/useRole";
 import CallerModal from "@/pages/model/CallerModal";
 import { FoodItem } from "@/types";
+import { UserCircle2 } from "lucide-react";
 /* Logo Component */
 type LogoProps = {
   className?: string; // Optional className for styling wrapper div
@@ -221,7 +222,7 @@ export const Header = () => {
     chatData.forEach((chat) => {
       if (!socketsRef.current[chat.id]) {
         const ws = new WebSocket(
-          `wss://abc.winaclaim.com/ws/call/${chat.id}/?token=${jwt}`
+          `wss://api.cleverbiz.ai/ws/call/${chat.id}/?token=${jwt}`
         );
         setNewSocket(ws);
         ws.onopen = () => {
@@ -860,7 +861,7 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
           <thead className="table-header">
             <tr>
               <th className="px-4 py-2 text-start">Image</th>
-              <th className="px-4 py-2 text-start">Name of the food</th>
+              <th className="px-4 py-2 text-center">Name of the food</th>
               <th className="px-4 py-2 text-center">Category</th>
               <th className="px-4 py-2 text-center">Price</th>
               <th className="px-4 py-2 text-start">Action</th>
@@ -877,8 +878,8 @@ export const TableFoodList: React.FC<TableFoodListProps> = ({ data }) => {
                     className="bg-dashboard/50 w-12 h-12 rounded-md"
                   />
                 </td>
-                <td className="p-4 text-primary-text truncate text-start">
-                  {item.name.substring(0, 30) + "..."}
+                <td className="p-4 text-primary-text  truncate text-center">
+                  {item.name.substring(0, 40)}
                 </td>
                 <td className="p-4 text-primary-text text-center">
                   {item.category}
@@ -1060,7 +1061,7 @@ export const ChatSection: React.FC = () => {
       socket.current.close();
     }
     const ws = new WebSocket(
-      `wss://abc.winaclaim.com/ws/chat/${selectedChat.id}/?token=${accessToken}`
+      `wss://api.cleverbiz.ai/ws/chat/${selectedChat.id}/?token=${accessToken}`
     );
     socket.current = ws;
 
@@ -1111,7 +1112,7 @@ export const ChatSection: React.FC = () => {
       if (bgSocketsRef.current[id]) return; // already open
 
       const ws = new WebSocket(
-        `wss://abc.winaclaim.com/ws/chat/${id}/?token=${accessToken}`
+        `wss://api.cleverbiz.ai/ws/chat/${id}/?token=${accessToken}`
       );
       bgSocketsRef.current[id] = ws;
 
@@ -1176,7 +1177,7 @@ export const ChatSection: React.FC = () => {
     if (!selectedChat) return;
     const accessToken = localStorage.getItem("accessToken");
     const socket = new WebSocket(
-      `wss://abc.winaclaim.com/ws/call/${device_id}/?token=${accessToken}`
+      `wss://api.cleverbiz.ai/ws/call/${device_id}/?token=${accessToken}`
     );
 
     socket.onopen = async () => {
@@ -1300,7 +1301,7 @@ export const ChatSection: React.FC = () => {
       return;
     }
     const newSoket = new WebSocket(
-      `wss://abc.winaclaim.com/ws/call/${selectedChat?.id}/?token=${jwt}`
+      `wss://api.cleverbiz.ai/ws/call/${selectedChat?.id}/?token=${jwt}`
     );
     newSoket.onopen = () => {
       console.log("Socket Opened");
@@ -1607,9 +1608,10 @@ const ChatListItem: React.FC<ChatListItemProps> = ({
       onClick={onClick}
     >
       <div className="relative">
-        <p className="h-12 w-12 bg-[#292758]/50 rounded-full flex justify-center items-center text-white font-semibold">
-          <span className="text-[clamp(10px,2vw,14px)] uppercase truncate">
-            {`${data.table_name}`}
+        <p className="h-12 flex justify-center items-center gap-2 truncate text-white font-semibold rounded-md  px-4">
+          <UserCircle2 className="w-5 h-5 text-blue-400" />
+          <span className="text-[clamp(12px,2vw,15px)] uppercase tracking-wide">
+            {data.table_name}
           </span>
         </p>
 
