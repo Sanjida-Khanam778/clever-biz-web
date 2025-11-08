@@ -10,7 +10,7 @@ const WebSocketProvider = ({ children }) => {
   const id = parseUser.restaurants?.[0]?.id; // safer optional chaining
   const [ws, setWs] = useState(null);
   const [messages, setMessages] = useState([]);
-  const wsUrl = `wss://abc.winaclaim.com/ws/alldatalive/${id}/?token=${accessToken}`;
+  const wsUrl = `wss://api.cleverbiz.ai/ws/alldatalive/${id}/?token=${accessToken}`;
   const [response, setResponse] = useState({});
 
   useEffect(() => {
@@ -48,14 +48,14 @@ const WebSocketProvider = ({ children }) => {
     socket.onclose = () => {
       console.log("WebSocket connection closed");
     };
- 
+
     return () => {
       if (socket.readyState === WebSocket.OPEN) {
         socket.close();
       }
     };
   }, [wsUrl, id, accessToken, setResponse]);
- 
+
   return (
     <WebSocketContext.Provider value={{ ws, messages, response }}>
       {children}

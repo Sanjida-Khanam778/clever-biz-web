@@ -136,7 +136,7 @@ const ScreenAdminDashboard = () => {
           <DashboardCard
             icon={<IconSales />}
             label="Total Sells today"
-            data={`$${state.total_all_restaurant_order_sells_price.toString()}`}
+            data={`AED ${state.total_all_restaurant_order_sells_price.toString()}`}
             accentColor="#31BB24"
             gradientStart="#48E03A"
             gradientEnd="#161F42"
@@ -146,7 +146,7 @@ const ScreenAdminDashboard = () => {
           <DashboardCard
             icon={<IconGrowth />}
             label="Weekly growth"
-            data={`$${state.last_week_all_order_price.toString()}`}
+            data={`AED ${state.last_week_all_order_price.toString()}`}
             accentColor="#FFB056"
             gradientStart="#FFB056"
             gradientEnd="#161F42"

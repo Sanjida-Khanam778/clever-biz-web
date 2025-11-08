@@ -858,7 +858,8 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
                 {item.id}
               </td>
               <td className="p-2 sm:p-4 text-primary-text text-center z-20">
-                {item.status.toLowerCase() === "paid" ? (
+                {item.status.toLowerCase() === "completed" ? (
+                  // If order is completed, show a disabled button (no changes allowed)
                   <ButtonStatus
                     status={item.status}
                     properties={{
@@ -867,12 +868,26 @@ export const TableFoodOrderList: React.FC<TableFoodOrderListProps> = ({
                         text: "text-green-300",
                       },
                     }}
-                    availableStatuses={["Completed"]} // only allow Completed for paid
+                    availableStatuses={[]} // No available options
+                   
+                  />
+                ) : item.status.toLowerCase() === "paid" ? (
+                  // If order is paid, only allow "Completed"
+                  <ButtonStatus
+                    status={item.status}
+                    properties={{
+                      Completed: {
+                        bg: "bg-green-800",
+                        text: "text-green-300",
+                      },
+                    }}
+                    availableStatuses={["Completed"]}
                     onChange={(newStatus) =>
                       handleStatusChange(item.id, newStatus)
                     }
                   />
                 ) : (
+                  // For all other statuses, show all options
                   <ButtonStatus
                     status={item.status}
                     properties={{

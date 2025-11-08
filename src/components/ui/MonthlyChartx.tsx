@@ -75,7 +75,7 @@ export const DailyReportChart: React.FC<DailyReportProps> = ({
       },
       {
         type: "line" as const,
-        label: "Sales Amount ($)",
+        label: "Sales Amount (AED)",
         data: salesAmount,
         borderColor: "#053AE7",
         backgroundColor: "rgba(5, 58, 231, 0.3)",
@@ -94,7 +94,7 @@ export const DailyReportChart: React.FC<DailyReportProps> = ({
             const datasetLabel = tooltipItem.dataset.label || "";
             const value = tooltipItem.raw as number;
             if (datasetLabel.includes("Sales")) {
-              return `${datasetLabel}: $${value.toLocaleString()}`;
+              return `${datasetLabel}: AED ${value.toLocaleString()}`;
             }
             return `${datasetLabel}: ${value}`;
           },
