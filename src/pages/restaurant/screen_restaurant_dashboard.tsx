@@ -15,6 +15,7 @@ import {
   Pagination,
   TableFoodList,
 } from "../../components/utilities";
+import MonthFilter from "@/components/ui/MontheFilter";
 
 const ScreenRestaurantDashboard = () => {
   const {
@@ -106,7 +107,6 @@ const ScreenRestaurantDashboard = () => {
     }
   }, []);
 
-  // Load most selling items on component mount
   useEffect(() => {
     fetchMostSellingItems();
   }, [fetchMostSellingItems]);
@@ -132,19 +132,28 @@ const ScreenRestaurantDashboard = () => {
   useEffect(() => {
     fetchAnalytics();
   }, [fetchAnalytics]);
+  const [filterMonth, setFilterMonth] = useState("");
+
+  const handleMonthChange = (month) => {
+    console.log("Selected month:", month);
+    setFilterMonth(month);
+    // 👉 Use month here to filter your data
+  };
+  console.log(filterMonth);
   const fetchMonthlyReport = async () => {
     try {
-      const response = await axiosInstance.get("/owners/sales-report/monthly/");
+      const response = await axiosInstance.get(
+        `/owners/sales-report/monthly/?month=${filterMonth || ""}`
+      );
+      console.log(response);
       const data = response.data;
       console.log(response.data.month);
       // Extract month + year
-      const [monthName, yearStr] = data.month.split(" "); // "October 2025"
+      const [monthName, yearStr] = data.month.split(" ");
       const yearNum = parseInt(yearStr, 10);
 
-      // Convert month name → number
-      const monthNum = response.data.month; // October → 10
+      const monthNum = response.data.month;
 
-      // Convert objects (day1, day2, ...) → arrays
       const productsArray = Object.values(
         data.sales_report_count_completed_order
       );
@@ -161,7 +170,7 @@ const ScreenRestaurantDashboard = () => {
 
   useEffect(() => {
     fetchMonthlyReport();
-  }, []);
+  }, [filterMonth]);
   console.log(month);
   return (
     <>
@@ -307,12 +316,17 @@ const ScreenRestaurantDashboard = () => {
             )}
           </div>
         </div>
-        <DailyReportChart
-          month={month.toString()}
-          year={year}
-          productsSold={productsSold}
-          salesAmount={salesAmount}
-        />
+        <div>
+          <div className="flex flex-col items-end mt-3">
+            <MonthFilter onChange={handleMonthChange} />
+          </div>
+          <DailyReportChart
+            month={month.toString()}
+            year={year}
+            productsSold={productsSold}
+            salesAmount={salesAmount}
+          />
+        </div>
       </div>
 
       {/* Modals */}

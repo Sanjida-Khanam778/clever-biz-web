@@ -32,7 +32,7 @@ export const YearlyChart: React.FC<ChartStatProps> = ({
             // Get the value for the tooltip item
             const value = tooltipItem.raw;
             // Format the tooltip with dollar value
-            return `${tooltipItem.label}: AED ${value.toLocaleString()}`;
+            return `${tooltipItem.label}: Orders ${value.toLocaleString()}`;
           },
           title: function (tooltipItem) {
             const datasetIndex = tooltipItem[0]?.datasetIndex;
