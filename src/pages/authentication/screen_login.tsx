@@ -29,36 +29,63 @@ const ScreenLogin = () => {
         email: data.email,
         password: data.password,
       });
-
+      console.log(response.data);
       const { access, refresh, user } = response.data;
 
-      // Use the hook to update user data
       updateUserData(user, access, refresh);
       setLoading(false);
-      
-      // Show success message with role info
+      console.log(response);
       toast.success(`Welcome! You are logged in as ${user.role}`);
-     
 
-      // Redirect based on role
-      switch (user.role) {
-        case "chef":
-          navigate("/chef");
-          break;
-        case "staff":
-          navigate("/staff");
-          break;
-        case "owner":
-          navigate("/restaurant");
-          break;
-        case "admin":
-          navigate("/admin");
-          break;
-        default:
-          navigate("/");
-          break;
+      const restaurant = response.data?.user?.restaurants?.[0];
+      const subscription = restaurant?.subscription;
+
+      console.log("User role:", user?.role);
+      console.log("Subscription:", subscription);
+
+      // Check if subscription exists and is valid
+      if (
+        !subscription ||
+        subscription.status !== "active" ||
+        !subscription.current_period_end
+      ) {
+        console.log("Invalid or inactive subscription");
+        navigate("/");
+        return;
       }
-       window.location.reload();
+
+      const currentDate = new Date();
+      const expirationDate = new Date(subscription.current_period_end);
+
+      if (currentDate > expirationDate) {
+        console.log("Subscription expired");
+        navigate("/");
+        return;
+      }
+
+      if (user?.role) {
+        switch (user.role) {
+          case "chef":
+            navigate("/chef");
+            break;
+          case "staff":
+            navigate("/staff");
+            break;
+          case "owner":
+            navigate("/restaurant");
+            break;
+          case "admin":
+            navigate("/admin");
+            break;
+          default:
+            console.log("Unknown role");
+            navigate("/");
+            break;
+        }
+      } else {
+        console.log("No user role found");
+        navigate("/");
+      }
     } catch (error: any) {
       setLoading(false);
       console.error("Login failed:", error);

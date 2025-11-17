@@ -15,7 +15,7 @@ import {
   Pagination,
   TableFoodList,
 } from "../../components/utilities";
-import MonthFilter from "@/components/ui/MontheFilter";
+import { MonthFilter, YearFilter } from "@/components/ui/MontheFilter";
 
 const ScreenRestaurantDashboard = () => {
   const {
@@ -44,7 +44,7 @@ const ScreenRestaurantDashboard = () => {
   const [analytics, setAnalytics] = useState<any>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(true);
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
-
+  const [filterYear, setFilterYear] = useState();
   const showFoodItemAddModal = () => {
     setShowFoodItemModal(true);
     fetchCategories();
@@ -133,7 +133,9 @@ const ScreenRestaurantDashboard = () => {
     fetchAnalytics();
   }, [fetchAnalytics]);
   const [filterMonth, setFilterMonth] = useState("");
-
+  const onChnage = (year) => {
+    setFilterYear(year);
+  };
   const handleMonthChange = (month) => {
     console.log("Selected month:", month);
     setFilterMonth(month);
@@ -143,7 +145,9 @@ const ScreenRestaurantDashboard = () => {
   const fetchMonthlyReport = async () => {
     try {
       const response = await axiosInstance.get(
-        `/owners/sales-report/monthly/?month=${filterMonth || ""}`
+        `/owners/sales-report/monthly/?month=${filterMonth || ""}&year=${
+          filterYear || ""
+        }`
       );
       console.log(response);
       const data = response.data;
@@ -170,7 +174,7 @@ const ScreenRestaurantDashboard = () => {
 
   useEffect(() => {
     fetchMonthlyReport();
-  }, [filterMonth]);
+  }, [filterMonth, filterYear]);
   console.log(month);
   return (
     <>
@@ -317,8 +321,9 @@ const ScreenRestaurantDashboard = () => {
           </div>
         </div>
         <div>
-          <div className="flex flex-col items-end mt-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center   mt-3">
             <MonthFilter onChange={handleMonthChange} />
+            <YearFilter onChange={onChnage} />
           </div>
           <DailyReportChart
             month={month.toString()}

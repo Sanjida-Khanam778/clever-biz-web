@@ -1085,7 +1085,7 @@ export const EditDeviceModal: React.FC<ModalProps> = ({ isOpen, close }) => {
       const response = await axiosInstance.post("/owners/devices/", {
         table_name: tableName,
       });
-
+      console.log(response)
       console.log("Response:", response.data);
       toast.success("Device added successfully!");
 

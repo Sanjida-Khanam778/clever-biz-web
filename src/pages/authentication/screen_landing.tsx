@@ -1,19 +1,12 @@
-import {
-  Logo,
-  SocialContactButtons,
-  SubscriptionIcon1,
-  SubscriptionIcon2,
-  SubscriptionIcon3,
-} from "../../components/utilities";
-import heroImage from "../../assets/hero-image-1.webp";
-import subscriptionCardOverlay from "../../assets/subscription-card-overlay.webp";
-import { Link, useNavigate } from "react-router";
-import { Disclosure, DisclosureButton } from "@headlessui/react";
-import { IoChevronUpCircleOutline } from "react-icons/io5";
-import { AnimatePresence, motion } from "motion/react";
-import { cn } from "clsx-for-tailwind";
 import { faqs } from "@/data";
-import { CheckCircle } from "@/components/icons";
+import { Disclosure, DisclosureButton } from "@headlessui/react";
+import { cn } from "clsx-for-tailwind";
+import { AnimatePresence, motion } from "motion/react";
+import { IoChevronUpCircleOutline } from "react-icons/io5";
+import { Link, useNavigate } from "react-router";
+import heroImage from "../../assets/hero-image-1.webp";
+import { Logo, SocialContactButtons } from "../../components/utilities";
+import SubscriptionCards from "./subscription-packeges";
 export const getAccessToken = () => localStorage.getItem("accessToken");
 export const getUserInfo = () =>
   JSON.parse(localStorage.getItem("userInfo") || "{}");
@@ -69,72 +62,64 @@ const ScreenLanding = () => {
       <main className="flex flex-col">
         {/* Hero Section */}
         <section className="flex flex-col bg-gradient-to-br from-container-start to-container-end">
-          <div className="h-[calc(127px_+_65px)]"></div>
-          <div className="container-content self-center flex flex-col md:flex-row relative h-[898px]">
-            {/* Right Container */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 h-[712px] w-full flex flex-row">
-              <div className="basis-[50%]"></div>
-              {/* Hero Image */}
-              <div className="basis-[50%] flex flex-row justify-end relative">
-                <div className="absolute right-0 top-0 bottom-0 -left-40 flex justify-end">
-                  <img src={heroImage} alt="CleverBiz" className="h-[712px]" />
-                </div>
-              </div>
+          <div className="pt-32 pb-10"></div>
+
+          <div className="container-content mx-auto flex flex-col md:flex-row relative">
+            {/* Hero Image (Top on Mobile, Right on Desktop) */}
+            <div className="order-1 md:order-2 flex justify-center md:justify-end w-full md:w-1/2">
+              <img
+                src={heroImage}
+                alt="CleverBiz"
+                className="w-full max-w-[850px] md:h-[850px] object-contain"
+              />
             </div>
-            {/* Left Container */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 h-[712px] w-full flex flex-row">
-              {/* Left Secion Text And Buttons */}
-              <div className="basis-[45%] mt-24 flex flex-col justify-center">
-                <h1 className="text-[70px] text-white font-david font-bold leading-20">
-                  Dine Smarter
-                  <br />
-                  With Cleverbiz AI
-                </h1>
-                <div className="flex flex-row">
-                  <p className="text-[#CECECE] mt-16 basis-[80%] font-inter leading-8 text-[16px]">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
-                    do eiusmod tempor incididunt ut labore et dolore magna
-                    aliqua.
-                  </p>
-                </div>
-                <SocialContactButtons className="fill-white mt-8" />
-                <div className="flex-1"></div>
-                <div className="border-b border-white/20 w-1/2 mb-24"></div>
-              </div>
-              <div className="basis-[55%]"></div>
+
+            {/* Left Text Content */}
+            <div className="order-2 md:order-1 mt-10 md:mt-0 md:w-1/2 flex flex-col justify-center">
+              <h1 className="text-4xl md:text-6xl lg:text-[70px] text-white font-david font-bold leading-tight">
+                Dine Smarter
+                <br />
+                With Cleverbiz AI
+              </h1>
+
+              <p className="text-[#CECECE] mt-6 text-base leading-7 md:w-4/5">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+                eiusmod tempor incididunt ut labore et dolore magna aliqua.
+              </p>
+
+              <SocialContactButtons className="fill-white mt-8" />
+
+              <div className="border-b border-white/20 w-1/2 mt-14"></div>
             </div>
           </div>
         </section>
+
         {/* Subscription Packages Section */}
-        <section className="pt-16 pb-10 flex flex-col bg-white">
-          <h2 className="text-[52px] self-center font-bold text-primary font-david leading-none">
-            Available Packages
-          </h2>
-          <div className="mt-16 container-content self-center">
-            <PricingSection />
+        <section className="pt-16 pb-10 flex flex-col max-w-full bg-white">
+          <div className="mt-10 container-content mx-auto">
+            <SubscriptionCards />
           </div>
         </section>
-        {/* Frequently Ask Question */}
-        <section className="pt-16 pb-10 flex flex-col bg-gradient-to-br from-container-start to-container-end">
-          <h2 className="text-[52px] self-center font-bold text-white font-david leading-none">
+
+        {/* Frequently Asked Questions */}
+        <section className="pt-16 pb-20 bg-gradient-to-br from-container-start to-container-end">
+          <h2 className="text-3xl md:text-5xl font-bold text-white font-david text-center">
             Frequently Asked Questions
           </h2>
-          <div className="container-content self-center">
-            <div className="space-y-4 mt-16">
-              {/* Faq list section */}
+
+          <div className="container-content mx-auto mt-10 md:mt-16">
+            <div className="space-y-4">
               {faqs.map((faq, index) => (
-                <Disclosure key={index} defaultOpen={index === 0} as="div">
+                <Disclosure key={index} defaultOpen={index === 0}>
                   {({ open }) => (
                     <>
-                      {/* Expand button with question */}
-                      <DisclosureButton className="flex w-full justify-between items-center p-4 text-left text-primary-text bg-primary focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md">
+                      <DisclosureButton className="flex w-full justify-between items-center p-4 text-left text-primary-text bg-primary rounded-md">
                         <div className="flex flex-row gap-x-2">
                           <span className="h-6 w-6">
                             <svg
                               className="h-6 w-6"
                               viewBox="0 0 34 32"
                               fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
                             >
                               <rect
                                 width="22.5882"
@@ -151,34 +136,27 @@ const ScreenLanding = () => {
                               />
                             </svg>
                           </span>
-                          <span className="text-lg font-medium">
+                          <span className="text-base md:text-lg font-medium">
                             {faq.question}
                           </span>
                         </div>
+
                         <IoChevronUpCircleOutline
                           className={cn(
-                            { "transform rotate-180": !open },
-                            "h-6 w-6 text-primary-text"
+                            open ? "rotate-180" : "",
+                            "h-6 w-6 text-primary-text transition-transform"
                           )}
                         />
                       </DisclosureButton>
-                      {/* Expandable container with answer */}
+
                       <AnimatePresence initial={false}>
                         {open && (
                           <motion.div
-                            key="content"
-                            initial="collapsed"
-                            animate="open"
-                            exit="collapsed"
-                            variants={{
-                              open: { height: "auto", opacity: 1 },
-                              collapsed: { height: 0, opacity: 0 },
-                            }}
-                            transition={{
-                              duration: 0.3,
-                              ease: [0.4, 0, 0.2, 1],
-                            }}
-                            className="overflow-hidden pt-0 text-primary"
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="overflow-hidden"
                           >
                             <div className="bg-primary-text p-4 rounded-b-md">
                               {faq.answer}
@@ -234,199 +212,199 @@ const ScreenLanding = () => {
 };
 
 /* Pricing Section */
-const PricingSection = () => {
-  return (
-    <div className="container mx-auto px-4">
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 font-sf-pro">
-        {/* Basic Plan */}
-        <div className="rounded-lg border border-gray-200 bg-white p-8 shadow-sm flex flex-col">
-          <div className="mb-6 flex flex-col">
-            <div className="mr-4 flex items-center justify-start">
-              <SubscriptionIcon1 />
-            </div>
-            <h3 className="font-medium text-text-2 font-sf-pro text-[29px]">
-              Basic
-            </h3>
-          </div>
-          <div className="mb-4 flex items-center">
-            <span className="text-[46px] font-medium leading-none text-text-2">
-              $19
-            </span>
-            <div className="inline-flex flex-col">
-              <span className="ml-2 text-text-2 line-through font-inter">
-                $29
-              </span>
-              <span className="ml-2 text-sm text-[#475467] font-normal">
-                /per month
-              </span>
-            </div>
-          </div>
-          <p className="text-[18px] text-gray-600">For solo entrepreneurs</p>
-          <div className="border-t border-gray-100 my-8" />
-          <ul className="mb-8 space-y-3 text-[16px] fill-checkmark">
-            <li className="flex items-start">
-              <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
-              <span>2% 3rd-party payment providers</span>
-            </li>
-            <li className="flex items-start">
-              <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
-              <span>10 inventory locations</span>
-            </li>
-            <li className="flex items-start">
-              <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
-              <span>24/7 chat support</span>
-            </li>
-            <li className="flex items-start">
-              <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
-              <span>Localized global selling (3 markets)</span>
-            </li>
-            <li className="flex items-start">
-              <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
-              <span>POS Lite</span>
-            </li>
-          </ul>
-          <div className="flex-1" />
-          <button className="w-full rounded-xl subscription-button border-[#1C1F54] py-3 text-center font-medium text-white transition-colors hover:bg-checkmark/20 border">
-            Start 7-day free trial
-          </button>
-        </div>
+// const PricingSection = () => {
+//   return (
+//     <div className="container mx-auto px-4">
+//       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 font-sf-pro">
+//         {/* Basic Plan */}
+//         <div className="rounded-lg border border-gray-200 bg-white p-8 shadow-sm flex flex-col">
+//           <div className="mb-6 flex flex-col">
+//             <div className="mr-4 flex items-center justify-start">
+//               <SubscriptionIcon1 />
+//             </div>
+//             <h3 className="font-medium text-text-2 font-sf-pro text-[29px]">
+//               Basic
+//             </h3>
+//           </div>
+//           <div className="mb-4 flex items-center">
+//             <span className="text-[46px] font-medium leading-none text-text-2">
+//               $19
+//             </span>
+//             <div className="inline-flex flex-col">
+//               <span className="ml-2 text-text-2 line-through font-inter">
+//                 $29
+//               </span>
+//               <span className="ml-2 text-sm text-[#475467] font-normal">
+//                 /per month
+//               </span>
+//             </div>
+//           </div>
+//           <p className="text-[18px] text-gray-600">For solo entrepreneurs</p>
+//           <div className="border-t border-gray-100 my-8" />
+//           <ul className="mb-8 space-y-3 text-[16px] fill-checkmark">
+//             <li className="flex items-start">
+//               <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
+//               <span>2% 3rd-party payment providers</span>
+//             </li>
+//             <li className="flex items-start">
+//               <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
+//               <span>10 inventory locations</span>
+//             </li>
+//             <li className="flex items-start">
+//               <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
+//               <span>24/7 chat support</span>
+//             </li>
+//             <li className="flex items-start">
+//               <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
+//               <span>Localized global selling (3 markets)</span>
+//             </li>
+//             <li className="flex items-start">
+//               <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
+//               <span>POS Lite</span>
+//             </li>
+//           </ul>
+//           <div className="flex-1" />
+//           <button className="w-full rounded-xl subscription-button border-[#1C1F54] py-3 text-center font-medium text-white transition-colors hover:bg-checkmark/20 border">
+//             Start 7-day free trial
+//           </button>
+//         </div>
 
-        {/* Plus Plan */}
-        <div className="rounded-lg border border-gray-200 bg-[#1C1F54] p-8 text-white shadow-lg flex flex-col relative overflow-hidden">
-          <img
-            className="absolute right-0 top-0 z-0"
-            src={subscriptionCardOverlay}
-            alt=""
-          />
-          <div className="mb-6 flex flex-col">
-            <div className="mr-4 flex items-center justify-start">
-              <SubscriptionIcon2 />
-            </div>
-            <h3 className="font-mediumfont-sf-pro text-[29px]">Plus</h3>
-          </div>
-          <div className="mb-4 flex items-center">
-            <span className="text-[46px] font-medium leading-none">$199</span>
-            <div className="inline-flex flex-col">
-              <span className="ml-2 line-through font-inter">$129</span>
-              <span className="ml-2 text-sm text-[#FCFCFD8F] font-normal">
-                /per month
-              </span>
-            </div>
-          </div>
-          <p className="text-[18px] text-[#FCFCFD]">
-            For more complex businesses
-          </p>
-          <div className="my-8" />
-          <ul className="mb-8 space-y-3 fill-white">
-            <li className="flex items-start">
-              <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0 " />
-              <span>Competitive rates for high-volume merchants</span>
-            </li>
-            <li className="flex items-start">
-              <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
-              <span>Custom reports and analytics</span>
-            </li>
-            <li className="flex items-start">
-              <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
-              <span>Priority 24/7 phone support</span>
-            </li>
-            <li className="flex items-start">
-              <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
-              <span>Localized global selling (50 markets)</span>
-            </li>
-            <li className="flex items-start">
-              <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
-              <span>Unlimited staff accounts</span>
-            </li>
-            <li className="flex items-start">
-              <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
-              <span>Fully customizable checkout with 40x capacity</span>
-            </li>
-            <li className="flex items-start">
-              <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
-              <span>200 POS Pro</span>
-            </li>
-            <li className="flex items-start">
-              <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
-              <span>Sell wholesale/B2B</span>
-            </li>
-          </ul>
-          <div className="flex-1" />
-          <button className="w-full rounded-xl bg-white py-3 text-center font-medium text-[#2a2a6c] transition-colors hover:bg-gray-100">
-            Start 7-day free trial
-          </button>
-        </div>
+//         {/* Plus Plan */}
+//         <div className="rounded-lg border border-gray-200 bg-[#1C1F54] p-8 text-white shadow-lg flex flex-col relative overflow-hidden">
+//           <img
+//             className="absolute right-0 top-0 z-0"
+//             src={subscriptionCardOverlay}
+//             alt=""
+//           />
+//           <div className="mb-6 flex flex-col">
+//             <div className="mr-4 flex items-center justify-start">
+//               <SubscriptionIcon2 />
+//             </div>
+//             <h3 className="font-mediumfont-sf-pro text-[29px]">Plus</h3>
+//           </div>
+//           <div className="mb-4 flex items-center">
+//             <span className="text-[46px] font-medium leading-none">$199</span>
+//             <div className="inline-flex flex-col">
+//               <span className="ml-2 line-through font-inter">$129</span>
+//               <span className="ml-2 text-sm text-[#FCFCFD8F] font-normal">
+//                 /per month
+//               </span>
+//             </div>
+//           </div>
+//           <p className="text-[18px] text-[#FCFCFD]">
+//             For more complex businesses
+//           </p>
+//           <div className="my-8" />
+//           <ul className="mb-8 space-y-3 fill-white">
+//             <li className="flex items-start">
+//               <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0 " />
+//               <span>Competitive rates for high-volume merchants</span>
+//             </li>
+//             <li className="flex items-start">
+//               <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
+//               <span>Custom reports and analytics</span>
+//             </li>
+//             <li className="flex items-start">
+//               <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
+//               <span>Priority 24/7 phone support</span>
+//             </li>
+//             <li className="flex items-start">
+//               <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
+//               <span>Localized global selling (50 markets)</span>
+//             </li>
+//             <li className="flex items-start">
+//               <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
+//               <span>Unlimited staff accounts</span>
+//             </li>
+//             <li className="flex items-start">
+//               <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
+//               <span>Fully customizable checkout with 40x capacity</span>
+//             </li>
+//             <li className="flex items-start">
+//               <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
+//               <span>200 POS Pro</span>
+//             </li>
+//             <li className="flex items-start">
+//               <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
+//               <span>Sell wholesale/B2B</span>
+//             </li>
+//           </ul>
+//           <div className="flex-1" />
+//           <button className="w-full rounded-xl bg-white py-3 text-center font-medium text-[#2a2a6c] transition-colors hover:bg-gray-100">
+//             Start 7-day free trial
+//           </button>
+//         </div>
 
-        {/* Advanced Plan */}
-        <div className="rounded-lg border border-gray-200 bg-white p-8 shadow-sm flex flex-col">
-          <div className="mb-6 flex flex-col">
-            <div className="mr-4 flex items-center justify-start">
-              <SubscriptionIcon3 />
-            </div>
-            <h3 className="font-medium text-text-2 font-sf-pro text-[29px]">
-              Advanced
-            </h3>
-          </div>
-          <div className="mb-4 flex items-center">
-            <span className="text-[46px] font-medium leading-none text-text-2">
-              $299
-            </span>
-            <div className="inline-flex flex-col">
-              <span className="ml-2 text-text-2 line-through font-inter">
-                $399
-              </span>
-              <span className="ml-2 text-sm text-[#475467] font-normal">
-                /per month
-              </span>
-            </div>
-          </div>
-          <p className="text-[18px] text-gray-600">As your business scales</p>
-          <div className="border-t border-gray-100 my-8" />
-          <ul className="mb-8 space-y-3 fill-checkmark">
-            <li className="flex items-start">
-              <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
-              <span>0.6% 3rd-party payment providers</span>
-            </li>
-            <li className="flex items-start">
-              <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
-              <span>Custom reports and analytics</span>
-            </li>
-            <li className="flex items-start">
-              <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
-              <span>10 inventory locations</span>
-            </li>
-            <li className="flex items-start">
-              <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
-              <span>Enhanced 24/7 chat support</span>
-            </li>
-            <li className="flex items-start">
-              <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
-              <span>
-                Localized global selling (3 markets) + add markets for $59
-                USD/mo each
-              </span>
-            </li>
-            <li className="flex items-start">
-              <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
-              <span>15 additional staff accounts</span>
-            </li>
-            <li className="flex items-start">
-              <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
-              <span>10x checkout capacity</span>
-            </li>
-            <li className="flex items-start">
-              <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
-              <span>POS Lite</span>
-            </li>
-          </ul>
-          <div className="flex-1" />
-          <button className="w-full rounded-xl subscription-button border-[#1C1F54] py-3 text-center font-medium text-white transition-colors hover:bg-checkmark/20 border">
-            Start 7-day free trial
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
+//         {/* Advanced Plan */}
+//         <div className="rounded-lg border border-gray-200 bg-white p-8 shadow-sm flex flex-col">
+//           <div className="mb-6 flex flex-col">
+//             <div className="mr-4 flex items-center justify-start">
+//               <SubscriptionIcon3 />
+//             </div>
+//             <h3 className="font-medium text-text-2 font-sf-pro text-[29px]">
+//               Advanced
+//             </h3>
+//           </div>
+//           <div className="mb-4 flex items-center">
+//             <span className="text-[46px] font-medium leading-none text-text-2">
+//               $299
+//             </span>
+//             <div className="inline-flex flex-col">
+//               <span className="ml-2 text-text-2 line-through font-inter">
+//                 $399
+//               </span>
+//               <span className="ml-2 text-sm text-[#475467] font-normal">
+//                 /per month
+//               </span>
+//             </div>
+//           </div>
+//           <p className="text-[18px] text-gray-600">As your business scales</p>
+//           <div className="border-t border-gray-100 my-8" />
+//           <ul className="mb-8 space-y-3 fill-checkmark">
+//             <li className="flex items-start">
+//               <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
+//               <span>0.6% 3rd-party payment providers</span>
+//             </li>
+//             <li className="flex items-start">
+//               <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
+//               <span>Custom reports and analytics</span>
+//             </li>
+//             <li className="flex items-start">
+//               <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
+//               <span>10 inventory locations</span>
+//             </li>
+//             <li className="flex items-start">
+//               <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
+//               <span>Enhanced 24/7 chat support</span>
+//             </li>
+//             <li className="flex items-start">
+//               <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
+//               <span>
+//                 Localized global selling (3 markets) + add markets for $59
+//                 USD/mo each
+//               </span>
+//             </li>
+//             <li className="flex items-start">
+//               <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
+//               <span>15 additional staff accounts</span>
+//             </li>
+//             <li className="flex items-start">
+//               <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
+//               <span>10x checkout capacity</span>
+//             </li>
+//             <li className="flex items-start">
+//               <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
+//               <span>POS Lite</span>
+//             </li>
+//           </ul>
+//           <div className="flex-1" />
+//           <button className="w-full rounded-xl subscription-button border-[#1C1F54] py-3 text-center font-medium text-white transition-colors hover:bg-checkmark/20 border">
+//             Start 7-day free trial
+//           </button>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
 
 export default ScreenLanding;
