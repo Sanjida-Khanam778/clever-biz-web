@@ -60,16 +60,16 @@ const ScreenRegister = () => {
       // Redirect based on role
       switch (user.role) {
         case "chef":
-          navigate("/chef");
+          navigate("/");
           break;
         case "staff":
-          navigate("/staff");
+          navigate("/");
           break;
         case "owner":
-          navigate("/restaurant");
+          navigate("/");
           break;
         case "admin":
-          navigate("/admin");
+          navigate("/");
           break;
         default:
           navigate("/");
