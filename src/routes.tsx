@@ -44,6 +44,8 @@ import ScreenAdminFaq from "./pages/super-admin/screen_admin_faq";
 import ScreenAdminManagement from "./pages/super-admin/screen_admin_management";
 import ScreenAdminPrivacy from "./pages/super-admin/screen_admin_privacy";
 import ScreenAdminTermsAndCondition from "./pages/super-admin/screen_admin_terms";
+import SubscriptionSuccess from "./pages/authentication/subscription-success";
+import SubscriptionCancelled from "./pages/authentication/subscription-cancel";
 
 ChartJS.register(
   CategoryScale,
@@ -88,10 +90,7 @@ function App() {
         <Route index={true} element={<ScreenRestaurantDashboard />} />
         <Route path="orders" element={<ScreenRestaurantOrderList />} />
         {/* <Route path="reservations" element={<ScreenRestaurantReservations />} /> */}
-        <Route
-          path="reservations"
-          element={<ScreenRestaurantReservations />}
-        />
+        <Route path="reservations" element={<ScreenRestaurantReservations />} />
         <Route path="management" element={<ScreenRestaurantManagement />} />
         <Route path="devices" element={<ScreenRestaurantDevices />} />
         <Route path="reviews" element={<ScreenRestaurantReviews />} />
@@ -108,6 +107,8 @@ function App() {
         <Route path="privacy-policy" element={<ScreenAdminPrivacy />} />
         <Route path="faq" element={<ScreenAdminFaq />} />
       </Route>
+      <Route path="subscription-success" element={<SubscriptionSuccess />} />
+      <Route path="subscription-cancel" element={<SubscriptionCancelled />} />
     </Routes>
   );
 }
