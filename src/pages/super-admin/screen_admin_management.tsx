@@ -1,17 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import axiosInstance from "@/lib/axios";
+import React, { useCallback, useEffect, useState } from "react";
 import { IconCustomerInfo } from "../../components/icons";
 import { ButtonStatus, TextSearchBox } from "../../components/input";
 import { ModalAddSubscriber } from "../../components/modals";
-import { StatCardAsteric, Pagination } from "../../components/utilities";
-import { IoMdAdd } from "react-icons/io";
-import { useSelector } from "react-redux";
+import { Pagination, StatCardAsteric } from "../../components/utilities";
+import { useAppDispatch, useAppSelector } from "../../store/store";
 import {
   hideSubscriberDetail,
   showSubscriberDetail,
 } from "./redux-slices/slice_admin_management";
-import React, { useCallback, useEffect, useState } from "react";
-import { useAppDispatch, useAppSelector } from "../../store/store";
-import axiosInstance from "@/lib/axios";
 
 export interface TSubscriber {
   id: number;

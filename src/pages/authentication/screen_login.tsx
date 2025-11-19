@@ -29,40 +29,39 @@ const ScreenLogin = () => {
         email: data.email,
         password: data.password,
       });
-      console.log(response.data);
+
       const { access, refresh, user } = response.data;
 
       updateUserData(user, access, refresh);
       setLoading(false);
-      console.log(response);
+
       toast.success(`Welcome! You are logged in as ${user.role}`);
 
-      const restaurant = response.data?.user?.restaurants?.[0];
-      const subscription = restaurant?.subscription;
+      if (user?.role !== "admin") {
+        const restaurant = response.data?.user?.restaurants?.[0];
+        const subscription = restaurant?.subscription;
 
-      console.log("User role:", user?.role);
-      console.log("Subscription:", subscription);
+        if (
+          !subscription ||
+          subscription.status !== "active" ||
+          !subscription.current_period_end
+        ) {
+          console.log("Invalid or inactive subscription");
+          navigate("/");
+          return;
+        }
 
-      // Check if subscription exists and is valid
-      if (
-        !subscription ||
-        subscription.status !== "active" ||
-        !subscription.current_period_end
-      ) {
-        console.log("Invalid or inactive subscription");
-        navigate("/");
-        return;
+        const currentDate = new Date();
+        const expirationDate = new Date(subscription.current_period_end);
+
+        if (currentDate > expirationDate) {
+          console.log("Subscription expired");
+          navigate("/");
+          return;
+        }
       }
 
-      const currentDate = new Date();
-      const expirationDate = new Date(subscription.current_period_end);
-
-      if (currentDate > expirationDate) {
-        console.log("Subscription expired");
-        navigate("/");
-        return;
-      }
-
+      // Role-based navigation
       if (user?.role) {
         switch (user.role) {
           case "chef":
@@ -75,7 +74,7 @@ const ScreenLogin = () => {
             navigate("/restaurant");
             break;
           case "admin":
-            navigate("/admin");
+            navigate("/admin"); // Make sure this route exists
             break;
           default:
             console.log("Unknown role");

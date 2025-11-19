@@ -125,7 +125,7 @@ const ScreenAdminDashboard = () => {
     };
     fetchData();
   }, []);
-
+console.log(allResutrentUser,"fkdsjfdsklkjfjf")
   return (
     <>
       <div className="flex flex-col">
@@ -135,27 +135,27 @@ const ScreenAdminDashboard = () => {
           <DashboardCard
             icon={<IconSales />}
             label="Total Sells today"
-            data={`AED ${state.total_all_restaurant_order_sells_price.toString()}`}
+            data={`AED ${state?.total_all_restaurant_order_sells_price?.toString()}`}
             accentColor="#31BB24"
             gradientStart="#48E03A"
             gradientEnd="#161F42"
-            tail={state.total_all_restaurant_order_sells.toString()}
+            tail={state?.total_all_restaurant_order_sells.toString()}
           />
           {/* Card 2 */}
           <DashboardCard
             icon={<IconGrowth />}
             label="Weekly growth"
-            data={`AED ${state.last_week_all_order_price.toString()}`}
+            data={`AED ${state?.last_week_all_order_price?.toString()}`}
             accentColor="#FFB056"
             gradientStart="#FFB056"
             gradientEnd="#161F42"
-            tail={`${state.last_week_all_order_growth.toString()}%`}
+            tail={`${state.last_week_all_order_growth?.toString()}%`}
           />
           {/* Card 3 */}
           <DashboardCard
             icon={<IconTeam />}
             label="Total Subscriber"
-            data={`${state.total_active_restaurant.toString()}`}
+            data={`${state?.total_active_restaurant?.toString()}`}
             accentColor="#FF6561"
             gradientStart="#EB342E"
             gradientEnd="#161F42"
