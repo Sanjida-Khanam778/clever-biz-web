@@ -23,7 +23,19 @@ const ScreenLanding = () => {
     // Optional: redirect to home or login
     navigate("/login");
   };
-
+  const userInfo = localStorage.getItem("userInfo");
+  const parseUserInfo = JSON.parse(userInfo || "{}");
+  const isAdmin = parseUserInfo?.role === "admin";
+  // const isSubscriptionActive = parseUserInfo?.restaurants[0];
+  // const subscriptionActive = isSubscriptionActive?.subscription?.status;
+  // const isCurrentPeriodActive =
+  //   isSubscriptionActive?.subscription?.current_period_end;
+  // const currentDate = new Date();
+  // const expirationDate = new Date(
+  //   isSubscriptionActive?.subscription?.current_period_end
+  // );
+  // const showDashboard =
+  //   isCurrentPeriodActive && subscriptionActive && currentDate > expirationDate;
   return (
     <div className="bg-primary h-full min-h-screen flex flex-col">
       {/* Header */}
@@ -37,13 +49,31 @@ const ScreenLanding = () => {
 
           {/* Navigation Buttons */}
           <div className="flex flex-row justify-center items-center gap-x-4 z-49">
-            {isLoggedIn ? (
+            {/* {showDashboard && (
               <button
-                onClick={handleLogout}
-                className="button-landing-text px-2"
+                className="px-5 py-2 bg-accent"
+                onClick={() => navigate("/admin")}
               >
-                Logout
+                Dashboard
               </button>
+            )} */}
+            {isAdmin  && (
+              <button
+                className="px-5 py-2 bg-primary text-white border border-slate-600 rounded-lg"
+                onClick={() => navigate("/admin")}
+              >
+                Dashboard
+              </button>
+            )}
+            {isLoggedIn ? (
+              <div className="space-x-6">
+                <button
+                  onClick={handleLogout}
+                  className="button-landing-text px-2"
+                >
+                  Logout
+                </button>
+              </div>
             ) : (
               <>
                 <Link to="/login" className="button-landing-text px-2">
@@ -158,7 +188,7 @@ const ScreenLanding = () => {
                             transition={{ duration: 0.3 }}
                             className="overflow-hidden"
                           >
-                            <div className="bg-primary-text p-4 rounded-b-md">
+                            <div className="bg-primary text-white border p-4 rounded-b-md">
                               {faq.answer}
                             </div>
                           </motion.div>
