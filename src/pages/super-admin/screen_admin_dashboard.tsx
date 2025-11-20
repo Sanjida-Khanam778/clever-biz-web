@@ -72,7 +72,6 @@ const ScreenAdminDashboard = () => {
           params,
         });
 
-
         const { count = 0, results = [] } = response.data ?? {};
         setallResutrentUser(Array.isArray(results) ? results : []);
         setTotal(count);
@@ -125,7 +124,8 @@ const ScreenAdminDashboard = () => {
     };
     fetchData();
   }, []);
-console.log(allResutrentUser,"fkdsjfdsklkjfjf")
+  console.log(state, "fk");
+  console.log(allResutrentUser, "fkdsjfdsklkjfjf");
   return (
     <>
       <div className="flex flex-col">
@@ -139,13 +139,18 @@ console.log(allResutrentUser,"fkdsjfdsklkjfjf")
             accentColor="#31BB24"
             gradientStart="#48E03A"
             gradientEnd="#161F42"
-            tail={state?.total_all_restaurant_order_sells.toString()}
+            tail={
+              state?.total_all_restaurant_order_sells
+                ? state?.total_all_restaurant_order_sells.toString()
+                : "0"
+            }
           />
+          {/* state?.total_all_restaurant_order_sells?.toString() */}
           {/* Card 2 */}
           <DashboardCard
             icon={<IconGrowth />}
             label="Weekly growth"
-            data={`AED ${state?.last_week_all_order_price?.toString()}`}
+            data={`AED ${String(state?.last_week_all_order_price ?? 0)}`}
             accentColor="#FFB056"
             gradientStart="#FFB056"
             gradientEnd="#161F42"
