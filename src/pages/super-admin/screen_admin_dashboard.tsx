@@ -124,8 +124,7 @@ const ScreenAdminDashboard = () => {
     };
     fetchData();
   }, []);
-  console.log(state, "fk");
-  console.log(allResutrentUser, "fkdsjfdsklkjfjf");
+  console.log(lastSalesData);
   return (
     <>
       <div className="flex flex-col">
@@ -141,7 +140,7 @@ const ScreenAdminDashboard = () => {
             gradientEnd="#161F42"
             tail={
               state?.total_all_restaurant_order_sells
-                ? state?.total_all_restaurant_order_sells.toString()
+                ? state?.total_all_restaurant_order_sells?.toString()
                 : "0"
             }
           />
@@ -172,14 +171,14 @@ const ScreenAdminDashboard = () => {
           <div className="col-span-2 bg-sidebar rounded-xl p-4">
             <YearlyChart
               title="Sales Report"
-              firstData={salesData.monthly_sales.map(
+              firstData={salesData?.monthly_sales?.map(
                 (item) => item.total_orders
-              )} // 👈 orders
-              secondData={lastSalesData.monthly_sales.map(
-                (item) => item.total_orders
-              )} // 👈 orders
-              currentYear={null}
-              lastYear={null}
+              )}
+              secondData={lastSalesData?.monthly_sales?.map(
+                (item) => item?.total_orders
+              )}
+              currentYear={salesData?.year?.toString()}
+              lastYear={lastSalesData?.year?.toString()}
             />
           </div>
 
