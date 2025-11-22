@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Checkbox, Field, Label } from "@headlessui/react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { HiLockClosed } from "react-icons/hi";
@@ -43,7 +44,7 @@ const ScreenLogin = () => {
 
         if (
           !subscription ||
-          subscription.status !== "active" ||
+          subscription.status !== "Active" ||
           !subscription.current_period_end
         ) {
           console.log("Invalid or inactive subscription");
@@ -81,6 +82,7 @@ const ScreenLogin = () => {
             navigate("/");
             break;
         }
+        window.location.reload();
       } else {
         console.log("No user role found");
         navigate("/");

@@ -5,8 +5,8 @@ interface ChartStatProps {
   firstData: number[];
   secondData: number[];
   title: string;
-  currentYear : null;
-  lastYear : null;
+  currentYear: string;
+  lastYear: string;
 }
 interface MonthChartStatProps {
   firstData: number[];
@@ -18,8 +18,8 @@ export const YearlyChart: React.FC<ChartStatProps> = ({
   firstData,
   secondData,
   title,
-  currentYear= null,
-  lastYear=null
+  currentYear,
+  lastYear,
 }) => {
   const options: ChartOptions<"line"> = {
     responsive: true,
