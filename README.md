@@ -4,13 +4,13 @@ A full-featured **Restaurant Management Platform** where customers can order foo
 
 ---
 
-## 📌 Project Overview
+## Project Overview
 
 This project is designed to manage the complete workflow of a restaurant ecosystem — from food ordering to delivery, staff management, payments, and real-time communication.
 
 ---
 
-## 👥 User Roles (5 Roles)
+## User Roles (5 Roles)
 
 1. **Admin**
 2. **Restaurant Owner**
@@ -22,32 +22,32 @@ Each role has specific permissions and responsibilities.
 
 ---
 
-## 🧑‍💼 Role Responsibilities
+## Role Responsibilities
 
-### 🔑 Admin
+### Admin
 - Manage all users and roles
 - Approve or manage restaurants
 - Monitor orders, payments, and system activity
 - Full control over the platform
 
-### 🏪 Restaurant Owner
+### Restaurant Owner
 - Manage restaurant profile
 - Add, update, and delete food items & categories
 - Manage **Chef** and **Staff**
 - Track orders and revenue
 - Monitor restaurant performance
 
-### 👨‍🍳 Chef
+### Chef
 - Receive and prepare customer orders
 - Update order status (Preparing / Ready)
 - Coordinate with staff
 
-### 🧑‍🍽️ Staff
+### Staff
 - Receive prepared orders
 - Deliver food to customers
 - Update delivery status
 
-### 👤 Customer
+### Customer
 - Browse restaurants and food categories
 - Place food orders
 - Make online payments
@@ -57,22 +57,22 @@ Each role has specific permissions and responsibilities.
 
 ---
 
-## 🍔 Core Features
+## Core Features
 
-- 🔐 Role-based Authentication & Authorization
-- 🍕 Food Category & Menu Management
-- 🛒 Order Placement & Tracking
-- 💳 Online Payment System
-- 👨‍🍳 Staff & Chef Management
-- 📦 Order Status Updates (Real-time)
-- 💬 Real-time Chat System
-- 📞 Mobile Phone Calling Feature
-- 📱 Mobile-friendly & Responsive UI
-- 📊 Admin Dashboard & Analytics
+-  Role-based Authentication & Authorization
+-  Food Category & Menu Management
+-  Order Placement & Tracking
+-  Online Payment System
+-  Staff & Chef Management
+-  Order Status Updates (Real-time)
+-  Real-time Chat System
+-  Mobile Phone Calling Feature
+-  Mobile-friendly & Responsive UI
+-  Admin Dashboard & Analytics
 
 ---
 
-## 💬 Real-Time Communication
+## Real-Time Communication
 
 - **Live Chat** between Customer, Staff, and Chef
 - **Mobile Phone Call** support for faster communication
@@ -80,7 +80,7 @@ Each role has specific permissions and responsibilities.
 
 ---
 
-## 💳 Payment System
+## Payment System
 
 - Secure online payment integration
 - Order confirmation after successful payment
@@ -88,28 +88,22 @@ Each role has specific permissions and responsibilities.
 
 ---
 
-## 🛠️ Tech Stack (Example)
+## Tech Stack (Example)
 
 > *(Customize this section based on your actual stack)*
 
 ### Frontend
-- React / Next.js
+- React
+- Typescript
 - Tailwind CSS
-- Redux / Context API
-
-### Backend
-- Node.js
-- Express.js
-- MongoDB / PostgreSQL
+- Context API
 
 ### Real-Time
-- Socket.io
+- Websocket
+- WebRTC
 
 ### Payment
-- Stripe / SSLCommerz (or any payment gateway)
-
-### Authentication
-- JWT / Firebase Auth
+- Stripe
 
 ---
 
