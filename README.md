@@ -105,12 +105,11 @@ Each role has specific permissions and responsibilities.
 
 ---
 
-## 🚀 Installation & Setup
+## Installation & Setup
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/restaurant-management-system.git
-
+git clone https://github.com/Sanjida-Khanam778/clever-biz-web.git
 # Install dependencies
 npm install
 
