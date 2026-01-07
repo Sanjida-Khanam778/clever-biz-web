@@ -90,8 +90,6 @@ Each role has specific permissions and responsibilities.
 
 ## Tech Stack (Example)
 
-> *(Customize this section based on your actual stack)*
-
 ### Frontend
 - React
 - Typescript
